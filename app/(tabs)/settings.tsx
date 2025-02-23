@@ -77,6 +77,10 @@ export default function Settings() {
 interface Usuario {
   nome: string;
   papel: 'admin' | 'entregador' | 'cliente' | 'consumidor';
+  // Add other properties from the User type here
+  // Assuming User type has properties 'name' and 'role'
+  name: string;
+  role: 'admin' | 'entregador' | 'cliente' | 'consumidor';
 }
 
 function ProfileCard({ user }: { user: Usuario }) {

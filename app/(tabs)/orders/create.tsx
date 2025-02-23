@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import Calendar from '../../../components/Calendar';
 import { Container, Title, Input, Button, ButtonText, ErrorText, Card, CardTitle, CardText } from '../../../components/styled';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
@@ -30,8 +30,8 @@ const mockItems = [
 
 export default function CreateOrder() {
   const [selectedItems, setSelectedItems] = useState<{ id: string; quantity: number }[]>([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const { darkMode } = useThemeContext();
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
   const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
@@ -111,26 +111,23 @@ export default function CreateOrder() {
 
         <Card>
           <CardTitle>Agendar Entrega</CardTitle>
-          <Button
-            onPress={() => setShowDatePicker(true)}
-            style={styles.dateButton}
-          >
-            <ButtonText style={styles.dateButtonText}>
-              {scheduledDate.toLocaleString()}
-            </ButtonText>
-          </Button>
-          {showDatePicker && (
-            <DateTimePicker
-              value={scheduledDate}
-              mode="datetime"
-              onChange={(event, date) => {
-                setShowDatePicker(false);
-                if (date) {
-                  setValue('scheduledDate', date);
-                }
+          <TouchableOpacity onPress={() => setCalendarVisible(true)} style={styles.dateButton}>
+            <Text style={styles.dateButtonText}>{scheduledDate.toLocaleString()}</Text>
+          </TouchableOpacity>
+          <Modal visible={calendarVisible} transparent={true}>
+            <Calendar
+              
+              initialDate={scheduledDate}
+              onDateChange={(date) => {
+                setValue('scheduledDate', date);
+                setCalendarVisible(false);
               }}
+              mode='datetime'
+              visible={calendarVisible}
+              onClose={() => setCalendarVisible(false)}
+              theme={darkMode ? '#1c1c1e' : '#f5f5f5'}
             />
-          )}
+          </Modal>
         </Card>
 
         <Card>
@@ -250,6 +247,9 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     backgroundColor: '#f5f5f5',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
   },
   dateButtonText: {
     color: '#1c1c1e',

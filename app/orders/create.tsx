@@ -1,37 +1,24 @@
+import CustomDateTimePicker from '@/components/Calendar1';
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Button, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { View, StyleSheet, Text, Button } from 'react-native';
 
 export default function CreateOrder() {
   const [date, setDate] = useState<Date>(new Date());
-  const [show, setShow] = useState<boolean>(false);
 
-  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShow(Platform.OS === 'ios');
-    setDate(currentDate);
-  };
-
-  const showDatepicker = () => {
-    setShow(true);
+  const handleDateTimeChange = (selectedDate: Date) => {
+    setDate(selectedDate);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Selecione a data e hora do pedido:</Text>
-      <View style={styles.buttonContainer}>
-        <Button onPress={showDatepicker} title="Mostrar Data e Hora" />
-      </View>
-      {show && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date}
-          mode="datetime"
-          display="default"
-          onChange={onChange}
-          onTouchCancel={() => setShow(false)}
-        />
-      )}
+      <CustomDateTimePicker
+        initialDate={date}
+        onDateTimeChange={handleDateTimeChange}
+        pickDate={true}
+        pickTime={true}
+        pickPast={false}
+      />
     </View>
   );
 }
@@ -46,8 +33,5 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     marginBottom: 16,
-  },
-  buttonContainer: {
-    marginVertical: 10,
   },
 });

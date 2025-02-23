@@ -1,0 +1,297 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { styles } from './styles';
+import { useThemeContext } from '../../context/ThemeContext';
+import { darkTheme, lightTheme } from '@/theme';
+import TimePicker from '../TimePicker/TimePicker';
+
+const getMonthName = (month: number) =>
+  [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ][month];
+
+const getDayOfWeek = (day: number) =>
+  ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][day];
+
+interface CalendarProps {
+  initialDate?: Date;
+  minDate?: Date;
+  maxDate?: Date;
+  mode?: 'date' | 'datetime';
+  onDateChange?: (date: Date) => void;
+  visible: boolean;
+  onClose: () => void;
+  theme?: string;
+}
+
+const Calendar: React.FC<CalendarProps> = ({
+  initialDate = new Date(),
+  minDate,
+  maxDate,
+  mode = 'date',
+  onDateChange,
+  visible,
+  onClose,
+  theme,
+}) => {
+  const { darkMode } = useThemeContext();
+  const appliedTheme = darkMode ? darkTheme.calendar : lightTheme.calendar;
+  const textColor = darkMode ? darkTheme.text : lightTheme.text;
+  const headerColor = darkMode ? darkTheme.primary : lightTheme.primary;
+  const buttonColor = darkMode ? darkTheme.buttonText : lightTheme.buttonText;
+
+  const [currentDate, setCurrentDate] = useState(initialDate);
+  const [isYearSelection, setIsYearSelection] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<{
+    hours: number;
+    minutes: number;
+  }>({ hours: initialDate.getHours(), minutes: initialDate.getMinutes() });
+
+  useEffect(() => {
+    setCurrentDate(initialDate);
+  }, [initialDate]);
+
+  const changeDate = (direction: number) => {
+    const newDate = isYearSelection
+      ? new Date(currentDate.setFullYear(currentDate.getFullYear() + direction))
+      : new Date(currentDate.setMonth(currentDate.getMonth() + direction));
+    setCurrentDate(newDate);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setCurrentDate(date);
+    if (mode === 'datetime') {
+      setShowTimePicker(true);
+    } else {
+      onDateChange?.(date);
+      onClose();
+    }
+  };
+
+  const handleTimeSelect = (time: number) => {
+    const selectedDate = new Date(currentDate);
+    selectedDate.setHours(Math.floor(time / (60 * 60 * 1000)));
+    selectedDate.setMinutes((time / (60 * 1000)) % 60);
+    setSelectedTime({
+      hours: selectedDate.getHours(),
+      minutes: selectedDate.getMinutes(),
+    });
+  };
+
+  const confirmTimeSelect = () => {
+    const selectedDate = new Date(currentDate);
+    selectedDate.setHours(selectedTime.hours);
+    selectedDate.setMinutes(selectedTime.minutes);
+    onDateChange?.(selectedDate);
+    setShowTimePicker(false);
+    onClose();
+  };
+
+  const renderHeader = () => (
+    <View style={[styles.header, { backgroundColor: headerColor }]}>
+      <TouchableOpacity onPress={() => changeDate(-1)}>
+        <Text style={[styles.navButton, { color: buttonColor }]}>{'<'}</Text>
+      </TouchableOpacity>
+      <View>
+        <Text style={[styles.month, { color: buttonColor }]}>
+          {getMonthName(currentDate.getMonth())}
+        </Text>
+        <Text style={[styles.year, { color: buttonColor }]}>
+          {currentDate.getFullYear()}
+        </Text>
+      </View>
+      <TouchableOpacity onPress={() => changeDate(1)}>
+        <Text style={[styles.navButton, { color: buttonColor }]}>{'>'}</Text>
+      </TouchableOpacity>
+      <View style={styles.selectionToggle}>
+        <TouchableOpacity
+          onPress={() => setIsYearSelection(false)}
+          style={[
+            styles.selectionButton,
+            !isYearSelection && {
+              ...styles.selectedButton,
+              backgroundColor: headerColor,
+            },
+          ]}
+        >
+          <Text style={[styles.selectionButtonText, { color: buttonColor }]}>
+            Mês
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setIsYearSelection(true)}
+          style={[
+            styles.selectionButton,
+            isYearSelection && {
+              ...styles.selectedButton,
+              backgroundColor: headerColor,
+            },
+          ]}
+        >
+          <Text style={[styles.selectionButtonText, { color: buttonColor }]}>
+            Ano
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderDaysOfWeek = () => (
+    <View style={[styles.daysOfWeek, { backgroundColor: appliedTheme }]}>
+      {Array.from({ length: 7 }, (_, i) => (
+        <Text key={i} style={[styles.dayOfWeek, { color: textColor }]}>
+          {getDayOfWeek(i)}
+        </Text>
+      ))}
+    </View>
+  );
+
+  const renderDays = () => {
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
+    const startDay = firstDayOfMonth.getDay();
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    const days = [];
+    for (let i = 0; i < startDay; i++) {
+      days.push(<View key={`empty-${i}`} style={styles.day} />);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dayDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        i
+      );
+      const isToday = dayDate.toDateString() === new Date().toDateString();
+      const isInRange =
+        (!minDate || dayDate >= minDate) && (!maxDate || dayDate <= maxDate);
+      days.push(
+        <TouchableOpacity
+          key={i}
+          style={styles.day}
+          onPress={() => isInRange && handleDateSelect(dayDate)}
+          disabled={!isInRange}
+        >
+          <Text
+            style={[
+              styles.dayText,
+              isToday && [styles.today, { color: darkTheme.primary }],
+              !isInRange && styles.disabled,
+              { color: textColor },
+            ]}
+          >
+            {i}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    return <View style={styles.days}>{days}</View>;
+  };
+
+  const renderDatetime = () => (
+    <View style={[styles.container, { backgroundColor: appliedTheme }]}>
+      {showTimePicker && (
+        <Modal
+          visible={true}
+          transparent
+          onRequestClose={() => setShowTimePicker(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.timePickerContainer}>
+              <Text style={[styles.timePickerTitle, { color: textColor }]}>
+                Selecione a Hora
+              </Text>
+              <TimePicker
+                value={
+                  selectedTime.hours * 60 * 60 * 1000 +
+                  selectedTime.minutes * 60 * 1000
+                }
+                onChange={handleTimeSelect}
+                textStyle={{ color: textColor, fontSize: 18 }}
+                timeFormat={["hours24", "min"]}
+                wheelProps={{
+                  itemHeight: 35,
+                  displayCount: 2,
+                  wheelHeight: 100,
+                  textStyle: { fontSize: 18, color: textColor },
+                  containerStyle: { backgroundColor: appliedTheme },
+                }}
+              />
+              <TouchableOpacity
+                onPress={confirmTimeSelect}
+                style={[styles.okButton, { backgroundColor: headerColor }]}
+              >
+                <Text style={{ color: "#fff", fontSize: 16 }}>ok</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+
+  return (
+
+<Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+<View style={styleCalendar.modalContainer}>
+  <View style={styleCalendar.calendarContainer}>
+    <View>
+      {renderHeader()} 
+      {renderDaysOfWeek()}
+      {renderDays()}
+      {renderDatetime()}
+    </View>
+    <TouchableOpacity onPress={onClose} style={styleCalendar.closeButton}>
+      <Text style={{ color: '#fff' }}>Fechar</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+</Modal>
+
+  );
+};
+
+const styleCalendar = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  calendarContainer: {
+    width: "80%",
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+});
+
+export default Calendar;

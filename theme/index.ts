@@ -7,6 +7,7 @@ const darkTheme = {
   card: '#1c1c1e',
   notification: '#FF3B30',
   buttonText: '#FFFFFF',
+  calendar: '#1c1c1e',
 };
 
 const lightTheme = {
@@ -18,6 +19,7 @@ const lightTheme = {
   card: '#FFFFFF',
   notification: '#FF3B30',
   buttonText: '#FFFFFF',
+  calendar: '#f5f5f5',
 };
 
 export { darkTheme, lightTheme };
@@ -31,4 +33,5 @@ export interface ThemeType {
   card: string;
   notification: string;
   buttonText: string;
+  calendar: string;
 }

@@ -1,17 +1,18 @@
-
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Camera, CameraView } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function ScanItems() {
-  const router = useRouter();
-  const cameraRef = useRef<Camera>(null);
+interface QRCodeScannerProps {
+  onScan: (data: string) => void;
+  onClose: () => void;
+  title?: string;
+}
+
+export default function QRCodeScanner({ onScan, onClose, title = 'Leitura de QR Code' }: QRCodeScannerProps) {
   const [permission, setPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cameraType, setCameraType] = useState<'back' | 'front'>('back'); // Alterado para uma string
 
   useEffect(() => {
     (async () => {
@@ -21,17 +22,17 @@ export default function ScanItems() {
     })();
   }, []);
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = ({ data }: { type: string; data: string }) => {
     if (!scanned) {
       setScanned(true);
-      alert(`Código QR escaneado: ${data}`);
+      onScan(data);
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6200EE" />
+        <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Carregando câmera...</Text>
       </View>
     );
@@ -50,25 +51,31 @@ export default function ScanItems() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📷 Leitura de QR Code</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <Ionicons name="close" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+
       <View style={styles.cameraContainer}>
         <CameraView
-          ref={cameraRef}
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           style={styles.camera}
           ratio="1:1"
         />
+        <View style={styles.overlay}>
+          <View style={styles.scanArea} />
+        </View>
       </View>
-      <Text style={styles.instructions}>📷 Aponte a câmera para o QR Code</Text>
+
+      <Text style={styles.instructions}>Posicione o QR Code dentro da área de leitura</Text>
+
       {scanned && (
         <TouchableOpacity onPress={() => setScanned(false)} style={styles.scanAgainButton}>
           <Text style={styles.buttonText}>Escanear Novamente</Text>
         </TouchableOpacity>
       )}
-      <TouchableOpacity onPress={() => router.back()} style={styles.button}>
-        <Ionicons name="arrow-back" size={18} color="#fff" />
-        <Text style={styles.buttonText}>Voltar</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -76,69 +83,87 @@ export default function ScanItems() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F4F4F4',
-    paddingHorizontal: 20,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 16,
     fontSize: 16,
-    color: '#6200EE',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#007AFF',
   },
   cameraContainer: {
-    width: 250,
-    height: 250,
-    backgroundColor: '#000',
-    borderRadius: 10,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    width: '100%',
+    aspectRatio: 1,
+    position: 'relative',
   },
   camera: {
     flex: 1,
-    width: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scanArea: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'transparent',
   },
   instructions: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 20,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  scanAgainButton: {
-    backgroundColor: '#34C759',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: '#FFF',
+    textAlign: 'center',
     fontSize: 16,
-    marginLeft: 5,
+    color: '#666',
+    marginTop: 24,
+    paddingHorizontal: 32,
   },
   message: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingHorizontal: 32,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  scanAgainButton: {
+    backgroundColor: '#34C759',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 24,
+    alignSelf: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

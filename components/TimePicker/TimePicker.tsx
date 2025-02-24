@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from 'react';
-/* eslint-disable radix */
 import {
   StyleProp,
   StyleSheet,
@@ -9,6 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import Wheel, { WheelStyleProps } from './Wheel';
+import { useThemeContext } from '../../context/ThemeContext';
+import { darkTheme, lightTheme } from '@/theme';
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const MILLISECONDS_PER_HOUR = MILLISECONDS_PER_MINUTE * 60;
@@ -55,7 +56,7 @@ interface Props {
   onScroll?: (scrollState: boolean) => void;
   textStyle?: TextStyle;
   wheelProps?: WheelStyleProps;
-  timeFormat?: (string | TimeType)[];
+  timeFormat?: (string | TimeType)[]; 
 }
 
 export default function TimePicker({
@@ -67,6 +68,10 @@ export default function TimePicker({
   wheelProps = {},
   timeFormat = DEFAULT_TYPE_TYPES,
 }: Props): React.ReactElement {
+  const { darkMode } = useThemeContext();
+  const appliedTheme = darkMode ? darkTheme.background : lightTheme.background;
+  const textColor = darkMode ? darkTheme.text : lightTheme.text;
+
   const [current, setCurrent] = useState(
     (value ?? Date.now()) % MILLISECONDS_PER_DAY
   );
@@ -106,7 +111,7 @@ export default function TimePicker({
   );
 
   return (
-    <View style={[styles.container, containerStyle]}>
+    <View style={[styles.container, containerStyle, { backgroundColor: appliedTheme }]}>
       {timeFormat.map((timeType) => {
         switch (timeType) {
           case TimeType.ampm:
@@ -122,7 +127,7 @@ export default function TimePicker({
                   );
                 }}
                 onScroll={onScroll}
-                textStyle={textStyle}
+                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
                 {...wheelProps}
               />
             );
@@ -147,7 +152,7 @@ export default function TimePicker({
                   );
                 }}
                 onScroll={onScroll}
-                textStyle={textStyle}
+                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
                 {...wheelProps}
               />
             );
@@ -161,7 +166,7 @@ export default function TimePicker({
                   changeTimeValue('minute', parseInt(newValue))
                 }
                 onScroll={onScroll}
-                textStyle={textStyle}
+                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
                 {...wheelProps}
               />
             );
@@ -175,12 +180,12 @@ export default function TimePicker({
                   changeTimeValue('second', parseInt(newValue))
                 }
                 onScroll={onScroll}
-                textStyle={textStyle}
+                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
                 {...wheelProps}
               />
             );
           default:
-            return <Text style={textStyle}>{timeType}</Text>;
+            return <Text style={[textStyle, { color: textColor }]}>{timeType}</Text>;
         }
       })}
     </View>

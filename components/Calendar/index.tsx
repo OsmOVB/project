@@ -209,65 +209,60 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const renderDatetime = () => (
-    <View style={[styles.container, { backgroundColor: appliedTheme }]}>
-      {showTimePicker && (
-        <Modal
-          visible={true}
-          transparent
-          onRequestClose={() => setShowTimePicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.timePickerContainer}>
-              <Text style={[styles.timePickerTitle, { color: textColor }]}>
-                Selecione a Hora
-              </Text>
-              <TimePicker
-                value={
-                  selectedTime.hours * 60 * 60 * 1000 +
-                  selectedTime.minutes * 60 * 1000
-                }
-                onChange={handleTimeSelect}
-                textStyle={{ color: textColor, fontSize: 18 }}
-                timeFormat={["hours24", "min"]}
-                wheelProps={{
-                  itemHeight: 35,
-                  displayCount: 2,
-                  wheelHeight: 100,
-                  textStyle: { fontSize: 18, color: textColor },
-                  containerStyle: { backgroundColor: appliedTheme },
-                }}
-              />
-              <TouchableOpacity
-                onPress={confirmTimeSelect}
-                style={[styles.okButton, { backgroundColor: headerColor }]}
-              >
-                <Text style={{ color: "#fff", fontSize: 16 }}>ok</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
-    </View>
+    <Modal
+      visible={showTimePicker}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowTimePicker(false)}
+    >
+      <View style={styleCalendar.modalContainer}>
+        <View style={[styleCalendar.timePickerContainer, { backgroundColor: appliedTheme }]}>
+          <Text style={[styleCalendar.timePickerTitle, { color: textColor }]}>
+            Selecione a Hora
+          </Text>
+          <TimePicker
+            value={
+              selectedTime.hours * 60 * 60 * 1000 +
+              selectedTime.minutes * 60 * 1000
+            }
+            onChange={handleTimeSelect}
+            textStyle={{ color: textColor, fontSize: 18 }}
+            timeFormat={["hours24", "min"]}
+            wheelProps={{
+              itemHeight: 35,
+              displayCount: 2,
+              wheelHeight: 100,
+              textStyle: { fontSize: 18, color: textColor },
+              containerStyle: { backgroundColor: appliedTheme },
+            }}
+          />
+          <TouchableOpacity
+            onPress={confirmTimeSelect}
+            style={[styleCalendar.okButton, { backgroundColor: headerColor }]}
+          >
+            <Text style={{ color: "#fff", fontSize: 16 }}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 
   return (
-
-<Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-<View style={styleCalendar.modalContainer}>
-  <View style={styleCalendar.calendarContainer}>
-    <View>
-      {renderHeader()} 
-      {renderDaysOfWeek()}
-      {renderDays()}
-      {renderDatetime()}
-    </View>
-    <TouchableOpacity onPress={onClose} style={styleCalendar.closeButton}>
-      <Text style={{ color: '#fff' }}>Fechar</Text>
-    </TouchableOpacity>
-  </View>
-</View>
-</Modal>
-
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styleCalendar.modalContainer}>
+        <View style={[styleCalendar.calendarContainer, { backgroundColor: appliedTheme }]}>
+          <View>
+            {renderHeader()} 
+            {renderDaysOfWeek()}
+            {renderDays()}
+            {renderDatetime()}
+          </View>
+          <TouchableOpacity onPress={onClose} style={[styleCalendar.closeButton, { backgroundColor: headerColor }]}>
+            <Text style={{ color: '#fff' }}>Fechar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 };
 
@@ -279,15 +274,29 @@ const styleCalendar = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   calendarContainer: {
-    width: "80%",
+    width: "90%",
     padding: 20,
     borderRadius: 10,
-    backgroundColor: '#fff',
     alignItems: 'center',
   },
   closeButton: {
     marginTop: 20,
-    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  timePickerContainer: {
+    width: '80%',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  timePickerTitle: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  okButton: {
+    marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,

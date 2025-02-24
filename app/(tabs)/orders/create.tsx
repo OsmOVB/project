@@ -72,6 +72,10 @@ export default function CreateOrder() {
     setValue('items', newItems);
   };
 
+  const formatDateToBrazilian = (date: Date) => {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
   return (
     <Container>
       <ScrollView>
@@ -112,11 +116,10 @@ export default function CreateOrder() {
         <Card>
           <CardTitle>Agendar Entrega</CardTitle>
           <TouchableOpacity onPress={() => setCalendarVisible(true)} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{scheduledDate.toLocaleString()}</Text>
+            <Text style={styles.dateButtonText}>{formatDateToBrazilian(scheduledDate)}</Text>
           </TouchableOpacity>
           <Modal visible={calendarVisible} transparent={true}>
-            <Calendar
-              
+            <Calendar              
               initialDate={scheduledDate}
               onDateChange={(date) => {
                 setValue('scheduledDate', date);

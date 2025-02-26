@@ -70,7 +70,7 @@ export default function TimePicker({
 }: Props): React.ReactElement {
   const { darkMode } = useThemeContext();
   const appliedTheme = darkMode ? darkTheme.background : lightTheme.background;
-  const textColor = darkMode ? darkTheme.text : lightTheme.text;
+  const textColor = darkMode ? '#fff' : lightTheme.text;
 
   const [current, setCurrent] = useState(
     (value ?? Date.now()) % MILLISECONDS_PER_DAY

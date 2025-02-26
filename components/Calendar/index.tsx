@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
 import { styles } from './styles';
 import { useThemeContext } from '../../context/ThemeContext';
 import { darkTheme, lightTheme } from '@/theme';
 import TimePicker from '../TimePicker/TimePicker';
+import HourSelection from './HourSelection';
 
 const getMonthName = (month: number) =>
   [
@@ -33,6 +34,7 @@ interface CalendarProps {
   visible: boolean;
   onClose: () => void;
   theme?: string;
+  bookedTimes?: { date: Date; duration: number; orderId: string }[];
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -44,6 +46,7 @@ const Calendar: React.FC<CalendarProps> = ({
   visible,
   onClose,
   theme,
+  bookedTimes = [],
 }) => {
   const { darkMode } = useThemeContext();
   const appliedTheme = darkMode ? darkTheme.calendar : lightTheme.calendar;
@@ -54,6 +57,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [isYearSelection, setIsYearSelection] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showHourSelection, setShowHourSelection] = useState(false);
   const [selectedTime, setSelectedTime] = useState<{
     hours: number;
     minutes: number;
@@ -73,7 +77,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const handleDateSelect = (date: Date) => {
     setCurrentDate(date);
     if (mode === 'datetime') {
-      setShowTimePicker(true);
+      setShowHourSelection(true);
     } else {
       onDateChange?.(date);
       onClose();
@@ -96,6 +100,7 @@ const Calendar: React.FC<CalendarProps> = ({
     selectedDate.setMinutes(selectedTime.minutes);
     onDateChange?.(selectedDate);
     setShowTimePicker(false);
+    setShowHourSelection(false);
     onClose();
   };
 
@@ -255,6 +260,14 @@ const Calendar: React.FC<CalendarProps> = ({
             {renderHeader()} 
             {renderDaysOfWeek()}
             {renderDays()}
+            <HourSelection
+              currentDate={currentDate}
+              bookedTimes={bookedTimes}
+              showHourSelection={showHourSelection}
+              setShowHourSelection={setShowHourSelection}
+              setSelectedTime={setSelectedTime}
+              setShowTimePicker={setShowTimePicker}
+            />
             {renderDatetime()}
           </View>
           <TouchableOpacity onPress={onClose} style={[styleCalendar.closeButton, { backgroundColor: headerColor }]}>

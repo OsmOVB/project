@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     borderColor: '#FF3B30',
   },
   hourText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '500',
     color: '#007AFF',
   },

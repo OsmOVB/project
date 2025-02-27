@@ -39,10 +39,10 @@ const Container = styled.View`
 
 const CenterIndicator = styled.View<{ top: number; itemHeight: number }>`
   position: absolute;
-  top: ${({ top }) => top}px;
+  top: ${({ top }: { top: number }) => top}px;
   left: 0;
   right: 0;
-  height: ${({ itemHeight }) => itemHeight}px;
+  height: ${({ itemHeight }: { itemHeight: number }) => itemHeight}px;
   border-top-width: 2px;
   border-bottom-width: 2px;
   border-color: rgba(0, 0, 0, 0.2);
@@ -50,7 +50,7 @@ const CenterIndicator = styled.View<{ top: number; itemHeight: number }>`
 `;
 
 const ItemContainer = styled.View<{ height: number }>`
-  height: ${({ height }) => height}px;
+  height: ${({ height }: { height: number }) => height}px;
   justify-content: center;
   align-items: center;
 `;
@@ -69,7 +69,7 @@ function Wheel<T>({
   displayCount = 5,
   punctuation = "",
   selectedFontSize = 24,
-  defaultFontSize = 18,
+  defaultFontSize = 20,
 }: WheelProps<T>): React.ReactElement {
   const selectedIndex =
     displayCount % 2 === 0 ? displayCount / 2 - 1 : Math.floor(displayCount / 2);
@@ -113,26 +113,25 @@ function Wheel<T>({
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const index = Math.round(offsetY / itemHeight);
-    let newIndex = index;
-
+    
     if (circular) {
+      let newIndex = (index - selectedIndex + values.length) % values.length;
+      
       if (index < selectedIndex) {
-        newIndex = index + values.length;
+        newIndex = values.length - 1;
         scrollRef.current?.scrollTo({
           y: newIndex * itemHeight,
           animated: false,
         });
       } else if (index >= values.length + selectedIndex) {
-        newIndex = index - values.length;
+        newIndex = 0;
         scrollRef.current?.scrollTo({
           y: newIndex * itemHeight,
           animated: false,
         });
       }
-      const originalIndex = (newIndex - selectedIndex + values.length) % values.length;
-      if (values[originalIndex] !== value) {
-        setValue(values[originalIndex]);
-      }
+  
+      setValue(values[newIndex]);
     } else {
       if (values[index] !== value) {
         setValue(values[index]);
@@ -140,6 +139,7 @@ function Wheel<T>({
     }
     onScroll && onScroll(false);
   };
+  
 
   const onScrollBeginDrag = () => {
     onScroll && onScroll(true);
@@ -153,11 +153,11 @@ function Wheel<T>({
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         snapToInterval={itemHeight}
-        decelerationRate="fast"
+        decelerationRate="normal"
         onScrollBeginDrag={onScrollBeginDrag}
         onMomentumScrollEnd={onMomentumScrollEnd}
         onScroll={handleScroll}
-        scrollEventThrottle={16}
+        scrollEventThrottle={12}
         contentContainerStyle={{
           paddingVertical: contentPadding,
         }}
@@ -167,7 +167,7 @@ function Wheel<T>({
           const visibleCenter = containerHeight / 2;
           const distance = Math.abs(itemCenter - visibleCenter);
           const ratio = Math.min(distance / itemHeight, 1);
-          const scale = 1 - ratio * 0.2;
+          const scale = 1 - ratio * 0.1;
 
           let isSelected = false;
           if (circular) {

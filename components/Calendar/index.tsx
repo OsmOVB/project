@@ -5,6 +5,7 @@ import { useThemeContext } from '../../context/ThemeContext';
 import { darkTheme, lightTheme } from '@/theme';
 import TimePicker from '../TimePicker/TimePicker';
 import HourSelection from './HourSelection';
+import Button from '../Button';
 
 const getMonthName = (month: number) =>
   [
@@ -231,22 +232,23 @@ const Calendar: React.FC<CalendarProps> = ({
               selectedTime.minutes * 60 * 1000
             }
             onChange={handleTimeSelect}
-            textStyle={{ color: textColor, fontSize: 18 }}
+            textStyle={{ color: textColor }}
             timeFormat={["hours24", "min"]}
             wheelProps={{
               itemHeight: 35,
               displayCount: 2,
               wheelHeight: 100,
-              textStyle: { fontSize: 18, color: textColor },
+              textStyle: {  color: textColor },
               containerStyle: { backgroundColor: appliedTheme },
+              selectedFontSize: 24, 
+              defaultFontSize: 20,
             }}
           />
-          <TouchableOpacity
+          <Button            
+            title="Selecionar"
             onPress={confirmTimeSelect}
-            style={[styleCalendar.okButton, { backgroundColor: headerColor }]}
-          >
-            <Text style={{ color: "#fff", fontSize: 16 }}>OK</Text>
-          </TouchableOpacity>
+            type='primary'
+          />
         </View>
       </View>
     </Modal>
@@ -305,7 +307,7 @@ const styleCalendar = StyleSheet.create({
     alignItems: 'center',
   },
   timePickerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     marginBottom: 10,
   },
   okButton: {

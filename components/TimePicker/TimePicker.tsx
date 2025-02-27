@@ -23,7 +23,13 @@ export enum TimeType {
   ampm = 'am/pm',
 }
 
-const DEFAULT_TYPE_TYPES = [TimeType.ampm, TimeType.hours12, ':', TimeType.min];
+const DEFAULT_TYPE_TYPES = [
+  TimeType.hours24,
+  ':',
+  TimeType.min,
+  ':',
+  TimeType.sec,
+];
 
 const styles = StyleSheet.create({
   container: {
@@ -31,9 +37,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 100,
-    height: 100,
+    height: 120,
     overflow: 'hidden',
-    borderRadius: 4,
+    borderRadius: 12,
   },
 });
 
@@ -44,19 +50,16 @@ function createNumberList(num: number) {
 }
 
 const TWENTY_FOUR_LIST = createNumberList(24);
-const TWELVE_LIST = new Array(12)
-  .fill(0)
-  .map((_, index) => (index + 1 < 10 ? `0${index + 1}` : `${index + 1}`));
 const SIXTY_LIST = createNumberList(60);
 
 interface Props {
-  value?: number | null; // milliseconds of date
+  value?: number | null;
   onChange: (value: number) => void;
   containerStyle?: StyleProp<ViewStyle>;
   onScroll?: (scrollState: boolean) => void;
   textStyle?: TextStyle;
   wheelProps?: WheelStyleProps;
-  timeFormat?: (string | TimeType)[]; 
+  timeFormat?: (string | TimeType)[];
 }
 
 export default function TimePicker({
@@ -111,49 +114,32 @@ export default function TimePicker({
   );
 
   return (
-    <View style={[styles.container, containerStyle, { backgroundColor: appliedTheme }]}>
+    <View
+      style={[
+        styles.container,
+        containerStyle,
+        { backgroundColor: appliedTheme },
+      ]}
+    >
       {timeFormat.map((timeType) => {
         switch (timeType) {
-          case TimeType.ampm:
-            return (
-              <Wheel
-                key={'am/pm'}
-                value={hour >= 12 ? 'PM' : 'AM'}
-                values={['AM', 'PM']}
-                setValue={(newValue) => {
-                  changeTimeValue(
-                    'hour',
-                    (hour % 12) + (newValue === 'PM' ? 12 : 0)
-                  );
-                }}
-                onScroll={onScroll}
-                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
-                {...wheelProps}
-              />
-            );
-
           case TimeType.hours24:
-          // eslint-disable-next-line no-fallthrough
-          case TimeType.hours12:
-            const use24HourSystem = timeType === TimeType.hours24;
-            let displayHour = use24HourSystem ? hour : hour % 12;
-            if (!use24HourSystem && displayHour === 0) displayHour = 12;
-            const displayHourValue =
-              displayHour < 10 ? `0${displayHour}` : `${displayHour}`;
             return (
               <Wheel
                 key={'hour'}
-                value={displayHourValue}
-                values={use24HourSystem ? TWENTY_FOUR_LIST : TWELVE_LIST}
+                value={hour < 10 ? `0${hour}` : `${hour}`}
+                values={TWENTY_FOUR_LIST}
                 setValue={(newValue) => {
-                  changeTimeValue(
-                    'hour',
-                    (parseInt(newValue) % 12) + (hour >= 12 ? 12 : 0)
-                  );
+                  changeTimeValue('hour', parseInt(newValue));
                 }}
                 onScroll={onScroll}
-                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
+                textStyle={StyleSheet.flatten([
+                  textStyle,
+                  { color: textColor },
+                ])}
                 {...wheelProps}
+                selectedFontSize={24}
+                defaultFontSize={20}
               />
             );
           case TimeType.min:
@@ -166,8 +152,13 @@ export default function TimePicker({
                   changeTimeValue('minute', parseInt(newValue))
                 }
                 onScroll={onScroll}
-                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
+                textStyle={StyleSheet.flatten([
+                  textStyle,
+                  { color: textColor },
+                ])}
                 {...wheelProps}
+                selectedFontSize={24} 
+                defaultFontSize={20}
               />
             );
           case TimeType.sec:
@@ -180,12 +171,19 @@ export default function TimePicker({
                   changeTimeValue('second', parseInt(newValue))
                 }
                 onScroll={onScroll}
-                textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
+                textStyle={StyleSheet.flatten([
+                  textStyle,
+                  { color: textColor },
+                ])}
                 {...wheelProps}
+                selectedFontSize={24} 
+                defaultFontSize={20}
               />
             );
           default:
-            return <Text style={[textStyle, { color: textColor }]}>{timeType}</Text>;
+            return (
+              <Text style={[textStyle, { color: textColor }]}>{timeType}</Text>
+            );
         }
       })}
     </View>

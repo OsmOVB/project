@@ -114,78 +114,30 @@ export default function TimePicker({
   );
 
   return (
-    <View
-      style={[
-        styles.container,
-        containerStyle,
-        { backgroundColor: appliedTheme },
-      ]}
-    >
-      {timeFormat.map((timeType) => {
-        switch (timeType) {
-          case TimeType.hours24:
-            return (
-              <Wheel
-                key={'hour'}
-                value={hour < 10 ? `0${hour}` : `${hour}`}
-                values={TWENTY_FOUR_LIST}
-                setValue={(newValue) => {
-                  changeTimeValue('hour', parseInt(newValue));
-                }}
-                onScroll={onScroll}
-                textStyle={StyleSheet.flatten([
-                  textStyle,
-                  { color: textColor },
-                ])}
-                {...wheelProps}
-                selectedFontSize={24}
-                defaultFontSize={20}
-              />
-            );
-          case TimeType.min:
-            return (
-              <Wheel
-                key={'min'}
-                value={minute < 10 ? `0${minute}` : `${minute}`}
-                values={SIXTY_LIST}
-                setValue={(newValue) =>
-                  changeTimeValue('minute', parseInt(newValue))
-                }
-                onScroll={onScroll}
-                textStyle={StyleSheet.flatten([
-                  textStyle,
-                  { color: textColor },
-                ])}
-                {...wheelProps}
-                selectedFontSize={24} 
-                defaultFontSize={20}
-              />
-            );
-          case TimeType.sec:
-            return (
-              <Wheel
-                key={'sec'}
-                value={second < 10 ? `0${second}` : `${second}`}
-                values={SIXTY_LIST}
-                setValue={(newValue) =>
-                  changeTimeValue('second', parseInt(newValue))
-                }
-                onScroll={onScroll}
-                textStyle={StyleSheet.flatten([
-                  textStyle,
-                  { color: textColor },
-                ])}
-                {...wheelProps}
-                selectedFontSize={24} 
-                defaultFontSize={20}
-              />
-            );
-          default:
-            return (
-              <Text style={[textStyle, { color: textColor }]}>{timeType}</Text>
-            );
-        }
-      })}
-    </View>
+    <View style={[styles.container, containerStyle, { backgroundColor: appliedTheme, flexDirection: "row", alignItems: "center" }]}>
+    <Wheel
+      key={'hour'}
+      value={hour < 10 ? `0${hour}` : `${hour}`}
+      values={TWENTY_FOUR_LIST}
+      setValue={(newValue) => changeTimeValue('hour', parseInt(newValue))}
+      onScroll={onScroll}
+      textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
+      {...wheelProps}
+    />
+  
+    {/* 🔹 Adiciona ":" entre os seletores de hora e minuto */}
+    <Text style={{ fontSize: 24, color: textColor, fontWeight: "bold", marginHorizontal: 5 }}>:</Text> 
+  
+    <Wheel
+      key={'min'}
+      value={minute < 10 ? `0${minute}` : `${minute}`}
+      values={SIXTY_LIST}
+      setValue={(newValue) => changeTimeValue('minute', parseInt(newValue))}
+      onScroll={onScroll}
+      textStyle={StyleSheet.flatten([textStyle, { color: textColor }])}
+      {...wheelProps}
+    />
+  </View>
+  
   );
 }

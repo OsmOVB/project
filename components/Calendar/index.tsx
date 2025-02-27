@@ -235,8 +235,8 @@ const Calendar: React.FC<CalendarProps> = ({
             textStyle={{ color: textColor }}
             timeFormat={["hours24", "min"]}
             wheelProps={{
-              itemHeight: 35,
-              displayCount: 2,
+              itemHeight: 30,
+              displayCount: 1,
               wheelHeight: 100,
               textStyle: {  color: textColor },
               containerStyle: { backgroundColor: appliedTheme },

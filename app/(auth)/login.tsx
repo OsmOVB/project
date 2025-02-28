@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   input: {
-    height: 50, // Mantém todos os inputs com o mesmo tamanho
+    height: 50,
     width: '100%',
     maxWidth: 400,
     marginBottom: 15,

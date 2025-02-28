@@ -1,12 +1,11 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Modal, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
 import { Container, Title, Input, Button, ButtonText, ErrorText } from '../../components/styled';
 import { useAuth } from '../../hooks/useAuth';
-import { Picker } from '@react-native-picker/picker';
 import { useThemeContext } from '../../context/ThemeContext';
 
 const registerSchema = z.object({
@@ -25,7 +24,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function Register() {
   const { register } = useAuth();
   const { darkMode } = useThemeContext();
-  const { control, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
+  const [modalVisible, setModalVisible] = useState(false);
+  const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       role: 'customer',
@@ -111,23 +111,37 @@ export default function Register() {
         {errors.confirmPassword && <ErrorText>{errors.confirmPassword.message}</ErrorText>}
 
         {/* Seleção de Função */}
-        <Controller
-          control={control}
-          name="role"
-          render={({ field: { onChange, value } }) => (
-            <View style={[styles.input, styles.pickerContainer]}>
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={styles.picker}
-              >
-                <Picker.Item label="Customer" value="customer" />
-                <Picker.Item label="Delivery" value="delivery" />
-                <Picker.Item label="Admin" value="admin" />
-              </Picker>
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.input}>
+          <Text style={styles.selectedRole}>{watch('role')}</Text>
+        </TouchableOpacity>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {['customer', 'delivery', 'admin'].map((role) => (
+                <TouchableOpacity
+                  key={role}
+                  onPress={() => {
+                    setValue('role', role as RegisterForm['role']);
+                    setModalVisible(false);
+                  }}
+                  style={styles.roleOption}
+                >
+                  <Text style={styles.roleText}>{role.charAt(0).toUpperCase() + role.slice(1)}</Text>
+                </TouchableOpacity>
+              ))}
+              <Button onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <ButtonText>Close</ButtonText>
+              </Button>
             </View>
-          )}
-        />
+          </View>
+        </Modal>
+
         {errors.role && <ErrorText>{errors.role.message}</ErrorText>}
 
         {/* Botão de Registro */}
@@ -152,7 +166,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   input: {
-    height: 50, // Mantém todos os inputs com o mesmo tamanho
+    height: 50,
     width: '100%',
     maxWidth: 400,
     marginBottom: 15,
@@ -161,14 +175,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     paddingHorizontal: 10,
-  },
-  pickerContainer: {
-    height: 50, // Garante que o Picker tenha o mesmo tamanho dos outros inputs
     justifyContent: 'center',
   },
-  picker: {
-    height: 50,
-    width: '100%',
+  selectedRole: {
+    color: '#ccc', // Garante que a cor do texto seja igual aos outros campos
+    fontSize: 16,
   },
   registerButton: {
     width: '100%',
@@ -184,4 +195,31 @@ const styles = StyleSheet.create({
   backText: {
     color: '#007AFF',
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  roleOption: {
+    padding: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  roleText: {
+    fontSize: 18,
+    color: '#000',
+  },
+  closeButton: {
+    marginTop: 10,
+    width: '100%',
+  },
 });
+

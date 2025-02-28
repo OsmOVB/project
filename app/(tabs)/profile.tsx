@@ -12,18 +12,18 @@ export default function Profile() {
     <Container>
       <ScrollView>
         <Title>Perfil</Title>
-        
+
         <View style={[styles.infoContainer, { backgroundColor: darkMode ? '#1c1c1e' : '#f0f0f0' }]}>
           <View style={styles.infoRow}>
             <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Nome</Text>
             <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.name}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Email</Text>
             <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.email}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Função</Text>
             <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>
@@ -43,7 +43,7 @@ export default function Profile() {
           <ButtonText>Editar Perfil</ButtonText>
         </Button>
 
-        <Button 
+        <Button
           onPress={logout}
           style={{ backgroundColor: '#FF3B30', marginTop: 10 }}
         >

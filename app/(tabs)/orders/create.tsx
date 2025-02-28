@@ -65,7 +65,7 @@ export default function CreateOrder() {
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    const newItems = selectedItems.map(item => 
+    const newItems = selectedItems.map(item =>
       item.id === itemId ? { ...item, quantity } : item
     );
     setSelectedItems(newItems);
@@ -95,7 +95,7 @@ export default function CreateOrder() {
             )}
           />
           {errors.customerName && <ErrorText>{errors.customerName.message}</ErrorText>}
-          
+
 
           <Controller
             control={control}
@@ -110,7 +110,7 @@ export default function CreateOrder() {
             )}
           />
           {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
-          
+
         </Card>
 
         <Card>
@@ -119,7 +119,7 @@ export default function CreateOrder() {
             <Text style={styles.dateButtonText}>{formatDateToBrazilian(scheduledDate)}</Text>
           </TouchableOpacity>
           <Modal visible={calendarVisible} transparent={true}>
-            <Calendar              
+            <Calendar
               initialDate={scheduledDate}
               onDateChange={(date) => {
                 setValue('scheduledDate', date);

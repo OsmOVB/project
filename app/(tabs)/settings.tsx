@@ -20,7 +20,7 @@ export default function Settings() {
 
         <Card>
           <CardTitle>Preferências</CardTitle>
-          
+
           <ThemeToggle>
             <ThemeToggleLabel>Modo Escuro</ThemeToggleLabel>
             <Switch
@@ -55,15 +55,15 @@ export default function Settings() {
 
         <Card>
           <CardTitle>Suporte</CardTitle>
-          <Button onPress={() => {}} style={styles.button}>
+          <Button onPress={() => { }} style={styles.button}>
             <ButtonText>Central de Ajuda</ButtonText>
           </Button>
-          <Button onPress={() => {}} style={styles.button}>
+          <Button onPress={() => { }} style={styles.button}>
             <ButtonText>Reportar Problema</ButtonText>
           </Button>
         </Card>
 
-        <Button 
+        <Button
           onPress={logout}
           style={[styles.button, styles.logoutButton]}
         >
@@ -93,8 +93,8 @@ function ProfileCard({ user }: { user: Usuario }) {
         <View style={styles.profileInfo}>
           <Text style={styles.name}>{user?.nome}</Text>
           <Text style={styles.role}>
-            {user?.papel === 'admin' ? 'Administrador' : 
-             user?.papel === 'entregador' ? 'Entregador' : 'Cliente'}
+            {user?.papel === 'admin' ? 'Administrador' :
+              user?.papel === 'entregador' ? 'Entregador' : 'Cliente'}
           </Text>
         </View>
       </View>

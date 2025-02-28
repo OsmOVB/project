@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,13 +31,10 @@ export default function Login() {
 
   return (
     <Container>
-      <View style={styles.content}>
-        <Image
-          source={{ uri: 'https://images.unsplash.com/photo-1581684652012-e7c4f8f9f4d1?q=80&w=400' }}
-          style={styles.logo}
-        />
+      <View style={styles.formContainer}>
         <Title>Bem-vindo de volta</Title>
-        
+
+        {/* Email */}
         <Controller
           control={control}
           name="email"
@@ -53,8 +50,8 @@ export default function Login() {
           )}
         />
         {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
-        
 
+        {/* Senha */}
         <Controller
           control={control}
           name="password"
@@ -69,16 +66,14 @@ export default function Login() {
           )}
         />
         {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
-        
 
+        {/* Botão de Login */}
         <Button onPress={handleSubmit(onSubmit)} style={styles.loginButton}>
           <ButtonText>Entrar</ButtonText>
         </Button>
 
-        <Button 
-          onPress={() => router.push('/register')}
-          style={styles.registerButton}
-        >
+        {/* Botão de Criar Conta */}
+        <Button onPress={() => router.push('/register')} style={styles.registerButton}>
           <ButtonText style={styles.registerText}>Criar Conta</ButtonText>
         </Button>
       </View>
@@ -87,21 +82,22 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  content: {
+  formContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
     paddingHorizontal: 20,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 30,
-  },
   input: {
+    height: 50, // Mantém todos os inputs com o mesmo tamanho
     width: '100%',
     maxWidth: 400,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
   },
   loginButton: {
     width: '100%',

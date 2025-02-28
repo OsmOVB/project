@@ -13,7 +13,7 @@
 
 //   useEffect(() => {
 //     const inAuthGroup = segments[0] === '(auth)';
-    
+
 //     if (user && inAuthGroup) {
 //       router.replace('/(tabs)');
 //     } else if (!user && !inAuthGroup) {
@@ -46,7 +46,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
-    
+
     if (user && inAuthGroup) {
       router.replace('/(tabs)');
     } else if (!user && !inAuthGroup) {

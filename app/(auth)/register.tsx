@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedRole: {
-    color: '#ccc', // Garante que a cor do texto seja igual aos outros campos
+    color: '#ccc',
     fontSize: 16,
   },
   registerButton: {

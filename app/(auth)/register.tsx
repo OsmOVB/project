@@ -9,11 +9,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { UserRole } from '../../types';
 import { Picker } from '@react-native-picker/picker';
 import { useThemeContext } from '../../context/ThemeContext';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../../firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   role: z.enum(['admin', 'delivery', 'customer'] as const),
 });
 
@@ -31,24 +35,36 @@ export default function Register() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      await register(data);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const uid = userCredential.user.uid;
+
+      const userData = {
+        uid,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      };
+
+      await setDoc(doc(db, 'users', uid), userData);
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+
       router.replace('/login');
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Falha no registro:', error);
     }
   };
 
   return (
     <Container>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Title>Create Account</Title>
+        <Title>Criar Conta</Title>
         
         <Controller
           control={control}
           name="name"
           render={({ field: { onChange, value } }) => (
             <Input
-              placeholder="Full Name"
+              placeholder="Nome Completo"
               value={value}
               onChangeText={onChange}
             />
@@ -56,7 +72,6 @@ export default function Register() {
         />
         {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
         
-
         <Controller
           control={control}
           name="email"
@@ -72,13 +87,12 @@ export default function Register() {
         />
         {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
         
-
         <Controller
           control={control}
           name="password"
           render={({ field: { onChange, value } }) => (
             <Input
-              placeholder="Password"
+              placeholder="Senha"
               secureTextEntry
               value={value}
               onChangeText={onChange}
@@ -87,7 +101,6 @@ export default function Register() {
         />
         {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
         
-
         <Controller
           control={control}
           name="role"
@@ -102,8 +115,8 @@ export default function Register() {
                 onValueChange={onChange}
                 style={{ height: 50 }}
               >
-                <Picker.Item label="Customer" value="customer" />
-                <Picker.Item label="Delivery" value="delivery" />
+                <Picker.Item label="Cliente" value="customer" />
+                <Picker.Item label="Entregador" value="delivery" />
                 <Picker.Item label="Admin" value="admin" />
               </Picker>
             </View>
@@ -111,16 +124,15 @@ export default function Register() {
         />
         {errors.role && <ErrorText>{errors.role.message}</ErrorText>}
         
-
         <Button onPress={handleSubmit(onSubmit)}>
-          <ButtonText>Register</ButtonText>
+          <ButtonText>Registrar</ButtonText>
         </Button>
 
         <Button 
           onPress={() => router.back()}
           style={{ backgroundColor: 'transparent', marginTop: 20 }}
         >
-          <ButtonText style={{ color: '#007AFF' }}>Back to Login</ButtonText>
+          <ButtonText style={{ color: '#007AFF' }}>Voltar para Login</ButtonText>
         </Button>
       </View>
     </Container>

@@ -3,7 +3,6 @@ import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { Container, Title, Button, ButtonText } from '../../components/styled';
 import { Order, StatusOrder } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import CustomDateTimePicker from '../../components/Calendar1';
 
 const mockOrders: Order[] = [
   {
@@ -54,7 +53,7 @@ export default function Orders() {
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.itemsList}>
               {order.items.map((item) => (
                 <View key={item.id} style={styles.orderItem}>

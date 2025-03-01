@@ -115,7 +115,7 @@ export default function CreateOrder() {
             )}
           />
           {errors.customerName && <ErrorText>{errors.customerName.message}</ErrorText>}
-          
+
 
           <Controller
             control={control}
@@ -130,7 +130,7 @@ export default function CreateOrder() {
             )}
           />
           {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
-          
+
         </Card>
 
         <Card>
@@ -139,7 +139,7 @@ export default function CreateOrder() {
             <Text style={styles.dateButtonText}>{formatDateToBrazilian(scheduledDate)}</Text>
           </TouchableOpacity>
           <Modal visible={calendarVisible} transparent={true}>
-            <Calendar              
+            <Calendar
               initialDate={scheduledDate}
               onDateChange={(date) => {
                 setValue('scheduledDate', date);

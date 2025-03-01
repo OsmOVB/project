@@ -4,10 +4,10 @@ import { User, UserRole } from '../types';
 interface AuthState {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { 
-    email: string; 
-    password: string; 
-    name: string; 
+  register: (data: {
+    email: string;
+    password: string;
+    name: string;
     role: UserRole;
   }) => Promise<void>;
   logout: () => void;

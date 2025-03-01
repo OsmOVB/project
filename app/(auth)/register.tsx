@@ -123,7 +123,7 @@ export default function Register() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              {['customer', 'delivery', 'admin'].map((role) => (
+              {['Customer', 'delivery', 'admin'].map((role) => (
                 <TouchableOpacity
                   key={role}
                   onPress={() => {

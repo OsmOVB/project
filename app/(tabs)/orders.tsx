@@ -54,7 +54,7 @@ export default function Orders() {
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.itemsList}>
               {order.items.map((item) => (
                 <View key={item.id} style={styles.orderItem}>

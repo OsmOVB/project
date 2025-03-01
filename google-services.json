@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1019413158991",
+    "project_id": "choppgo-8f7c4",
+    "storage_bucket": "choppgo-8f7c4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019413158991:android:d805f323bb2b67ba3e9e3a",
+        "android_client_info": {
+          "package_name": "com.company.choppGo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeBLsf8aPqzKWX0vUm0rl1VV8-W1UeJ5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

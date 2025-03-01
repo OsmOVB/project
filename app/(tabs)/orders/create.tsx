@@ -8,6 +8,7 @@ import { Container, Title, Input, Button, ButtonText, ErrorText, Card, CardTitle
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import { useThemeContext } from '../../../context/ThemeContext';
+import ScanItems from '@/components/ScanQrcode';
 
 const orderSchema = z.object({
   customerName: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
@@ -32,6 +33,9 @@ export default function CreateOrder() {
   const [selectedItems, setSelectedItems] = useState<{ id: string; quantity: number }[]>([]);
   const { darkMode } = useThemeContext();
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanningItemId, setScanningItemId] = useState<string | null>(null); // Para saber qual item está sendo escaneado
+
 
   const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
@@ -54,22 +58,38 @@ export default function CreateOrder() {
   };
 
   const addItem = (itemId: string) => {
-    setSelectedItems([...selectedItems, { id: itemId, quantity: 1 }]);
-    setValue('items', [...selectedItems, { id: itemId, quantity: 1 }]);
+    const item = mockItems.find(i => i.id === itemId);
+    if (item) {
+      const newItem = { ...item, quantity: 1, qrCode: '' };
+      const updatedItems = [...selectedItems, newItem];
+      setSelectedItems(updatedItems);
+      setValue('items', updatedItems);
+    }
   };
 
   const removeItem = (itemId: string) => {
-    const newItems = selectedItems.filter(item => item.id !== itemId);
-    setSelectedItems(newItems);
-    setValue('items', newItems);
+    const updatedItems = selectedItems.filter(item => item.id !== itemId);
+    setSelectedItems(updatedItems);
+    setValue('items', updatedItems);
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    const newItems = selectedItems.map(item =>
+    if (quantity < 1) return;
+    const updatedItems = selectedItems.map(item =>
       item.id === itemId ? { ...item, quantity } : item
     );
-    setSelectedItems(newItems);
-    setValue('items', newItems);
+    setSelectedItems(updatedItems);
+    setValue('items', updatedItems);
+  };
+
+  const setQRCodeForItem = (qrCode: string) => {
+    if (!scanningItemId) return;
+    const updatedItems = selectedItems.map(item =>
+      item.id === scanningItemId ? { ...item, qrCode } : item
+    );
+    setSelectedItems(updatedItems);
+    setValue('items', updatedItems);
+    setScannerVisible(false);
   };
 
   const formatDateToBrazilian = (date: Date) => {
@@ -141,7 +161,7 @@ export default function CreateOrder() {
               <View key={item.id} style={styles.itemContainer}>
                 <View style={styles.itemInfo}>
                   <CardText>{item.name}</CardText>
-                  <CardText style={styles.price}>${item.price}</CardText>
+                  <CardText style={styles.price}>R${item.price}</CardText>
                 </View>
                 {selectedItem ? (
                   <View style={styles.quantityContainer}>
@@ -152,6 +172,16 @@ export default function CreateOrder() {
                       <ButtonText>-</ButtonText>
                     </Button>
                     <CardText style={styles.quantity}>{selectedItem.quantity}</CardText>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setScanningItemId(item.id);
+                        setScannerVisible(true);
+                      }}
+                      style={styles.qrButton}
+                    >
+                      <Text style={styles.qrButtonText}>Escanear QR Code</Text>
+                    </TouchableOpacity>
                     <Button
                       onPress={() => updateQuantity(item.id, selectedItem.quantity + 1)}
                       style={styles.quantityButton}
@@ -197,6 +227,7 @@ export default function CreateOrder() {
             )}
           />
         </Card>
+        <ScanItems visible={scannerVisible} onClose={() => setScannerVisible(false)} onScan={setQRCodeForItem} />
 
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Criar Pedido</ButtonText>
@@ -207,6 +238,15 @@ export default function CreateOrder() {
 }
 
 const styles = StyleSheet.create({
+  qrButton: {
+    backgroundColor: '#007AFF',
+    padding: 8,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  qrButtonText: {
+    color: '#FFF',
+  },
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -18,6 +18,36 @@ export default function Settings() {
 
         {user && <ProfileCard user={user} />}
 
+        <View style={[styles.infoContainer, { backgroundColor: darkMode ? '#1c1c1e' : '#f0f0f0' }]}>
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Nome</Text>
+            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.name}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Email</Text>
+            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.email}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Função</Text>
+            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>
+              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
+            </Text>
+          </View>
+
+          {user?.address && (
+            <View style={styles.infoRow}>
+              <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Endereço</Text>
+              <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user.address}</Text>
+            </View>
+          )}
+        </View>
+
+        <Button style={{ marginTop: 20 }}>
+          <ButtonText>Editar Perfil</ButtonText>
+        </Button>
+
         <Card>
           <CardTitle>Preferências</CardTitle>
 
@@ -160,5 +190,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
     marginTop: 20,
     marginBottom: 40,
+  },
+  infoContainer: {
+    borderRadius: 8,
+    padding: 15,
+  },
+  infoRow: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

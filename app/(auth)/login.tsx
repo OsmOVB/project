@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Alert, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
-import { Container, Title, Input, Button, ButtonText, ErrorText } from '../../components/styled';
-import { useAuth } from '../../hooks/useAuth';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db, firebaseConfig } from '../../firebase/config';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { auth, db } from '../../firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getApps, initializeApp } from '@firebase/app';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import Button from '@/components/Button';
+import { Container, Title, Input, ErrorText } from '../../components/styled';
+
+WebBrowser.maybeCompleteAuthSession();
+
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -20,30 +24,59 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
-        querySnapshot.forEach((doc) => {
-          console.log("📌 Usuário encontrado:", doc.data());
-        });
-      } catch (error) {
-        console.error("❌ Erro ao buscar dados do Firestore:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_CLIENT_ID,
+    iosClientId: GOOGLE_CLIENT_ID_IOS,
+    webClientId: GOOGLE_CLIENT_ID_WEB,
+    redirectUri: "exp://192.168.1.7:8081", // 🔹 Substitua conforme seu ambiente
+  });
+  
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { accessToken } = response.authentication!;
+      authenticateWithGoogle(accessToken);
+    }
+  }, [response]);
+
+  // 📌 Autenticação com Firebase usando Google
+  const authenticateWithGoogle = async (idToken: string) => {
+    try {
+      const credential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
+      console.log('🔑 Usuário autenticado com Google:', user);
+      if (!user) throw new Error('Usuário não encontrado.');
+
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        const newUser = {
+          uid: user.uid,
+          name: user.displayName || 'Usuário Google',
+          email: user.email,
+          role: 'customer',
+        };
+        await setDoc(userRef, newUser);
+        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+      } else {
+        await AsyncStorage.setItem('user', JSON.stringify(userDoc.data()));
+      }
+
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('❌ Erro ao autenticar com Google:', error);
+      Alert.alert('Erro', 'Falha ao autenticar com Google.');
+    }
+  };
+
+  // 📌 Login com e-mail e senha
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
@@ -51,17 +84,18 @@ export default function Login() {
       const uid = userCredential.user.uid;
 
       const userDoc = await getDoc(doc(db, 'users', uid));
-
       if (!userDoc.exists()) {
-        alert("Usuário não existe.");
+        Alert.alert('Erro', 'Usuário não encontrado.');
         return;
       }
+
       const userData = userDoc.data();
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Login falhou:', error);
-      alert((error as Error).message);
+      console.error('❌ Erro no login:', error);
+      Alert.alert('Erro', 'Falha ao fazer login.');
     } finally {
       setIsLoading(false);
     }
@@ -72,50 +106,39 @@ export default function Login() {
       <View style={styles.formContainer}>
         <Title>Bem-vindo de volta</Title>
 
-        {/* Email */}
-        <Controller
-          control={control}
-          name="email"
+        <Controller 
+          control={control} 
+          name="email" 
           render={({ field: { onChange, value } }) => (
-            <Input
-              placeholder="Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={value}
-              onChangeText={onChange}
-              style={styles.input}
+            <Input 
+              placeholder="Email" 
+              keyboardType="email-address" 
+              autoCapitalize="none" 
+              value={value} 
+              onChangeText={onChange} 
             />
-          )}
+          )} 
         />
         {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
 
-        {/* Senha */}
-
-        <Controller
-          control={control}
-          name="password"
+        <Controller 
+          control={control} 
+          name="password" 
           render={({ field: { onChange, value } }) => (
-            <Input
-              placeholder="Senha"
-              secureTextEntry
-              value={value}
-              onChangeText={onChange}
-              style={styles.input}
+            <Input 
+              placeholder="Senha" 
+              secureTextEntry 
+              value={value} 
+              onChangeText={onChange} 
             />
-          )}
+          )} 
         />
         {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
 
-        {/* Botão de Login */}
+        <Button title="Entrar" onPress={handleSubmit(onSubmit)} />
+        <Button title="Entrar com Google" onPress={() => promptAsync()} disabled={!request} />
 
-        <Button onPress={handleSubmit(onSubmit)} style={styles.loginButton}>
-          <ButtonText>Entrar</ButtonText>
-        </Button>
-
-        {/* Botão de Criar Conta */}
-        <Button onPress={() => router.push('/register')} style={styles.registerButton}>
-          <ButtonText style={styles.registerText}>Criar Conta</ButtonText>
-        </Button>
+        <Button title="Criar Conta" type="outline" onPress={() => router.push('/register')} />
       </View>
     </Container>
   );
@@ -128,29 +151,5 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
   },
-  input: {
-    height: 50,
-    width: '100%',
-    maxWidth: 400,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-  },
-  loginButton: {
-    width: '100%',
-    maxWidth: 400,
-    marginTop: 20,
-  },
-  registerButton: {
-    backgroundColor: 'transparent',
-    marginTop: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  registerText: {
-    color: '#007AFF',
-  },
 });
+

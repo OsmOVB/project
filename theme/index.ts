@@ -1,6 +1,6 @@
 const darkTheme = {
   text: '#FFFFFF',
-  primary: '#007AFF',
+  primary: '#6366f1',
   secondary: '#1c1c1e',
   border: '#333333',
   notification: '#FF3B30',
@@ -20,13 +20,13 @@ const darkTheme = {
 
 const lightTheme = {
   text: '#000000',
-  primary: '#007AFF',
+  primary: '#6366f1',
   secondary: '#f0f0f0',
   border: '#CCCCCC',
   notification: '#FF3B30',
   buttonText: '#FFFFFF',
   calendar: '#f5f5f5',
-  background: "#F2F2F7",
+  background: "#f9fafb",
   card: "#FFFFFF",
   textPrimary: "#000000",
   textSecondary: "#8E8E93",

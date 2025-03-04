@@ -12,7 +12,20 @@
           "package_name": "com.company.choppGo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1019413158991-eec91di11ki7122rl4vsfp4fosrap62t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.choppGo",
+            "certificate_hash": "0485bf73ff599e19dcb05b5ab32059a9cc9d8a1e"
+          }
+        },
+        {
+          "client_id": "1019413158991-sd3tstkpt1r83830t9sng1dn79eaoumg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCeBLsf8aPqzKWX0vUm0rl1VV8-W1UeJ5E"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1019413158991-sd3tstkpt1r83830t9sng1dn79eaoumg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1019413158991-si17shf82lsp31m6m11mhbprjd0cgnq9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.company.choppGo"
+              }
+            }
+          ]
         }
       }
     }

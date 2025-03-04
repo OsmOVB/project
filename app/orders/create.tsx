@@ -1,37 +1,29 @@
-// import CustomDateTimePicker from '@/components/Calendar1';
-// import React, { useState } from 'react';
-// import { View, StyleSheet, Text, Button } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Button } from 'react-native';
 
-// export default function CreateOrder() {
-//   const [date, setDate] = useState<Date>(new Date());
+export default function CreateOrder() {
+  const [date, setDate] = useState<Date>(new Date());
 
-//   const handleDateTimeChange = (selectedDate: Date) => {
-//     setDate(selectedDate);
-//   };
+  const handleDateTimeChange = (selectedDate: Date) => {
+    setDate(selectedDate);
+  };
 
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.label}>Selecione a data e hora do pedido:</Text>
-//       <CustomDateTimePicker
-//         initialDate={date}
-//         onDateTimeChange={handleDateTimeChange}
-//         pickDate={true}
-//         pickTime={true}
-//         pickPast={false}
-//       />
-//     </View>
-//   );
-// }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Selecione a data e hora do pedido:</Text>
+    </View>
+  );
+}
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 16,
-//   },
-//   label: {
-//     fontSize: 18,
-//     marginBottom: 16,
-//   },
-// });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  label: {
+    fontSize: 18,
+    marginBottom: 16,
+  },
+});

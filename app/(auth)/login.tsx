@@ -15,6 +15,9 @@ import { Container, Title, Input, ErrorText } from '../../components/styled';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID_IOS = process.env.GOOGLE_CLIENT_ID_IOS;
+const GOOGLE_CLIENT_ID_WEB = process.env.GOOGLE_CLIENT_ID_WEB;
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),

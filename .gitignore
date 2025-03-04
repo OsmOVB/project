@@ -34,3 +34,4 @@ yarn-error.*
 *.tsbuildinfo
 # bloqueia a pasta node_modules
 node_modules
+.env

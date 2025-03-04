@@ -35,6 +35,5 @@ yarn-error.*
 # bloqueia a pasta node_modules
 node_modules
 
-*.env
-#remove o .env
+# Ignore environment variables
 .env

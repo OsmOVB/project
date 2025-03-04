@@ -12,12 +12,9 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Button from '@/components/Button';
 import { Container, Title, Input, ErrorText } from '../../components/styled';
-
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_ID_IOS, GOOGLE_CLIENT_ID_WEB  } from "@env";
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_ID_IOS = process.env.GOOGLE_CLIENT_ID_IOS;
-const GOOGLE_CLIENT_ID_WEB = process.env.GOOGLE_CLIENT_ID_WEB;
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),

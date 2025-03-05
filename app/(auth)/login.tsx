@@ -135,6 +135,7 @@ export default function Login() {
         />
         {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
 
+        <Button title="Entrar teste" onPress={()=>router.navigate("/(auth)/register")} />
         <Button title="Entrar" onPress={handleSubmit(onSubmit)} />
         <Button title="Entrar com Google" onPress={() => promptAsync()} disabled={!request} />
 

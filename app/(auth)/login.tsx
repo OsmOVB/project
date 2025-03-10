@@ -12,7 +12,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Button from '@/components/Button';
 import { Container, Title, Input, ErrorText } from '../../components/styled';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_ID_IOS, GOOGLE_CLIENT_ID_WEB } from "@env";
+import { config } from '@/utils/config';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -30,13 +30,11 @@ export default function Login() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🔹 REMOVIDO `redirectUri` (não é necessário no Expo)
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_CLIENT_ID,
-    iosClientId: GOOGLE_CLIENT_ID_IOS,
-    webClientId: GOOGLE_CLIENT_ID_WEB,
+    clientId: config.googleClientId,
+    iosClientId: config.googleClientIdIos,
+    webClientId: config.googleClientIdWeb,
   });
-
   useEffect(() => {
     console.log("🔍 Google Response:", response);
 

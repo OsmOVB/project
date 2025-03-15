@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1019413158991-u2fi4198ve6bidh3lbvmieo7rft1490n.apps.googleusercontent.com",
+          "client_id": "1019413158991-eec91di11ki7122rl4vsfp4fosrap62t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.company.choppGo",
-            "certificate_hash": "e2ef64c02629f3934b48485202af9bb10dfea0e0"
+            "certificate_hash": "0485bf73ff599e19dcb05b5ab32059a9cc9d8a1e"
           }
         },
         {

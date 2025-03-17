@@ -20,6 +20,27 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="stock"
+        options={{
+          title: 'Estoque',
+          tabBarIcon: ({ size, color }) => <Ionicons name="cube" size={size} color={color} />,
+        }}
+      />
+        <Tabs.Screen
+          name="reports"
+          options={{
+            title: 'Relatórios',
+            tabBarIcon: ({ size, color }) => <Ionicons name="bar-chart" size={size} color={color} />,
+          }}
+        />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ size, color }) => <Ionicons name="person" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Configurações',

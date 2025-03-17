@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
 import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../components/styled';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,7 +9,7 @@ import { useThemeContext } from '../../context/ThemeContext';
 export default function Settings() {
   const { user, logout } = useAuth();
   const { darkMode, toggleTheme } = useThemeContext();
-  const [notifications, setNotifications] = React.useState(true);
+  const [notifications, setNotifications] = useState(true);
 
   return (
     <Container>
@@ -18,33 +18,7 @@ export default function Settings() {
 
         {user && <ProfileCard user={user} />}
 
-        <View style={[styles.infoContainer, { backgroundColor: darkMode ? '#1c1c1e' : '#f0f0f0' }]}>
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Nome</Text>
-            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.name}</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Email</Text>
-            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user?.email}</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Função</Text>
-            <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>
-              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
-            </Text>
-          </View>
-
-          {user?.address && (
-            <View style={styles.infoRow}>
-              <Text style={[styles.label, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>Endereço</Text>
-              <Text style={[styles.value, { color: darkMode ? '#FFFFFF' : '#1c1c1e' }]}>{user.address}</Text>
-            </View>
-          )}
-        </View>
-
-        <Button style={{ marginTop: 20 }}>
+        <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
           <ButtonText>Editar Perfil</ButtonText>
         </Button>
 
@@ -74,10 +48,10 @@ export default function Settings() {
         {user?.role === 'admin' && (
           <Card>
             <CardTitle>Administração</CardTitle>
-            <Button onPress={() => router.push('/users' as any)} style={styles.button}>
+            <Button onPress={() => router.push('/users')} style={styles.button}>
               <ButtonText>Gerenciar Usuários</ButtonText>
             </Button>
-            <Button onPress={() => router.push('/settings/company' as any)} style={styles.button}>
+            <Button onPress={() => router.push('/settings/company')} style={styles.button}>
               <ButtonText>Configurações da Empresa</ButtonText>
             </Button>
           </Card>
@@ -104,16 +78,7 @@ export default function Settings() {
   );
 }
 
-interface Usuario {
-  nome: string;
-  papel: 'admin' | 'entregador' | 'cliente' | 'consumidor';
-  // Add other properties from the User type here
-  // Assuming User type has properties 'name' and 'role'
-  name: string;
-  role: 'admin' | 'entregador' | 'cliente' | 'consumidor';
-}
-
-function ProfileCard({ user }: { user: Usuario }) {
+function ProfileCard({ user }: { user: any }) {
   return (
     <Card style={styles.profileCard}>
       <View style={styles.profileHeader}>
@@ -121,11 +86,8 @@ function ProfileCard({ user }: { user: Usuario }) {
           <Ionicons name="person" size={40} color="#007AFF" />
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.name}>{user?.nome}</Text>
-          <Text style={styles.role}>
-            {user?.papel === 'admin' ? 'Administrador' :
-              user?.papel === 'entregador' ? 'Entregador' : 'Cliente'}
-          </Text>
+          <Text style={styles.name}>{user?.name}</Text>
+          <Text style={styles.role}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}</Text>
         </View>
       </View>
     </Card>
@@ -190,20 +152,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
     marginTop: 20,
     marginBottom: 40,
-  },
-  infoContainer: {
-    borderRadius: 8,
-    padding: 15,
-  },
-  infoRow: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: '500',
   },
 });

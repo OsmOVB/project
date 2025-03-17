@@ -1,27 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { Container, Title, Button, ButtonText } from '../../components/styled';
 import { Order, StatusOrder } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    customerName: 'João Silva',
-    items: [
-      { id: '1', stockItemId: '1', name: 'Pilsen 50L', quantity: 2 },
-      { id: '2', stockItemId: '2', name: 'Cilindro de CO2', quantity: 1 },
-    ],
-    totalLiters: 100,
-    status: 'pendente',
-    date: new Date(),
-    paymentMethod: 'crédito',
-  },
-];
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 export default function Orders() {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'orders'));
+        const fetchedOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+        setOrders(fetchedOrders);
+      } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const getStatusColor = (status: StatusOrder) => {
     switch (status) {
@@ -40,48 +41,46 @@ export default function Orders() {
     <Container>
       <ScrollView>
         <Title>Pedidos</Title>
-        {orders.map((order) => (
-          <View key={order.id} style={styles.orderContainer}>
-            <View style={styles.orderHeader}>
-              <Title style={styles.customerName}>{order.customerName}</Title>
-              <View style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(order.status) }
-              ]}>
-                <Text style={styles.statusText}>
-                  {order.status.replace('_', ' ').toUpperCase()}
+        {orders.length === 0 ? (
+          <Text style={styles.emptyText}>Nenhum pedido encontrado.</Text>
+        ) : (
+          orders.map((order) => (
+            <View key={order.id} style={styles.orderContainer}>
+              <View style={styles.orderHeader}>
+                <Title style={styles.customerName}>{order.customerName}</Title>
+                <View style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(order.status) }
+                ]}>
+                  <Text style={styles.statusText}>
+                    {order.status.replace('_', ' ').toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.itemsList}>
+                {order.items.map((item) => (
+                  <View key={item.id} style={styles.orderItem}>
+                    <Text>{item.name}</Text>
+                    <Text>x{item.quantity}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.orderFooter}>
+                <Text style={styles.totalLiters}>{order.totalLiters}L Total</Text>
+                <Text style={styles.paymentMethod}>
+                  {order.paymentMethod.toUpperCase()}
                 </Text>
               </View>
+
+              {user?.role === 'admin' && (
+                <Button style={{ marginTop: 10 }}>
+                  <ButtonText>Atualizar Status</ButtonText>
+                </Button>
+              )}
             </View>
-
-            <View style={styles.itemsList}>
-              {order.items.map((item) => (
-                <View key={item.id} style={styles.orderItem}>
-                  <Text>{item.name}</Text>
-                  <Text>x{item.quantity}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.orderFooter}>
-              <Text style={styles.totalLiters}>{order.totalLiters}L Total</Text>
-              <Text style={styles.paymentMethod}>
-                {order.paymentMethod.toUpperCase()}
-              </Text>
-            </View>
-
-            {user?.role === 'admin' && (
-              <Button style={{ marginTop: 10 }}>
-                <ButtonText>Atualizar Status</ButtonText>
-              </Button>
-            )}
-          </View>
-        ))}
-
-        {user?.role === 'customer' && (
-          <Button>
-            <ButtonText>Novo Pedido</ButtonText>
-          </Button>
+          ))
         )}
       </ScrollView>
     </Container>
@@ -89,6 +88,12 @@ export default function Orders() {
 }
 
 const styles = StyleSheet.create({
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#666',
+  },
   orderContainer: {
     backgroundColor: '#f5f5f5',
     borderRadius: 8,

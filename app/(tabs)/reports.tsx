@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Dimensions } from 'react-native';
 import { Container, Title, Button, ButtonText } from '../../components/styled';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -30,6 +32,22 @@ const mockData = {
 export default function Reports() {
   const [timeRange, setTimeRange] = useState('daily');
   const [chartType, setChartType] = useState('line');
+  const [reports, setReports] = useState<{ id: string; [key: string]: any }[]>([]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'sales_reports'));
+        const fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setReports(fetchedReports);
+      } catch (error) {
+        console.error('Erro ao buscar relatórios:', error);
+      }
+    };
+
+    fetchReports();
+  }, []);
+
 
   const chartConfig = {
     backgroundColor: '#ffffff',

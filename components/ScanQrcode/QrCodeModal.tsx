@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View, Modal, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import QRCode from 'react-native-qrcode-svg';
-import * as Print from 'expo-print';
+import handlePrint from '../Print';
 
 interface QrCodeModalProps {
   visible: boolean;
@@ -14,21 +14,14 @@ export default function QrCodeModal({ visible, value, onClose }: QrCodeModalProp
   const viewShotRef = useRef<ViewShot>(null);
   const [qrSize, setQrSize] = useState(200); // tamanho padrão M
 
-  const handlePrint = async () => {
+  const handlePrintQrCode = async () => {
     try {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) {
-        const htmlContent = `
-          <html>
-            <body style="text-align: center; padding: 50px">
-              <img src="${uri}" width="${qrSize}" height="${qrSize}" />
-            </body>
-          </html>
-        `;
-        await Print.printAsync({ html: htmlContent });
+        await handlePrint(uri);
       }
-    } catch (err) {
-      console.error('Erro ao imprimir QRCode:', err);
+    } catch (error) {
+      console.error('Erro ao capturar ou imprimir:', error);
     }
   };
 
@@ -53,7 +46,7 @@ export default function QrCodeModal({ visible, value, onClose }: QrCodeModalProp
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={handlePrint} style={styles.printButton}>
+          <TouchableOpacity onPress={handlePrintQrCode} style={styles.printButton}>
             <Text style={styles.buttonText}>Imprimir QR Code</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>

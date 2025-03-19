@@ -17,3 +17,5 @@ const handlePrint = async (uri: string) => {
     console.error('Erro ao imprimir:', err);
   }
 };
+
+export default handlePrint;

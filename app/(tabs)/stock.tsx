@@ -9,7 +9,7 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import { Container, Title, ButtonText } from '../../components/styled';
+import { Container, Title } from '../../components/styled';
 import { db } from '../../firebase/config';
 import {
   collection,
@@ -96,13 +96,13 @@ export default function Stock() {
   return (
     <Container>
       {/* Botão fora do scroll */}
+        <Title>Gestão de Estoque</Title>
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
         <Text style={styles.addButtonText}>Adicionar Produto</Text>
       </TouchableOpacity>
 
       <ScrollView>
-        <Title>Gestão de Estoque</Title>
         {stockItems.map((item) => (
           <View key={item.id} style={styles.itemContainer}>
             <Text style={styles.itemName}>{item.name}</Text>
@@ -114,7 +114,7 @@ export default function Stock() {
               Capacidade: {item.liters} litros
             </Text>
             <View style={styles.buttonRow}>
-              <TouchableOpacity onPress={() => setCurrentQrValue(item.id) || setQrVisible(true)}>
+              <TouchableOpacity onPress={() => { setCurrentQrValue(item.id); setQrVisible(true); }}>
                 <Ionicons name="qr-code-outline" size={22} color="#007AFF" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleEditItem(item)}>

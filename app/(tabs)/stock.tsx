@@ -8,9 +8,8 @@ import {
   TextInput,
   Modal,
   TouchableOpacity,
-  Image,
 } from 'react-native';
-import { Container, Title, Button, ButtonText } from '../../components/styled';
+import { Container, Title, ButtonText } from '../../components/styled';
 import { db } from '../../firebase/config';
 import {
   collection,
@@ -21,32 +20,23 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { StockItem } from '../../types';
-import QRCode from 'qrcode';
 import QrCodeModal from '@/components/ScanQrcode/QrCodeModal';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [qrModalVisible, setQrModalVisible] = useState(false);
-  const [currentQrImage, setCurrentQrImage] = useState<string | null>(null);
-  const [currentQrItemId, setCurrentQrItemId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState<StockItem | null>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [quantity, setQuantity] = useState('');
   const [liters, setLiters] = useState('');
-
   const [qrVisible, setQrVisible] = useState(false);
   const [currentQrValue, setCurrentQrValue] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStock();
   }, []);
-
-  async function showQrCode(itemId: string) {
-    setCurrentQrValue(itemId);
-    setQrVisible(true);
-  }
 
   async function fetchStock() {
     const stockCollection = await getDocs(collection(db, 'stock'));
@@ -74,8 +64,8 @@ export default function Stock() {
           quantity: Number(quantity),
           liters: Number(liters),
         });
-        setCurrentQrItemId(newDocRef.id);
-        await showQrCode(newDocRef.id);
+        setCurrentQrValue(newDocRef.id);
+        setQrVisible(true);
       }
       setModalVisible(false);
       setName('');
@@ -89,9 +79,7 @@ export default function Stock() {
     }
   }
 
-
-
-  async function handleEditItem(item: StockItem) {
+  function handleEditItem(item: StockItem) {
     setEditItem(item);
     setName(item.name);
     setType(item.type);
@@ -107,96 +95,78 @@ export default function Stock() {
 
   return (
     <Container>
+      {/* Botão fora do scroll */}
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
+        <Text style={styles.addButtonText}>Adicionar Produto</Text>
+      </TouchableOpacity>
+
       <ScrollView>
         <Title>Gestão de Estoque</Title>
         {stockItems.map((item) => (
           <View key={item.id} style={styles.itemContainer}>
-            <View>
-              <Title style={styles.itemName}>{item.name}</Title>
-              <Text style={styles.itemType}>Tipo: {item.type}</Text>
-              <Text style={styles.quantity}>
-                Quantidade: {item.quantity} unidades
-              </Text>
-              <Text style={styles.quantity}>
-                Capacidade: {item.liters} litros
-              </Text>
-              <Button onPress={() => showQrCode(item.id)}>
-                <ButtonText>Visualizar QRCode</ButtonText>
-              </Button>
-              <Button onPress={() => handleEditItem(item)}>
-                <ButtonText>Editar</ButtonText>
-              </Button>
-              <Button onPress={() => handleDeleteItem(item.id)}>
-                <ButtonText>Apagar</ButtonText>
-              </Button>
+            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemType}>Tipo: {item.type}</Text>
+            <Text style={styles.quantity}>
+              Quantidade: {item.quantity} unidades
+            </Text>
+            <Text style={styles.quantity}>
+              Capacidade: {item.liters} litros
+            </Text>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity onPress={() => setCurrentQrValue(item.id) || setQrVisible(true)}>
+                <Ionicons name="qr-code-outline" size={22} color="#007AFF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleEditItem(item)}>
+                <Ionicons name="create-outline" size={22} color="#FFA500" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
+                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+              </TouchableOpacity>
             </View>
           </View>
         ))}
-        <Button onPress={() => setModalVisible(true)}>
-          <ButtonText>Adicionar Novo Produto</ButtonText>
-        </Button>
-
-        <Modal visible={modalVisible} transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TextInput
-                placeholder="Nome do Produto"
-                value={name}
-                onChangeText={setName}
-                style={styles.input}
-              />
-              <TextInput
-                placeholder="Tipo (barril, co2, etc)"
-                value={type}
-                onChangeText={setType}
-                style={styles.input}
-              />
-              <TextInput
-                placeholder="Quantidade"
-                value={quantity}
-                keyboardType="numeric"
-                onChangeText={setQuantity}
-                style={styles.input}
-              />
-              <TextInput
-                placeholder="Litros (se aplicável)"
-                value={liters}
-                keyboardType="numeric"
-                onChangeText={setLiters}
-                style={styles.input}
-              />
-              <Button onPress={saveStockItem}>
-                <ButtonText>Salvar Produto e Gerar QRCode</ButtonText>
-              </Button>
-              <Button
-                onPress={() => {
-                  setModalVisible(false);
-                  setEditItem(null);
-                }}
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={qrModalVisible} transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              {currentQrImage && (
-                <Image
-                  source={{ uri: currentQrImage }}
-                  style={{ width: 200, height: 200 }}
-                />
-              )}
-              <Text>ID: {currentQrItemId}</Text>
-              <Button onPress={() => setQrModalVisible(false)}>
-                <ButtonText>Fechar</ButtonText>
-              </Button>
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
+
+      <Modal visible={modalVisible} transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TextInput
+              placeholder="Nome do Produto"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Tipo (barril, co2, etc)"
+              value={type}
+              onChangeText={setType}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Quantidade"
+              value={quantity}
+              keyboardType="numeric"
+              onChangeText={setQuantity}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Litros (se aplicável)"
+              value={liters}
+              keyboardType="numeric"
+              onChangeText={setLiters}
+              style={styles.input}
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={saveStockItem}>
+              <Text style={styles.saveButtonText}>Salvar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <QrCodeModal
         visible={qrVisible}
         value={currentQrValue || ''}
@@ -207,48 +177,88 @@ export default function Stock() {
 }
 
 const styles = StyleSheet.create({
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 16,
+  },
+  addButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    marginLeft: 8,
+  },
   itemContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 15,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    marginBottom: 10,
+    marginVertical: 8,
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   itemName: {
     fontSize: 18,
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   itemType: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 2,
   },
   quantity: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
     color: '#007AFF',
-    marginBottom: 5,
+    marginBottom: 2,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 12,
   },
   modalContainer: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     backgroundColor: '#fff',
+    width: '85%',
     padding: 20,
     borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
   },
   input: {
-    borderWidth: 1,
     borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
     padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    width: '100%',
+    marginBottom: 12,
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });

@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  Alert,
   TextInput,
   Modal,
   TouchableOpacity,
@@ -23,6 +22,8 @@ import { StockItem } from '../../types';
 import QrCodeModal from '@/components/ScanQrcode/QrCodeModal';
 import { Ionicons } from '@expo/vector-icons';
 
+import ConfirmModal from '@/components/ConfirmModal'; // componente de confirmação
+
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,6 +34,9 @@ export default function Stock() {
   const [liters, setLiters] = useState('');
   const [qrVisible, setQrVisible] = useState(false);
   const [currentQrValue, setCurrentQrValue] = useState<string | null>(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState('');
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
 
   useEffect(() => {
     fetchStock();
@@ -75,8 +79,13 @@ export default function Stock() {
       fetchStock();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
-      Alert.alert('Erro', 'Falha ao salvar o produto');
     }
+  }
+
+  function openConfirm(message: string, action: () => void) {
+    setConfirmMessage(message);
+    setConfirmAction(() => action);
+    setConfirmVisible(true);
   }
 
   function handleEditItem(item: StockItem) {
@@ -89,15 +98,21 @@ export default function Stock() {
   }
 
   async function handleDeleteItem(itemId: string) {
-    await deleteDoc(doc(db, 'stock', itemId));
-    fetchStock();
+    try {
+      await deleteDoc(doc(db, 'stock', itemId));
+      fetchStock();
+    } catch (error) {
+      console.error('Erro ao deletar item:', error);
+    }
   }
 
   return (
     <Container>
-      {/* Botão fora do scroll */}
-        <Title>Gestão de Estoque</Title>
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+      <Title>Gestão de Estoque</Title>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setModalVisible(true)}
+      >
         <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
         <Text style={styles.addButtonText}>Adicionar Produto</Text>
       </TouchableOpacity>
@@ -114,13 +129,24 @@ export default function Stock() {
               Capacidade: {item.liters} litros
             </Text>
             <View style={styles.buttonRow}>
-              <TouchableOpacity onPress={() => { setCurrentQrValue(item.id); setQrVisible(true); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setCurrentQrValue(item.id);
+                  setQrVisible(true);
+                }}
+              >
                 <Ionicons name="qr-code-outline" size={22} color="#007AFF" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleEditItem(item)}>
                 <Ionicons name="create-outline" size={22} color="#FFA500" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
+              <TouchableOpacity
+                onPress={() =>
+                  openConfirm('Deseja excluir este item?', () =>
+                    handleDeleteItem(item.id)
+                  )
+                }
+              >
                 <Ionicons name="trash-outline" size={22} color="#FF3B30" />
               </TouchableOpacity>
             </View>
@@ -157,10 +183,18 @@ export default function Stock() {
               onChangeText={setLiters}
               style={styles.input}
             />
-            <TouchableOpacity style={styles.saveButton} onPress={saveStockItem}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() =>
+                openConfirm('Deseja salvar as alterações?', saveStockItem)
+              }
+            >
               <Text style={styles.saveButtonText}>Salvar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setModalVisible(false)}
+            >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -171,6 +205,16 @@ export default function Stock() {
         visible={qrVisible}
         value={currentQrValue || ''}
         onClose={() => setQrVisible(false)}
+      />
+
+      <ConfirmModal
+        visible={confirmVisible}
+        message={confirmMessage}
+        onConfirm={() => {
+          confirmAction();
+          setConfirmVisible(false);
+        }}
+        onCancel={() => setConfirmVisible(false)}
       />
     </Container>
   );

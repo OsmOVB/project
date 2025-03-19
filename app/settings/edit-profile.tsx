@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TextInput, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  Alert,
+  Text,
+} from 'react-native';
 import { Container, Title, Button, ButtonText } from '../../components/styled';
 import { useAuth } from '../../hooks/useAuth';
 import { router } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { useThemeContext } from '@/context/ThemeContext';
 
 export default function EditProfile() {
+  const { darkMode } = useThemeContext();
   const { user, setUser } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [address, setAddress] = useState(user?.address || '');
@@ -35,6 +44,93 @@ export default function EditProfile() {
     <Container>
       <ScrollView>
         <Title>Editar Perfil</Title>
+
+        <View
+          style={[
+            styles.infoContainer,
+            { backgroundColor: darkMode ? '#1c1c1e' : '#f0f0f0' },
+          ]}
+        >
+          <View style={styles.infoRow}>
+            <Text
+              style={[
+                styles.label,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              Nome
+            </Text>
+            <Text
+              style={[
+                styles.value,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              {user?.name}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text
+              style={[
+                styles.label,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              Email
+            </Text>
+            <Text
+              style={[
+                styles.value,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              {user?.email}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text
+              style={[
+                styles.label,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              Função
+            </Text>
+            <Text
+              style={[
+                styles.value,
+                { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+              ]}
+            >
+              {user?.role
+                ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                : ''}
+            </Text>
+          </View>
+
+          {user?.address && (
+            <View style={styles.infoRow}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+                ]}
+              >
+                Endereço
+              </Text>
+              <Text
+                style={[
+                  styles.value,
+                  { color: darkMode ? '#FFFFFF' : '#1c1c1e' },
+                ]}
+              >
+                {user.address}
+              </Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -79,5 +175,32 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#FF3B30',
     marginTop: 10,
+  },
+  infoContainer: {
+    borderRadius: 8,
+    padding: 15,
+  },
+  infoRow: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: '#1c1c1e',
   },
 });

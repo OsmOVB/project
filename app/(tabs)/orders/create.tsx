@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,10 @@ import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import { useThemeContext } from '../../../context/ThemeContext';
 import ScanItems from '@/components/ScanQrcode';
+import { db } from '../../../firebase/config';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 
+// 📌 Validação do pedido
 const orderSchema = z.object({
   customerName: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
@@ -17,25 +20,21 @@ const orderSchema = z.object({
   paymentMethod: z.enum(['crédito', 'débito', 'dinheiro', 'pix']),
   items: z.array(z.object({
     id: z.string(),
+    name: z.string(),
     quantity: z.number().min(1),
   })),
 });
 
 type OrderForm = z.infer<typeof orderSchema>;
 
-const mockItems = [
-  { id: '1', name: 'Pilsen 50L', type: 'barril', price: 350 },
-  { id: '2', name: 'Cilindro de CO2', type: 'co2', price: 80 },
-  { id: '3', name: 'Torneira de Chopp', type: 'torneira', price: 120 },
-];
-
 export default function CreateOrder() {
-  const [selectedItems, setSelectedItems] = useState<{ id: string; quantity: number }[]>([]);
   const { darkMode } = useThemeContext();
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
-  const [scanningItemId, setScanningItemId] = useState<string | null>(null); // Para saber qual item está sendo escaneado
-
+  const [scanningItemId, setScanningItemId] = useState<string | null>(null);
+  const [products, setProducts] = useState<{ id: string; name: string; price: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState<{ id: string; name: string; quantity: number }[]>([]);
 
   const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
@@ -48,31 +47,45 @@ export default function CreateOrder() {
 
   const scheduledDate = watch('scheduledDate');
 
-  const onSubmit = async (data: OrderForm) => {
-    try {
-      console.log('Order data:', data);
-      router.back();
-    } catch (error) {
-      console.error('Failed to create order:', error);
-    }
-  };
+  // 🔥 Buscar produtos do Firestore ao carregar a tela
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const productsList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as { id: string; name: string; price: number }[];
+        setProducts(productsList);
+      } catch (error) {
+        console.error("Erro ao buscar produtos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchProducts();
+  }, []);
+
+  // 📌 Adicionar item ao pedido
   const addItem = (itemId: string) => {
-    const item = mockItems.find(i => i.id === itemId);
+    const item = products.find(i => i.id === itemId);
     if (item) {
-      const newItem = { ...item, quantity: 1, qrCode: '' };
+      const newItem = { id: item.id, name: item.name, quantity: 1 };
       const updatedItems = [...selectedItems, newItem];
       setSelectedItems(updatedItems);
       setValue('items', updatedItems);
     }
   };
 
+  // 📌 Remover item do pedido
   const removeItem = (itemId: string) => {
     const updatedItems = selectedItems.filter(item => item.id !== itemId);
     setSelectedItems(updatedItems);
     setValue('items', updatedItems);
   };
 
+  // 📌 Atualizar quantidade de item
   const updateQuantity = (itemId: string, quantity: number) => {
     if (quantity < 1) return;
     const updatedItems = selectedItems.map(item =>
@@ -82,18 +95,15 @@ export default function CreateOrder() {
     setValue('items', updatedItems);
   };
 
-  const setQRCodeForItem = (qrCode: string) => {
-    if (!scanningItemId) return;
-    const updatedItems = selectedItems.map(item =>
-      item.id === scanningItemId ? { ...item, qrCode } : item
-    );
-    setSelectedItems(updatedItems);
-    setValue('items', updatedItems);
-    setScannerVisible(false);
-  };
-
-  const formatDateToBrazilian = (date: Date) => {
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  // 📌 Salvar pedido no Firestore
+  const onSubmit = async (data: OrderForm) => {
+    try {
+      await addDoc(collection(db, 'orders'), data);
+      console.log('Pedido salvo com sucesso:', data);
+      router.back();
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+    }
   };
 
   return (
@@ -107,36 +117,26 @@ export default function CreateOrder() {
             control={control}
             name="customerName"
             render={({ field: { onChange, value } }) => (
-              <Input
-                placeholder="Nome do Cliente"
-                value={value}
-                onChangeText={onChange}
-              />
+              <Input placeholder="Nome do Cliente" value={value} onChangeText={onChange} />
             )}
           />
           {errors.customerName && <ErrorText>{errors.customerName.message}</ErrorText>}
-
 
           <Controller
             control={control}
             name="address"
             render={({ field: { onChange, value } }) => (
-              <Input
-                placeholder="Endereço de Entrega"
-                value={value}
-                onChangeText={onChange}
-                multiline
-              />
+              <Input placeholder="Endereço de Entrega" value={value} onChangeText={onChange} multiline />
             )}
           />
           {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
-
         </Card>
 
+        {/* 🔹 SELEÇÃO DE DATA MANTIDA */}
         <Card>
           <CardTitle>Agendar Entrega</CardTitle>
           <TouchableOpacity onPress={() => setCalendarVisible(true)} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{formatDateToBrazilian(scheduledDate)}</Text>
+            <Text style={styles.dateButtonText}>{scheduledDate.toLocaleString()}</Text>
           </TouchableOpacity>
           <Modal visible={calendarVisible} transparent={true}>
             <Calendar
@@ -155,51 +155,26 @@ export default function CreateOrder() {
 
         <Card>
           <CardTitle>Itens do Pedido</CardTitle>
-          {mockItems.map(item => {
+          {loading ? <ActivityIndicator size="large" color="#007AFF" /> : products.map(item => {
             const selectedItem = selectedItems.find(si => si.id === item.id);
             return (
               <View key={item.id} style={styles.itemContainer}>
-                <View style={styles.itemInfo}>
-                  <CardText>{item.name}</CardText>
-                  <CardText style={styles.price}>R${item.price}</CardText>
-                </View>
+                <CardText>{item.name} - R${item.price}</CardText>
                 {selectedItem ? (
                   <View style={styles.quantityContainer}>
-                    <Button
-                      onPress={() => updateQuantity(item.id, selectedItem.quantity - 1)}
-                      style={styles.quantityButton}
-                    >
+                    <Button onPress={() => updateQuantity(item.id, selectedItem.quantity - 1)}>
                       <ButtonText>-</ButtonText>
                     </Button>
-                    <CardText style={styles.quantity}>{selectedItem.quantity}</CardText>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setScanningItemId(item.id);
-                        setScannerVisible(true);
-                      }}
-                      style={styles.qrButton}
-                    >
-                      <Text style={styles.qrButtonText}>Escanear QR Code</Text>
-                    </TouchableOpacity>
-                    <Button
-                      onPress={() => updateQuantity(item.id, selectedItem.quantity + 1)}
-                      style={styles.quantityButton}
-                    >
+                    <CardText>{selectedItem.quantity}</CardText>
+                    <Button onPress={() => updateQuantity(item.id, selectedItem.quantity + 1)}>
                       <ButtonText>+</ButtonText>
                     </Button>
-                    <Button
-                      onPress={() => removeItem(item.id)}
-                      style={styles.removeButton}
-                    >
+                    <Button onPress={() => removeItem(item.id)} style={styles.removeButton}>
                       <ButtonText>Remover</ButtonText>
                     </Button>
                   </View>
                 ) : (
-                  <Button
-                    onPress={() => addItem(item.id)}
-                    style={styles.addButton}
-                  >
+                  <Button onPress={() => addItem(item.id)}>
                     <ButtonText>Adicionar</ButtonText>
                   </Button>
                 )}
@@ -207,27 +182,6 @@ export default function CreateOrder() {
             );
           })}
         </Card>
-
-        <Card>
-          <CardTitle>Método de Pagamento</CardTitle>
-          <Controller
-            control={control}
-            name="paymentMethod"
-            render={({ field: { onChange, value } }) => (
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={[styles.picker, { backgroundColor: darkMode ? '#1c1c1e' : '#f5f5f5' }]}
-              >
-                <Picker.Item label="PIX" value="pix" />
-                <Picker.Item label="Cartão de Crédito" value="crédito" />
-                <Picker.Item label="Cartão de Débito" value="débito" />
-                <Picker.Item label="Dinheiro" value="dinheiro" />
-              </Picker>
-            )}
-          />
-        </Card>
-        <ScanItems visible={scannerVisible} onClose={() => setScannerVisible(false)} onScan={setQRCodeForItem} />
 
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Criar Pedido</ButtonText>
@@ -244,6 +198,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
+  removeButton: { backgroundColor: '#FF3B30', marginLeft: 10 },
+  submitButton: { marginVertical: 20 },
   qrButtonText: {
     color: '#FFF',
   },
@@ -288,16 +244,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 10,
   },
-  dateButton: {
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  dateButtonText: {
-    color: '#1c1c1e',
-  },
-  submitButton: {
-    marginVertical: 20,
-  },
+  dateButton: { backgroundColor: '#f5f5f5', padding: 10, borderRadius: 5, alignItems: 'center' },
+  dateButtonText: { color: '#1c1c1e' },
 });

@@ -10,6 +10,7 @@ export interface User {
 }
 
 export interface StockItem {
+  liters: any;
   id: string;
   type: 'barril' | 'co2' | 'torneira' | 'copo';
   name: string;

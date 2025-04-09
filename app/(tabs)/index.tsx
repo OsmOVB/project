@@ -1,3 +1,4 @@
+//caminho do arquivo: app/(tabs)/index.tsx
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Pressable, Image } from 'react-native';
 import { Container, Title, Card, CardTitle, CardText, Button, ButtonText } from '../../components/styled';

@@ -1,28 +1,31 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getReactNativePersistence, initializeAuth, getAuth } from "firebase/auth";
+import { getReactNativePersistence, initializeAuth } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_KEY, AUTH_DOMAIN, PROJECT_ID, STORAGE_BUCKET, MESSAGING_SENDER_ID, APP_ID } from "@env";
+import { config } from "@/utils/config";
 
-// 🔹 Configuração extraída do seu `google-services.json`
 const firebaseConfig = {
-  apiKey: API_KEY,
-  authDomain: AUTH_DOMAIN,
-  projectId: PROJECT_ID,
-  storageBucket: STORAGE_BUCKET,
-  messagingSenderId: MESSAGING_SENDER_ID,
-  appId: APP_ID,
+  apiKey: config.apiKey,
+  authDomain: config.authDomain,
+  projectId: config.projectId,
+  storageBucket: config.storageBucket,
+  messagingSenderId: config.messagingSenderId,
+  appId: config.appId,
 };
 
-// 🔹 Garante que o Firebase só seja inicializado uma vez
+// 🔹 Inicializa o Firebase apenas uma vez
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// 🔹 Inicializa Firebase Auth com AsyncStorage para persistência do login
+// 🔹 Configura o Auth com persistência no AsyncStorage
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
-// 🔹 Inicializa Firestore
+// 🔹 Inicializa o Firestore
 const db = getFirestore(app);
+
+// ✅ Logs para confirmar inicialização
+console.log("✅ Firebase App inicializado:", app.name);
+console.log("✅ Firebase Auth inicializado:", auth);
 
 export { auth, db, firebaseConfig };

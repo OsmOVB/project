@@ -1,0 +1,125 @@
+  $ expo credentials:manager is not supported in the local CLI, please use eas credentials instead
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+npm notice To update run: npm install -g npm@11.2.0
+PS C:\projeto tcc\project>
+PS C:\projeto tcc\project> npm install -g npm@11.2.0
+npm error code EEXIST
+npm error path C:\Users\osmar\AppData\Roaming\nvm\v20.18.2\node_modules\npm
+npm error EEXIST: file already exists
+npm error File exists: C:\Users\osmar\AppData\Roaming\nvm\v20.18.2\node_modules\npm
+npm error Remove the existing file and try again, or run npm
+npm error with --force to overwrite files recklessly.
+npm error A complete log of this run can be found in: C:\Users\osmar\AppData\Local\npm-cache\_logs\2025-03-15T02_33_27_651Z-debug-0.log
+PS C:\projeto tcc\project> npm install -g eas-cli
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated sudo-prompt@9.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+npm warn deprecated glob@6.0.4: Glob versions prior to v9 are no longer supported
+npm warn deprecated @oclif/screen@3.0.8: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+
+added 443 packages in 28s
+
+53 packages are looking for funding
+  run `npm fund` for details
+PS C:\projeto tcc\project> eas credentials
+An Expo user account is required to proceed.
+
+Log in to EAS with email or username (exit and run eas login --help to see other login options)
+√ Email or username ... osmaro.v.b@gmail.com
+√ Password ... ********
+EAS project not configured.
+√ Would you like to automatically create an EAS project for @osmarvb/choppgo? ... yes
+✔ Created @osmarvb/choppgo: https://expo.dev/accounts/osmarvb/projects/choppgo on Expo
+✔ Linked local project to EAS project 507946a0-5ec1-4bac-ab45-104c870be270
+√ Select platform » Android
+eas.json could not be found at C:\projeto tcc\project\eas.json. Learn more at https://expo.fyi/eas-json
+    Error: credentials command failed.
+PS C:\projeto tcc\project> eas build:configure
+★ eas-cli@15.0.15 is now available.
+npm install -g eas-cli
+Proceeding with outdated version.
+
+💡 The following process will configure your iOS and/or Android project to be compatible with EAS Build. These changes only apply to your local project files and you can safely revert them at any time.
+
+√ Which platforms would you like to configure for EAS Build? » All
+
+√ Generated eas.json. Learn more: https://docs.expo.dev/build-reference/eas-json/
+
+🎉 Your project is ready to build.
+
+- Run eas build when you are ready to create your first build.
+- Once the build is completed, run eas submit to upload the app to app stores.
+- Learn more about other capabilities of EAS Build: https://docs.expo.dev/build/introduction
+PS C:\projeto tcc\project> eas credentials
+★ eas-cli@15.0.15 is now available.
+To upgrade, run:
+npm install -g eas-cli
+Proceeding with outdated version.
+
+√ Select platform » Android
+√ Which build profile do you want to configure? » development
+✔ Using build profile: development
+Android Credentials     
+Project                 choppgo
+Application Identifier  com.company.choppGo
+No credentials set up yet!  
+
+√ What do you want to do? » Keystore: Manage everything needed to build your project
+Android Credentials   
+Project                 choppgo
+Application Identifier  com.company.choppGo
+No credentials set up yet!
+
+√ What do you want to do? » Set up a new keystore
+√ Assign a name to your build credentials: ... Build Credentials I4dIw_GItV
+√ Generate a new Android Keystore? ... yes
+✔ Created keystore
+✔ Created Android build credentials Build Credentials I4dIw_GItV
+Press any key to continue...
+
+
+Android Credentials     
+Project                 choppgo
+Application Identifier  com.company.choppGo
+
+Push Notifications (FCM Legacy)
+  None assigned yet
+
+Push Notifications (FCM V1): Google Service Account Key For FCM V1
+  None assigned yet
+
+Submissions: Google Service Account Key for Play Store Submissions
+  None assigned yet
+
+Configuration: Build Credentials I4dIw_GItV (Default)
+Keystore
+Type                JKS
+Key Alias           d769f2f5bf761d3985b4738fda28790d
+MD5 Fingerprint     44:29:F2:04:1C:BD:B1:09:C9:43:FE:C3:D3:FC:80:96
+SHA1 Fingerprint    E2:EF:64:C0:26:29:F3:93:4B:48:48:52:02:AF:9B:B1:0D:FE:A0:E0
+SHA256 Fingerprint  67:76:2E:5C:BB:57:96:FC:D9:FE:4D:25:F1:4E:6F:0B:B0:E4:19:8C:36:3B:6C:FE:76:0D:E6:8B:03:39:91:B7
+Updated             26 seconds ago
+
+√ What do you want to do? » Download existing keystore
+√ Do you want to display the sensitive information of the Android Keystore? ... yes
+Saving Keystore to @osmarvb__choppgo.jks
+Type                JKS
+Key Alias           d769f2f5bf761d3985b4738fda28790d
+MD5 Fingerprint     44:29:F2:04:1C:BD:B1:09:C9:43:FE:C3:D3:FC:80:96
+SHA1 Fingerprint    E2:EF:64:C0:26:29:F3:93:4B:48:48:52:02:AF:9B:B1:0D:FE:A0:E0
+SHA256 Fingerprint  67:76:2E:5C:BB:57:96:FC:D9:FE:4D:25:F1:4E:6F:0B:B0:E4:19:8C:36:3B:6C:FE:76:0D:E6:8B:03:39:91:B7
+Updated             34 seconds ago
+
+Sensitive Keystore information:
+    Keystore password: 73702fdf376c6133927220aad6ecc9cf
+    Key alias:         d769f2f5bf761d3985b4738fda28790d
+    Key password:      92d19811cd61b390a54d28400b363e7c
+
+    Path to Keystore:  @osmarvb__choppgo.jks
+
+
+Press any key to continue...

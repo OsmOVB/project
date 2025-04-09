@@ -6,26 +6,37 @@ export const Container = styled.View`
   flex: 1;
   background-color: ${({ theme }: { theme: ThemeType }) => theme.background};
   padding: 20px;
-  padding-top: 60px;
 `;
 
 export const Title = styled.Text`
   font-size: 28px;
-  font-weight: bold;
   color: ${({ theme }: { theme: ThemeType }) => theme.text};
-  margin-bottom: 24px;
-  letter-spacing: -0.5px;
+  font-weight: bold;
+  margin-bottom: 10px;
+`;
+
+export const Subtitle = styled.Text`
+  font-size: 16px;
+  color: ${({ theme }: { theme: ThemeType }) => theme.subText};
+  margin-bottom: 20px;
 `;
 
 export const Input = styled.TextInput`
+  height: 55px;
   width: 100%;
-  height: 50px;
-  background-color: ${({ theme }: { theme: ThemeType }) => theme.secondary};
   border-radius: 12px;
+  border-width: 1px;
+  border-color: ${({ theme }: { theme: ThemeType }) => theme.border};
+  background-color: ${({ theme }: { theme: ThemeType }) => theme.inputBg};
   padding: 0 15px;
   margin-bottom: 15px;
-  font-size: 16px;
   color: ${({ theme }: { theme: ThemeType }) => theme.text};
+`;
+
+export const ErrorText = styled.Text`
+  color: #ef4444;
+  margin-bottom: 10px;
+  font-size: 14px;
 `;
 
 export const Button = styled.TouchableOpacity`
@@ -61,13 +72,6 @@ export const ButtonText = styled.Text`
   font-size: 16px;
   font-weight: bold;
   letter-spacing: 0.5px;
-`;
-
-export const ErrorText = styled.Text`
-  color: #ff3b30;
-  font-size: 14px;
-  margin-bottom: 10px;
-  margin-left: 5px;
 `;
 
 export const Card = styled.View`

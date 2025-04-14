@@ -18,9 +18,9 @@ export default function Settings() {
 
         {user && <ProfileCard user={user} />}
 
-        <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
+        {/* <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
           <ButtonText>Editar Perfil</ButtonText>
-        </Button>
+        </Button> */}
 
         <Card>
           <CardTitle>Preferências</CardTitle>

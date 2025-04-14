@@ -25,7 +25,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <SafeAreaProvider>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={styles.safeArea}>
           <StatusBar style="auto" />
           <Slot />
         </SafeAreaView>

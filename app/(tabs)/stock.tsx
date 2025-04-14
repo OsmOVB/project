@@ -18,28 +18,36 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore';
-import { StockItem } from '../../types';
+import { StockItem, TipoItem } from '../../types';
 import QrCodeModal from '@/components/ScanQrcode/QrCodeModal';
 import { Ionicons } from '@expo/vector-icons';
-
-import ConfirmModal from '@/components/ConfirmModal'; // componente de confirmação
+import ConfirmModal from '@/components/ConfirmModal';
+import StarRating from '@/components/StarRating';
+import { useRouter } from 'expo-router';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editItem, setEditItem] = useState<StockItem | null>(null);
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
+  const [selectedEnum, setSelectedEnum] = useState<TipoItem | null>(null);
   const [quantity, setQuantity] = useState('');
-  const [liters, setLiters] = useState('');
   const [qrVisible, setQrVisible] = useState(false);
   const [currentQrValue, setCurrentQrValue] = useState<string | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [enumModalVisible, setEnumModalVisible] = useState(false);
+  const [newEnumValue, setNewEnumValue] = useState('');
+  const [newEnumSize, setNewEnumSize] = useState('');
+  const [newEnumBrand, setNewEnumBrand] = useState('');
+  const [newEnumFavorite, setNewEnumFavorite] = useState(3);
+  const [enums, setEnums] = useState<TipoItem[]>([]);
+  const [showEnumList, setShowEnumList] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     fetchStock();
+    fetchEnums();
   }, []);
 
   async function fetchStock() {
@@ -48,38 +56,52 @@ export default function Stock() {
       id: doc.id,
       ...doc.data(),
     })) as StockItem[];
+
     setStockItems(items);
   }
 
-  async function saveStockItem() {
-    try {
-      if (editItem) {
-        await updateDoc(doc(db, 'stock', editItem.id), {
-          name,
-          type,
-          quantity: Number(quantity),
-          liters: Number(liters),
-        });
-        setEditItem(null);
-      } else {
-        const newDocRef = await addDoc(collection(db, 'stock'), {
-          name,
-          type,
-          quantity: Number(quantity),
-          liters: Number(liters),
-        });
-        setCurrentQrValue(newDocRef.id);
-        setQrVisible(true);
-      }
-      setModalVisible(false);
-      setName('');
-      setType('');
-      setQuantity('');
-      setLiters('');
-      fetchStock();
-    } catch (error) {
-      console.error('Erro ao salvar produto:', error);
-    }
+  async function fetchEnums() {
+    const enumCollection = await getDocs(collection(db, 'product_enums'));
+    const enumList = enumCollection.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as TipoItem[];
+    setEnums(enumList.sort((a, b) => b.favorite - a.favorite));
+  }
+
+  async function saveEnum() {
+    if (!newEnumValue) return;
+    await addDoc(collection(db, 'product_enums'), {
+      name: newEnumValue,
+      size: newEnumSize,
+      brand: newEnumBrand,
+      favorite: newEnumFavorite,
+      createdAt: new Date().toISOString(),
+    });
+    setNewEnumValue('');
+    setNewEnumSize('');
+    setNewEnumBrand('');
+    setNewEnumFavorite(3);
+    setEnumModalVisible(false);
+    fetchEnums();
+  }
+
+  async function addStockItemFromEnum() {
+    if (!selectedEnum || !quantity) return;
+    await addDoc(collection(db, 'stock'), {
+      tipoItemId: selectedEnum.id,
+      tipoItemName: selectedEnum.name,
+      quantity: Number(quantity),
+      liters: selectedEnum.size ? parseInt(selectedEnum.size) : 0,
+      loteId: 1,
+      dataLote: new Date().toLocaleDateString(),
+      sequenciaLote: stockItems.length + 1,
+      pendenciaImpressao: 'S',
+    });
+    setModalVisible(false);
+    setSelectedEnum(null);
+    setQuantity('');
+    fetchStock();
   }
 
   function openConfirm(message: string, action: () => void) {
@@ -88,124 +110,128 @@ export default function Stock() {
     setConfirmVisible(true);
   }
 
-  function handleEditItem(item: StockItem) {
-    setEditItem(item);
-    setName(item.name);
-    setType(item.type);
-    setQuantity(item.quantity.toString());
-    setLiters(item.liters?.toString() || '');
-    setModalVisible(true);
-  }
-
-  async function handleDeleteItem(itemId: string) {
-    try {
-      await deleteDoc(doc(db, 'stock', itemId));
-      fetchStock();
-    } catch (error) {
-      console.error('Erro ao deletar item:', error);
-    }
-  }
-
   return (
     <Container>
       <Title>Gestão de Estoque</Title>
       <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
+        style={styles.enumButton}
+        onPress={() => setEnumModalVisible(true)}
       >
-        <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
-        <Text style={styles.addButtonText}>Adicionar Produto</Text>
+        <Ionicons name="list-circle-outline" size={28} color="#28A745" />
+        <Text style={styles.enumButtonText}>Cadastrar Tipo</Text>
       </TouchableOpacity>
 
-      <ScrollView>
-        {stockItems.map((item) => (
-          <View key={item.id} style={styles.itemContainer}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemType}>Tipo: {item.type}</Text>
-            <Text style={styles.quantity}>
-              Quantidade: {item.quantity} unidades
-            </Text>
-            <Text style={styles.quantity}>
-              Capacidade: {item.liters} litros
-            </Text>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                onPress={() => {
-                  setCurrentQrValue(item.id);
-                  setQrVisible(true);
+      <TouchableOpacity
+        style={styles.enumButton}
+        onPress={() => setShowEnumList(!showEnumList)}
+      >
+        <Ionicons name="list-outline" size={28} color="#007AFF" />
+        <Text style={styles.enumButtonText}>Ver Lista de Tipos</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.enumButton, { backgroundColor: '#ddd' }]}
+        onPress={() => router.push('/stock/lotes')}
+      >
+        <Ionicons name="cube-outline" size={24} color="#000" />
+        <Text style={styles.enumButtonText}>Ver Lotes</Text>
+      </TouchableOpacity>
+
+      {showEnumList ? (
+        <ScrollView>
+          {enums.map((enumItem, index) => (
+            <View key={index} style={styles.itemContainer}>
+              <Text style={styles.itemName}>{enumItem.name}</Text>
+              <Text>{enumItem.size && `Tamanho: ${enumItem.size}`}</Text>
+              <Text>{enumItem.brand && `Marca: ${enumItem.brand}`}</Text>
+              <StarRating
+                rating={enumItem.favorite}
+                onChange={(val) => {
+                  updateDoc(doc(db, 'product_enums', enumItem.id), {
+                    favorite: val,
+                  });
+                  fetchEnums();
                 }}
-              >
-                <Ionicons name="qr-code-outline" size={22} color="#007AFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleEditItem(item)}>
-                <Ionicons name="create-outline" size={22} color="#FFA500" />
-              </TouchableOpacity>
+              />
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
+        <ScrollView>
+          {enums.map((enumItem, index) => (
+            <View key={index} style={styles.itemContainer}>
+              <Text style={styles.itemName}>{enumItem.name}</Text>
+              <Text>{enumItem.size && `Tamanho: ${enumItem.size}`}</Text>
+              <Text>{enumItem.brand && `Marca: ${enumItem.brand}`}</Text>
+              <StarRating rating={enumItem.favorite} disabled />
+              <TextInput
+                placeholder="Quantidade"
+                keyboardType="numeric"
+                value={selectedEnum?.id === enumItem.id ? quantity : ''}
+                onChangeText={(text) => {
+                  setSelectedEnum(enumItem);
+                  setQuantity(text);
+                }}
+                style={styles.input}
+              />
               <TouchableOpacity
+                style={styles.saveButton}
                 onPress={() =>
-                  openConfirm('Deseja excluir este item?', () =>
-                    handleDeleteItem(item.id)
+                  openConfirm(
+                    'Deseja adicionar ao estoque?',
+                    addStockItemFromEnum
                   )
                 }
               >
-                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                <Text style={styles.saveButtonText}>Adicionar Estoque</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
 
-      <Modal visible={modalVisible} transparent>
+      <Modal visible={enumModalVisible} transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <TextInput
-              placeholder="Nome do Produto"
-              value={name}
-              onChangeText={setName}
+              placeholder="Novo tipo (ex: Barril, CO2, etc)"
+              value={newEnumValue}
+              onChangeText={setNewEnumValue}
               style={styles.input}
             />
             <TextInput
-              placeholder="Tipo (barril, co2, etc)"
-              value={type}
-              onChangeText={setType}
+              placeholder="Tamanho (ex: 30L, 50L)"
+              value={newEnumSize}
+              onChangeText={setNewEnumSize}
               style={styles.input}
             />
             <TextInput
-              placeholder="Quantidade"
-              value={quantity}
-              keyboardType="numeric"
-              onChangeText={setQuantity}
+              placeholder="Marca (ex: Heineken)"
+              value={newEnumBrand}
+              onChangeText={setNewEnumBrand}
               style={styles.input}
             />
-            <TextInput
-              placeholder="Litros (se aplicável)"
-              value={liters}
-              keyboardType="numeric"
-              onChangeText={setLiters}
-              style={styles.input}
-            />
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() =>
-                openConfirm('Deseja salvar as alterações?', saveStockItem)
+            <Text style={{ marginVertical: 8 }}>
+              Favoritos (1 a 5 estrelas):
+            </Text>
+            <StarRating
+              rating={newEnumFavorite}
+              onChange={(val: React.SetStateAction<number>) =>
+                setNewEnumFavorite(val)
               }
-            >
-              <Text style={styles.saveButtonText}>Salvar</Text>
+            />
+            <TouchableOpacity style={styles.saveButton} onPress={saveEnum}>
+              <Text style={styles.saveButtonText}>Salvar Tipo</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}
+              onPress={() => setEnumModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <QrCodeModal
-        visible={qrVisible}
-        value={currentQrValue || ''}
-        onClose={() => setQrVisible(false)}
-      />
 
       <ConfirmModal
         visible={confirmVisible}
@@ -221,6 +247,19 @@ export default function Stock() {
 }
 
 const styles = StyleSheet.create({
+  enumButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 6,
+    marginVertical: 10,
+  },
+  enumButtonText: {
+    fontSize: 16,
+    color: '#28A745',
+    marginLeft: 8,
+  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',

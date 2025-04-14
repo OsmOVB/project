@@ -11,3 +11,34 @@ deve marcar a quantia de chopp, que o cliente quer, e se uma maquina especifica 
 o proximo passo é o entregador cadastrar na ordem do pedido, os itens que serao entregues, deve adicionar na ordem os itens lendo o qrcode e vinculando-os ao pedido, o entregador deve finalizar a instalaçao no cliente e o sistema deve gerar uma ordem de retirada com a data informada ao cadastrar o pedido e caso nao seja cadastrada seja gerada a retirada em no maximo 72 horas, essa ordem de retidarada servira de conderencia via qrcode pra que os produtos nao se percam. 
 o sistema deve gerar os devidos relatorios e deixar disponivel a agenda de entregas do dia e proximos dias por ordem de data numa tela de listagem.
 esse é a regra principal do sistema.
+
+quero que:
+o banco tenha essas colunas, pois quero adicionar ao estoque por lotes de tipos, 
+
+loteId: 1, 
+data: 14/03/2025,
+sequencialote: 1,2,3,4
+tipoItem: pilsen
+pendenciaImpressao: S
+favorite: 5
+
+type TipoItem = {
+  id: string;           // ID do tipo cadastrado
+  name: string;         // Nome (ex: Pilsen, Barril, CO2)
+  size?: string;        // Tamanho (ex: 30L, 50L)
+  brand?: string;       // Marca (ex: Heineken)
+  favorite: number;     // Nota de 1 a 5 estrelas
+  createdAt: string;    // Data de criação
+};
+
+type StockItem = {
+  id: string;                    // ID do estoque
+  tipoItemId: string;            // ID do tipoItem relacionado
+  tipoItemName: string;          // Nome do tipo item (para renderização rápida)
+  quantity: number;              // Quantidade
+  liters?: number;               // Capacidade em litros (se aplicável)
+  loteId: number;                // Número do lote
+  dataLote: string;              // Data do lote (formato dd/MM/yyyy)
+  sequenciaLote: number;         // Sequência do item no lote
+  pendenciaImpressao: 'S' | 'N'; // Pendência de impressão
+};

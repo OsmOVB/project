@@ -4,46 +4,52 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function Layout() {
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        headerShown: false, // REMOVE o cabeçalho padrão como "Início"
+        tabBarHideOnKeyboard: true, // esconde a tab bar com o teclado
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Início',
+          href: '/',
+          tabBarLabel: 'Início',
           tabBarIcon: ({ size, color }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'Pedidos',
+          tabBarLabel: 'Pedidos',
           tabBarIcon: ({ size, color }) => <Ionicons name="list" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="stock"
         options={{
-          title: 'Estoque',
+          tabBarLabel: 'Estoque',
           tabBarIcon: ({ size, color }) => <Ionicons name="cube" size={size} color={color} />,
         }}
       />
-        <Tabs.Screen
-          name="reports"
-          options={{
-            title: 'Relatórios',
-            tabBarIcon: ({ size, color }) => <Ionicons name="bar-chart" size={size} color={color} />,
-          }}
-        />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          tabBarLabel: 'Relatórios',
+          tabBarIcon: ({ size, color }) => <Ionicons name="bar-chart" size={size} color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
+          tabBarLabel: 'Perfil',
           tabBarIcon: ({ size, color }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Configurações',
+          tabBarLabel: 'Configurações',
           tabBarIcon: ({ size, color }) => <Ionicons name="settings" size={size} color={color} />,
         }}
       />

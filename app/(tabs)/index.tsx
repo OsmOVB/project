@@ -55,7 +55,7 @@ export default function Home() {
             <Title style={styles.welcomeText}>Bem-vindo de volta,</Title>
             <Text style={styles.userName}>{user?.name}</Text>
           </View>
-          <Image 
+          <Image
             source={{ uri: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=100' }}
             style={styles.avatar}
           />
@@ -78,7 +78,7 @@ export default function Home() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Title style={styles.sectionTitle}>Agenda de hoje</Title>
-            <Button 
+            <Button
               onPress={() => router.push('/orders/create')}
               style={styles.addButton}
             >
@@ -87,7 +87,7 @@ export default function Home() {
           </View>
 
           {mockDeliveries.map((delivery) => (
-            <Pressable 
+            <Pressable
               key={delivery.id}
               style={styles.deliveryCard}
               onPress={() => router.push(`/orders/${delivery.id}` as any)}

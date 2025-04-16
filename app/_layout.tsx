@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import React from 'react';
 import { ThemeProvider } from '../context/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export default function RootLayout() {
   const { user } = useAuth();
@@ -14,7 +14,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
-
     if (user && inAuthGroup) {
       router.replace('/(tabs)');
     } else if (!user && !inAuthGroup) {
@@ -26,7 +25,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <SafeAreaProvider>
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-          <StatusBar style="auto" />
+          <StatusBar style="inverted" translucent backgroundColor="transparent" />
           <Slot />
         </SafeAreaView>
       </SafeAreaProvider>
@@ -40,3 +39,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
+ 

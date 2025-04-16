@@ -1,15 +1,29 @@
-//app/(auth)/_layout.tsx
 import React from 'react';
 import { ThemeProvider } from '../../context/ThemeContext';
 import { Stack } from 'expo-router';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet } from 'react-native';
 
 export default function AuthLayout() {
   return (
     <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-      </Stack>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+          <StatusBar style="inverted" translucent backgroundColor="transparent" />
+          <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
+            <Stack.Screen name="login" />
+            <Stack.Screen name="register" />
+          </Stack>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+});

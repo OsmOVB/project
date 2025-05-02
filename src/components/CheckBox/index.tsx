@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeContext } from '@/context/ThemeContext';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 interface CheckboxProps {
   label?: string;

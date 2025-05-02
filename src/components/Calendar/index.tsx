@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
 import { styles } from './styles';
-import { useThemeContext } from '../../context/ThemeContext';
-import { darkTheme, lightTheme } from '@/theme';
+import { darkTheme, lightTheme } from '@/src/theme';
 import TimePicker from '../TimePicker/TimePicker';
 import HourSelection from './HourSelection';
 import Button from '../Button';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 const getMonthName = (month: number) =>
   [

@@ -8,8 +8,8 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import { Container, Title } from '../../components/styled';
-import { db } from '../../firebase/config';
+import { Container, Title } from '../../src/components/styled';
+import { db } from '../../src/firebase/config';
 import {
   collection,
   getDocs,
@@ -18,11 +18,11 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore';
-import { StockItem, TipoItem } from '../../types';
-import QrCodeModal from '@/components/ScanQrcode/QrCodeModal';
+import { StockItem, TipoItem } from '../../src/types';
+import QrCodeModal from '@/src/components/ScanQrcode/QrCodeModal';
 import { Ionicons } from '@expo/vector-icons';
-import ConfirmModal from '@/components/ConfirmModal';
-import StarRating from '@/components/StarRating';
+import ConfirmModal from '@/src/components/ConfirmModal';
+import StarRating from '@/src/components/StarRating';
 import { useRouter } from 'expo-router';
 
 export default function Stock() {

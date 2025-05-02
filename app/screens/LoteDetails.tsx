@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { db } from '../../src/firebase/config';
 
 export default function LoteDetails() {
   const { loteId, dataLote } = useLocalSearchParams();

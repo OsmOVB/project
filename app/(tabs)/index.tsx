@@ -1,11 +1,11 @@
 //caminho do arquivo: app/(tabs)/index.tsx
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Pressable, Image } from 'react-native';
-import { Container, Title, Card, CardTitle, CardText, Button, ButtonText } from '../../components/styled';
-import { useAuth } from '../../hooks/useAuth';
+import { Container, Title, Card, CardTitle, CardText, Button, ButtonText } from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StatusOrder } from '@/types';
+import { StatusOrder } from '@/src/types';
+import { useAuth } from '@/src/hooks/useAuth';
 
 const mockDeliveries = [
   {

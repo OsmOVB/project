@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { db } from '../../src/firebase/config';
 import { useRouter } from 'expo-router';
 
 export default function StockLots() {

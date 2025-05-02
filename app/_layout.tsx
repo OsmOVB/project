@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../hooks/useAuth';
 import React from 'react';
-import { ThemeProvider } from '../context/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, StyleSheet } from 'react-native';
+import { useAuth } from '@/src/hooks/useAuth';
+import { ThemeProvider } from '@/src/context/ThemeContext';
 
 export default function RootLayout() {
   const { user } = useAuth();

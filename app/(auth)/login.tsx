@@ -5,13 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../../firebase/config';
+import { auth, db } from '../../src/firebase/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
-import Button from '@/components/Button';
-import { Container, Title, Input, ErrorText } from '../../components/styled';
-import Checkbox from '@/components/CheckBox';
+import Button from '@/src/components/Button';
+import { Container, Title, Input, ErrorText } from '../../src/components/styled';
+import Checkbox from '@/src/components/CheckBox';
 
 WebBrowser.maybeCompleteAuthSession();
 

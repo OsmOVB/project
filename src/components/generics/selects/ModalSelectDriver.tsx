@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Modal, TouchableOpacity, Text, View, TextInput, ToastAndroid, ScrollView, ActivityIndicator } from 'react-native';
 import { wbDriverInfos } from '@tools/webservice';
-import { Driver } from '../../../types/database/entities';
+import { Driver } from '../../../src/types/database/entities';
 import { themes } from '@styles/themes';
 import NetworkStatus from '@hooks/useNetworkStatus';
 import { CloseIcon, HandPointLeftIcon, SearchIcon } from '@assets/icons';

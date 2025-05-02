@@ -7,9 +7,9 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useThemeContext } from '../../context/ThemeContext';
-import { darkTheme, lightTheme } from '@/theme';
+import { darkTheme, lightTheme } from '@/src/theme';
 import Button from '../Button';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 interface HourSelectionProps {
   currentDate: Date;

@@ -3,14 +3,14 @@ import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Text, ActivityIn
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Calendar from '../../../components/Calendar';
-import { Container, Title, Input, Button, ButtonText, ErrorText, Card, CardTitle, CardText } from '../../../components/styled';
+import Calendar from '../../../src/components/Calendar';
+import { Container, Title, Input, Button, ButtonText, ErrorText, Card, CardTitle, CardText } from '../../../src/components/styled';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
-import { useThemeContext } from '../../../context/ThemeContext';
-import ScanItems from '@/components/ScanQrcode';
-import { db } from '../../../firebase/config';
+import ScanItems from '@/src/components/ScanQrcode';
+import { db } from '../../../src/firebase/config';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 // 📌 Validação do pedido
 const orderSchema = z.object({

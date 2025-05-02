@@ -5,11 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../../firebase/config';
+import { auth, db } from '../../src/firebase/config';
 import { collection, doc, setDoc, getDoc, getDocs } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Button from '@/components/Button';
-import { Container, Title, Input, ErrorText } from '../../components/styled';
+import Button from '@/src/components/Button';
+import { Container, Title, Input, ErrorText } from '../../src/components/styled';
 
 // 📌 Schema de validação do formulário
 const registerSchema = z

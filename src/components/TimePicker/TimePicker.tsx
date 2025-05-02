@@ -8,8 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import Wheel, { WheelStyleProps } from './Wheel';
-import { useThemeContext } from '../../context/ThemeContext';
-import { darkTheme, lightTheme } from '@/theme';
+import { useThemeContext } from '@/src/context/ThemeContext';
+import { darkTheme, lightTheme } from '@/src/theme';
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const MILLISECONDS_PER_HOUR = MILLISECONDS_PER_MINUTE * 60;

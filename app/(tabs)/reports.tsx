@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Dimensions } from 'react-native';
-import { Container, Title, Button, ButtonText } from '../../components/styled';
+import { Container, Title, Button, ButtonText } from '../../src/components/styled';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase/config';
+import { db } from '@/src/firebase/config';
 
 const screenWidth = Dimensions.get('window').width;
 

@@ -1,5 +1,5 @@
 import { HarvestOrder, HarvestOrderField } from '../modules/harvest/types/harvest';
-import { HarvestOrderPrintData } from '../types/hooks/printing';
+import { HarvestOrderPrintData } from '../src/types/hooks/printing';
 
 type ClassificationKey = 
   Pick<HarvestOrderPrintData, 'productId' | 'licensePlate' | 'sequenceNumber' | 'tetrazolium'> &

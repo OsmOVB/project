@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { getDocs, collection } from 'firebase/firestore';
 
 import { useRouter } from 'expo-router';
-import { db } from '@/firebase/config';
+import { db } from '@/src/firebase/config';
 
 export default function Lotes() {
   const [lotes, setLotes] = useState<any[]>([]);

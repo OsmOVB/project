@@ -11,8 +11,7 @@ export default function ScanItems() {
   const [permission, setPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cameraType, setCameraType] = useState<'back' | 'front'>('back'); // Alterado para uma string
-
+  const [cameraType, setCameraType] = useState<'back' | 'front'>('back'); 
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();

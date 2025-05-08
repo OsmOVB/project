@@ -52,13 +52,8 @@ export default function Home() {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <View>
-            <Title style={styles.welcomeText}>Bem-vindo de volta,</Title>
-            <Text style={styles.userName}>{user?.name}</Text>
+            <Title style={styles.welcomeText}>Bem-vindo de volta, {user?.name}</Title>           
           </View>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=100' }}
-            style={styles.avatar}
-          />
         </View>
 
         <Card style={styles.statsCard}>
@@ -67,10 +62,10 @@ export default function Home() {
               <CardTitle style={styles.statValue}>12</CardTitle>
               <CardText style={styles.statLabel}>Entregas de hoje</CardText>
             </View>
-            <View style={styles.statDivider} />
+            {/* <View style={styles.statDivider} /> */}
             <View style={styles.statItem}>
-              <CardTitle style={styles.statValue}>85%</CardTitle>
-              <CardText style={styles.statLabel}>Taxa de pontualidade</CardText>
+              {/* <CardTitle style={styles.statValue}>85%</CardTitle> */}
+              {/* <CardText style={styles.statLabel}>Taxa de pontualidade</CardText> */}
             </View>
           </View>
         </Card>

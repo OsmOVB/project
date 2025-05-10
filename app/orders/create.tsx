@@ -82,7 +82,7 @@ export default function CreateOrder() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'product_enums'));
+        const querySnapshot = await getDocs(collection(db, 'product'));
         const productsList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),

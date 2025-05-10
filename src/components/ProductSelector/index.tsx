@@ -11,7 +11,7 @@ import Button from '../Button';
 export interface Product {
   id: string;
   name: string;
-  price?: number; // preço agora opcional para refletir os dados da coleção product_enums
+  price?: number; // preço agora opcional para refletir os dados da coleção product
 }
 
 export interface SelectedItem {

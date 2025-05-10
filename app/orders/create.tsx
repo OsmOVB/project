@@ -23,12 +23,12 @@ import {
   CardTitle,
   CardText,
 } from '../../src/components/styled';
-import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
-import ScanItems from '@/src/components/ScanQrcode';
 import { db } from '../../src/firebase/config';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { useThemeContext } from '@/src/context/ThemeContext';
+import ProductSelector from '@/src/components/ProductSelector';
+import AddProductModal from '@/src/components/AddProductModal';
 
 // 📌 Validação do pedido
 const orderSchema = z.object({
@@ -52,6 +52,7 @@ export default function CreateOrder() {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scanningItemId, setScanningItemId] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const [products, setProducts] = useState<
     { id: string; name: string; price: number }[]
   >([]);
@@ -81,7 +82,7 @@ export default function CreateOrder() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'products'));
+        const querySnapshot = await getDocs(collection(db, 'product_enums'));
         const productsList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -141,6 +142,32 @@ export default function CreateOrder() {
       <ScrollView>
         <Title>Criar Novo Pedido</Title>
 
+        {/* 🔹 SELEÇÃO DE DATA MANTIDA */}
+        <Card>
+          <CardTitle>Agendar Entrega</CardTitle>
+          <TouchableOpacity
+            onPress={() => setCalendarVisible(true)}
+            style={styles.dateButton}
+          >
+            <Text style={styles.dateButtonText}>
+              {scheduledDate.toLocaleString()}
+            </Text>
+          </TouchableOpacity>
+          <Modal visible={calendarVisible} transparent={true}>
+            <Calendar
+              initialDate={scheduledDate}
+              onDateChange={(date) => {
+                setValue('scheduledDate', date);
+                setCalendarVisible(false);
+              }}
+              mode="datetime"
+              visible={calendarVisible}
+              onClose={() => setCalendarVisible(false)}
+              theme={darkMode ? '#1c1c1e' : '#f5f5f5'}
+            />
+          </Modal>
+        </Card>
+
         <Card>
           <CardTitle>Informações do Cliente</CardTitle>
           <Controller
@@ -173,33 +200,20 @@ export default function CreateOrder() {
           {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
         </Card>
 
-        {/* 🔹 SELEÇÃO DE DATA MANTIDA */}
         <Card>
-          <CardTitle>Agendar Entrega</CardTitle>
-          <TouchableOpacity
-            onPress={() => setCalendarVisible(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateButtonText}>
-              {scheduledDate.toLocaleString()}
-            </Text>
-          </TouchableOpacity>
-          <Modal visible={calendarVisible} transparent={true}>
-            <Calendar
-              initialDate={scheduledDate}
-              onDateChange={(date) => {
-                setValue('scheduledDate', date);
-                setCalendarVisible(false);
-              }}
-              mode="datetime"
-              visible={calendarVisible}
-              onClose={() => setCalendarVisible(false)}
-              theme={darkMode ? '#1c1c1e' : '#f5f5f5'}
-            />
-          </Modal>
+          <CardTitle>Produtos</CardTitle>
+          <ProductSelector
+            products={products}
+            loading={loading}
+            selectedItems={selectedItems}
+            onAddItem={addItem}
+            onRemoveItem={removeItem}
+            onUpdateQuantity={updateQuantity}
+            onOpenAddModal={() => setModalVisible(true)}
+          />
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardTitle>Itens do Pedido</CardTitle>
           {loading ? (
             <ActivityIndicator size="large" color="#007AFF" />
@@ -246,12 +260,21 @@ export default function CreateOrder() {
               );
             })
           )}
-        </Card>
+        </Card> */}
 
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Criar Pedido</ButtonText>
         </Button>
       </ScrollView>
+      <AddProductModal
+        visible={modalVisible}
+        products={products}
+        onAdd={(product: any) => {
+          addItem(product.id);
+          setModalVisible(false);
+        }}
+        onClose={() => setModalVisible(false)}
+      />
     </Container>
   );
 }
@@ -263,12 +286,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
-  removeButton: { 
-    backgroundColor: '#FF3B30', 
-    marginLeft: 10 
+  removeButton: {
+    backgroundColor: '#FF3B30',
+    marginLeft: 10,
   },
-  submitButton: { 
-    marginVertical: 20 
+  submitButton: {
+    marginVertical: 20,
   },
   qrButtonText: {
     color: '#FFF',

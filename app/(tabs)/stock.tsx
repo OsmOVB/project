@@ -47,7 +47,7 @@ export default function Stock() {
 
   useEffect(() => {
     fetchStock();
-    fetchEnums();
+    fetchProduct();
   }, []);
 
   async function fetchStock() {
@@ -60,8 +60,8 @@ export default function Stock() {
     setStockItems(items);
   }
 
-  async function fetchEnums() {
-    const enumCollection = await getDocs(collection(db, 'product_enums'));
+  async function fetchProduct() {
+    const enumCollection = await getDocs(collection(db, 'product'));
     const enumList = enumCollection.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -69,9 +69,9 @@ export default function Stock() {
     setEnums(enumList.sort((a, b) => b.favorite - a.favorite));
   }
 
-  async function saveEnum() {
+  async function saveProduct() {
     if (!newEnumValue) return;
-    await addDoc(collection(db, 'product_enums'), {
+    await addDoc(collection(db, 'product'), {
       name: newEnumValue,
       size: newEnumSize,
       brand: newEnumBrand,
@@ -83,7 +83,7 @@ export default function Stock() {
     setNewEnumBrand('');
     setNewEnumFavorite(3);
     setEnumModalVisible(false);
-    fetchEnums();
+    fetchProduct();
   }
 
   async function addStockItemFromEnum() {
@@ -118,7 +118,7 @@ export default function Stock() {
         onPress={() => setEnumModalVisible(true)}
       >
         <Ionicons name="list-circle-outline" size={28} color="#28A745" />
-        <Text style={styles.enumButtonText}>Cadastrar Tipo</Text>
+        <Text style={styles.enumButtonText}>Cadastrar Produto</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -126,7 +126,7 @@ export default function Stock() {
         onPress={() => setShowEnumList(!showEnumList)}
       >
         <Ionicons name="list-outline" size={28} color="#007AFF" />
-        <Text style={styles.enumButtonText}>Ver Lista de Tipos</Text>
+        <Text style={styles.enumButtonText}>Ver Lista de Produtos</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -134,23 +134,23 @@ export default function Stock() {
         onPress={() => router.push('/stock/lotes')}
       >
         <Ionicons name="cube-outline" size={24} color="#000" />
-        <Text style={styles.enumButtonText}>Ver Lotes</Text>
+        <Text style={styles.enumButtonText}>Lotes de Produtos</Text>
       </TouchableOpacity>
 
       {showEnumList ? (
         <ScrollView>
-          {enums.map((enumItem, index) => (
+          {enums.map((product, index) => (
             <View key={index} style={styles.itemContainer}>
-              <Text style={styles.itemName}>{enumItem.name}</Text>
-              <Text>{enumItem.size && `Tamanho: ${enumItem.size}`}</Text>
-              <Text>{enumItem.brand && `Marca: ${enumItem.brand}`}</Text>
+              <Text style={styles.itemName}>{product.name}</Text>
+              <Text>{product.size && `Tamanho: ${product.size}`}</Text>
+              <Text>{product.brand && `Marca: ${product.brand}`}</Text>
               <StarRating
-                rating={enumItem.favorite}
+                rating={product.favorite}
                 onChange={(val) => {
-                  updateDoc(doc(db, 'product_enums', enumItem.id), {
+                  updateDoc(doc(db, 'product', product.id), {
                     favorite: val,
                   });
-                  fetchEnums();
+                  fetchProduct();
                 }}
               />
             </View>
@@ -158,18 +158,18 @@ export default function Stock() {
         </ScrollView>
       ) : (
         <ScrollView>
-          {enums.map((enumItem, index) => (
+          {enums.map((product, index) => (
             <View key={index} style={styles.itemContainer}>
-              <Text style={styles.itemName}>{enumItem.name}</Text>
-              <Text>{enumItem.size && `Tamanho: ${enumItem.size}`}</Text>
-              <Text>{enumItem.brand && `Marca: ${enumItem.brand}`}</Text>
-              <StarRating rating={enumItem.favorite} disabled />
+              <Text style={styles.itemName}>{product.name}</Text>
+              <Text>{product.size && `Tamanho: ${product.size}`}</Text>
+              <Text>{product.brand && `Marca: ${product.brand}`}</Text>
+              <StarRating rating={product.favorite} disabled />
               <TextInput
                 placeholder="Quantidade"
                 keyboardType="numeric"
-                value={selectedEnum?.id === enumItem.id ? quantity : ''}
+                value={selectedEnum?.id === product.id ? quantity : ''}
                 onChangeText={(text) => {
-                  setSelectedEnum(enumItem);
+                  setSelectedEnum(product);
                   setQuantity(text);
                 }}
                 style={styles.input}
@@ -183,7 +183,7 @@ export default function Stock() {
                   )
                 }
               >
-                <Text style={styles.saveButtonText}>Adicionar Estoque</Text>
+                <Text style={styles.saveButtonText}>Adicionar ao Estoque</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -220,7 +220,7 @@ export default function Stock() {
                 setNewEnumFavorite(val)
               }
             />
-            <TouchableOpacity style={styles.saveButton} onPress={saveEnum}>
+            <TouchableOpacity style={styles.saveButton} onPress={saveProduct}>
               <Text style={styles.saveButtonText}>Salvar Tipo</Text>
             </TouchableOpacity>
             <TouchableOpacity

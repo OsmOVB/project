@@ -41,6 +41,8 @@ const orderSchema = z.object({
       id: z.string(),
       name: z.string(),
       quantity: z.number().min(1),
+      size: z.string().optional(),
+      price: z.number().optional(),
     })
   ),
 });
@@ -54,7 +56,10 @@ export default function CreateOrder() {
   const [scanningItemId, setScanningItemId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [products, setProducts] = useState<
-    { id: string; name: string; price: number }[]
+    {
+      quantity: any;
+      size: string; id: string; name: string; price: number 
+}[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<
@@ -85,8 +90,11 @@ export default function CreateOrder() {
         const querySnapshot = await getDocs(collection(db, 'product'));
         const productsList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
-        })) as { id: string; name: string; price: number }[];
+          name: doc.data().name || 'Produto sem nome', // Ensure name is present
+          price: doc.data().price || 0, // Ensure price is present
+          size: doc.data().size ||'', // Set a default string value for size
+          quantity: doc.data().quantity || 0, // Ensure quantity is present
+        }));
         setProducts(productsList);
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
@@ -98,17 +106,21 @@ export default function CreateOrder() {
     fetchProducts();
   }, []);
 
-  // 📌 Adicionar item ao pedido
   const addItem = (itemId: string) => {
     const item = products.find((i) => i.id === itemId);
     if (item) {
-      const newItem = { id: item.id, name: item.name, quantity: 1 };
+      const newItem = {
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        size: item.size,
+      };
       const updatedItems = [...selectedItems, newItem];
       setSelectedItems(updatedItems);
       setValue('items', updatedItems);
     }
   };
-
+  
   // 📌 Remover item do pedido
   const removeItem = (itemId: string) => {
     const updatedItems = selectedItems.filter((item) => item.id !== itemId);
@@ -212,55 +224,6 @@ export default function CreateOrder() {
             onOpenAddModal={() => setModalVisible(true)}
           />
         </Card>
-
-        {/* <Card>
-          <CardTitle>Itens do Pedido</CardTitle>
-          {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" />
-          ) : (
-            products.map((item) => {
-              const selectedItem = selectedItems.find(
-                (si) => si.id === item.id
-              );
-              return (
-                <View key={item.id} style={styles.itemContainer}>
-                  <CardText>
-                    {item.name} - R${item.price}
-                  </CardText>
-                  {selectedItem ? (
-                    <View style={styles.quantityContainer}>
-                      <Button
-                        onPress={() =>
-                          updateQuantity(item.id, selectedItem.quantity - 1)
-                        }
-                      >
-                        <ButtonText>-</ButtonText>
-                      </Button>
-                      <CardText>{selectedItem.quantity}</CardText>
-                      <Button
-                        onPress={() =>
-                          updateQuantity(item.id, selectedItem.quantity + 1)
-                        }
-                      >
-                        <ButtonText>+</ButtonText>
-                      </Button>
-                      <Button
-                        onPress={() => removeItem(item.id)}
-                        style={styles.removeButton}
-                      >
-                        <ButtonText>Remover</ButtonText>
-                      </Button>
-                    </View>
-                  ) : (
-                    <Button onPress={() => addItem(item.id)}>
-                      <ButtonText>Adicionar</ButtonText>
-                    </Button>
-                  )}
-                </View>
-              );
-            })
-          )}
-        </Card> */}
 
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Criar Pedido</ButtonText>

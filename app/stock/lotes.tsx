@@ -4,15 +4,6 @@ import { getDocs, collection, deleteDoc, doc, query, where } from 'firebase/fire
 import { useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
 
-interface StockItem {
-  id: string;
-  loteId: string;
-  dataLote: string;
-  tipoItemName: string;
-  marca: string;
-  capacidade: string;
-}
-
 export default function Lotes() {
   const [lotes, setLotes] = useState<{ loteId: string; dataLote: string; items: StockItem[] }[]>([]);
   const router = useRouter();

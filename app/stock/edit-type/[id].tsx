@@ -4,14 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
-interface StockItem {
-  id: string;
-  tipoItemName: string;
-  marca: string;
-  capacidade: string;
-  loteId: string;
-  dataLote: string;
-}
 
 export default function EditTypeScreen() {
   const { id } = useLocalSearchParams();

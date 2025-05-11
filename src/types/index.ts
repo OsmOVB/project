@@ -9,15 +9,7 @@ export interface User {
   createdAt: Date;
 }
 
-// export interface StockItem {
-//   liters: any;
-//   id: string;
-//   type: 'barril' | 'co2' | 'torneira' | 'copo';
-//   name: string;
-//   quantity: number;
-// }
-
-export type TipoItem = {
+export type Product = {
   id: string;           // ID do tipo cadastrado
   name: string;         // Nome (ex: Pilsen, Barril, CO2)
   size?: string;        // Tamanho (ex: 30L, 50L)
@@ -26,7 +18,7 @@ export type TipoItem = {
   createdAt: string;    // Data de criação
 };
 
-export type StockItem = {
+export type Stock = {
   id: string;                    // ID do estoque
   tipoItemId: string;            // ID do tipoItem relacionado
   tipoItemName: string;          // Nome do tipo item (para renderização rápida)

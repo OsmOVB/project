@@ -8,46 +8,56 @@ import { db } from '@/src/firebase/config';
 
 const screenWidth = Dimensions.get('window').width;
 
-const mockData = {
-  daily: {
-    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
-    datasets: [{
-      data: [20, 45, 28, 80, 99, 43, 50]
-    }]
-  },
-  weekly: {
-    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-    datasets: [{
-      data: [250, 320, 280, 390]
-    }]
-  },
-  monthly: {
-    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-    datasets: [{
-      data: [1200, 1400, 1300, 1550, 1800, 1600]
-    }]
-  }
-};
-
 export default function Reports() {
-  const [timeRange, setTimeRange] = useState('daily');
-  const [chartType, setChartType] = useState('line');
-  const [reports, setReports] = useState<{ id: string; [key: string]: any }[]>([]);
-
+  const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [totalPedidos, setTotalPedidos] = useState(0);
+  const [reportData, setReportData] = useState<{ labels: string[]; datasets: { data: number[] }[] }>({
+    labels: [],
+    datasets: [{ data: [] }],
+  });
+  
   useEffect(() => {
-    const fetchReports = async () => {
+    const fetchFromOrders = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'sales_reports'));
-        const fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setReports(fetchedReports);
+        const snapshot = await getDocs(collection(db, 'orders'));
+        const grouped: Record<string, number> = {};
+  
+        setTotalPedidos(snapshot.size); // 👈 define total de pedidos
+  
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const date = new Date(data.scheduledDate?.seconds * 1000 || 0);
+  
+          let key = '';
+          if (timeRange === 'daily') {
+            key = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
+              .toString()
+              .padStart(2, '0')}`;
+          } else if (timeRange === 'weekly') {
+            key = `Semana ${Math.ceil(date.getDate() / 7)}`;
+          } else if (timeRange === 'monthly') {
+            key = date.toLocaleString('default', { month: 'short' });
+          }
+  
+          grouped[key] = (grouped[key] || 0) + 1;
+        });
+  
+        const labels = Object.keys(grouped);
+        const values = labels.map((label) => grouped[label]);
+  
+        setReportData({
+          labels,
+          datasets: [{ data: values }],
+        });
       } catch (error) {
-        console.error('Erro ao buscar relatórios:', error);
+        console.error('Erro ao processar pedidos:', error);
       }
     };
-
-    fetchReports();
-  }, []);
-
+  
+    fetchFromOrders();
+  }, [timeRange]);
+  
 
   const chartConfig = {
     backgroundColor: '#ffffff',
@@ -56,35 +66,35 @@ export default function Reports() {
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
     style: {
-      borderRadius: 16
-    }
+      borderRadius: 16,
+    },
   };
 
   const renderChart = () => {
-    const data = mockData[timeRange as keyof typeof mockData];
-    
-    if (chartType === 'line') {
-      return (
-        <LineChart
-          data={data}
-          width={screenWidth - 80}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={styles.chart}
-        />
-      );
+    const hasData = reportData.labels.length > 0 && reportData.datasets[0].data.length > 0;
+
+    if (!hasData) {
+      return <Text style={styles.noData}>Sem dados para este intervalo.</Text>;
     }
-    
-    return (
+
+    return chartType === 'line' ? (
+      <LineChart
+        data={reportData}
+        width={screenWidth - 80}
+        height={220}
+        chartConfig={chartConfig}
+        bezier
+        style={styles.chart}
+      />
+    ) : (
       <BarChart
-        data={data}
+        data={reportData}
         width={screenWidth - 80}
         height={220}
         chartConfig={chartConfig}
         style={styles.chart}
         yAxisLabel="R$"
-        yAxisSuffix="k"
+        yAxisSuffix=""
       />
     );
   };
@@ -97,11 +107,7 @@ export default function Reports() {
         <View style={styles.filterContainer}>
           <View style={styles.pickerContainer}>
             <Text style={styles.label}>Intervalo de Tempo</Text>
-            <Picker
-              selectedValue={timeRange}
-              onValueChange={setTimeRange}
-              style={styles.picker}
-            >
+            <Picker selectedValue={timeRange} onValueChange={setTimeRange} style={styles.picker}>
               <Picker.Item label="Diário" value="daily" />
               <Picker.Item label="Semanal" value="weekly" />
               <Picker.Item label="Mensal" value="monthly" />
@@ -110,34 +116,29 @@ export default function Reports() {
 
           <View style={styles.pickerContainer}>
             <Text style={styles.label}>Tipo de Gráfico</Text>
-            <Picker
-              selectedValue={chartType}
-              onValueChange={setChartType}
-              style={styles.picker}
-            >
+            <Picker selectedValue={chartType} onValueChange={setChartType} style={styles.picker}>
               <Picker.Item label="Gráfico de Linha" value="line" />
               <Picker.Item label="Gráfico de Barras" value="bar" />
             </Picker>
           </View>
         </View>
 
-        <View style={styles.chartContainer}>
-          {renderChart()}
-        </View>
+        <View style={styles.chartContainer}>{renderChart()}</View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Total de Pedidos</Text>
-            <Text style={styles.statValue}>1,234</Text>
+            <Text style={styles.statValue}>{totalPedidos}</Text>
+
           </View>
-          <View style={styles.statCard}>
+          {/* <View style={styles.statCard}>
             <Text style={styles.statLabel}>Receita</Text>
-            <Text style={styles.statValue}>R$12,345</Text>
+            <Text style={styles.statValue}>R$12.345</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Clientes Ativos</Text>
             <Text style={styles.statValue}>89</Text>
-          </View>
+          </View> */}
         </View>
 
         <Button style={styles.exportButton}>
@@ -173,10 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -185,6 +183,12 @@ const styles = StyleSheet.create({
   chart: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+  noData: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 16,
+    marginTop: 16,
   },
   statsContainer: {
     flexDirection: 'row',

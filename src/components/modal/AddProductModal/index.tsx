@@ -8,8 +8,8 @@ import {
   FlatList,
   StyleSheet,
 } from 'react-native';
-import Button from '../Button';
-import { Product } from '../ProductSelector';
+import Button from '../../Button';
+import { Product } from '../../ProductSelector';
 
 interface AddProductModalProps {
   visible: boolean;

@@ -28,7 +28,7 @@ import { db } from '../../src/firebase/config';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { useThemeContext } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
-import AddProductModal from '@/src/components/AddProductModal';
+import AddProductModal from '@/src/components/modal/AddProductModal';
 
 // 📌 Validação do pedido
 const orderSchema = z.object({
@@ -58,8 +58,11 @@ export default function CreateOrder() {
   const [products, setProducts] = useState<
     {
       quantity: any;
-      size: string; id: string; name: string; price: number 
-}[]
+      size: string;
+      id: string;
+      name: string;
+      price: number;
+    }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<
@@ -92,7 +95,7 @@ export default function CreateOrder() {
           id: doc.id,
           name: doc.data().name || 'Produto sem nome', // Ensure name is present
           price: doc.data().price || 0, // Ensure price is present
-          size: doc.data().size ||'', // Set a default string value for size
+          size: doc.data().size || '', // Set a default string value for size
           quantity: doc.data().quantity || 0, // Ensure quantity is present
         }));
         setProducts(productsList);
@@ -120,7 +123,7 @@ export default function CreateOrder() {
       setValue('items', updatedItems);
     }
   };
-  
+
   // 📌 Remover item do pedido
   const removeItem = (itemId: string) => {
     const updatedItems = selectedItems.filter((item) => item.id !== itemId);
@@ -225,10 +228,10 @@ export default function CreateOrder() {
           />
         </Card>
 
-        <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
-          <ButtonText>Criar Pedido</ButtonText>
-        </Button>
       </ScrollView>
+        <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
+          <ButtonText>Cadastrar Pedido</ButtonText>
+        </Button>
       <AddProductModal
         visible={modalVisible}
         products={products}

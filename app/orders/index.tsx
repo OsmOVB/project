@@ -5,10 +5,14 @@ import { Order, StatusOrder } from '../../src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
+import { Delivery } from '../(tabs)';
 
 export default function Orders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+const [modalVisible, setModalVisible] = useState(false);
+
 
   useEffect(() => {
     const fetchOrders = async () => {

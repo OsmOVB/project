@@ -7,6 +7,7 @@ import {
   Text,
   Pressable,
   Image,
+  Modal,
 } from 'react-native';
 import {
   Container,
@@ -23,6 +24,8 @@ import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { db } from '@/src/firebase/config';
 import { getDocs, collection } from 'firebase/firestore';
+import ProductModal from '@/src/components/modal/ProductModal';
+import ScanItemsModal from '@/src/components/modal/ScanItemsModal';
 
 export interface DeliveryItem {
   name: string;
@@ -44,28 +47,37 @@ export default function Home() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [orders, setOrders] = useState<Delivery[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null
+  );
+  const [modalVisible, setModalVisible] = useState(false);
+  const [productModal, setProductModal] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const snapshot = await getDocs(collection(db, 'orders'));
-  
+
         const data = await Promise.all(
           snapshot.docs.map(async (doc) => {
             const orderData = doc.data();
-            const scheduledDate = new Date(orderData.scheduledDate?.seconds * 1000 || 0);
+            const scheduledDate = new Date(
+              orderData.scheduledDate?.seconds * 1000 || 0
+            );
             const iso = scheduledDate.toISOString();
-  
+
             //Enriquecer cada item com o tamanho (size)
             const enrichedItems = await Promise.all(
               (orderData.items || []).map(async (item: any) => {
                 const productDoc = await getDocs(collection(db, 'product'));
-                const matchedDoc = productDoc.docs.find((d) => d.id === item.id);
+                const matchedDoc = productDoc.docs.find(
+                  (d) => d.id === item.id
+                );
                 const size = matchedDoc?.data().size || '';
                 return { ...item, size };
               })
             );
-  
+
             return {
               id: doc.id,
               customerName: orderData.customerName,
@@ -77,16 +89,15 @@ export default function Home() {
             } as Delivery;
           })
         );
-  
+
         setOrders(data);
       } catch (error) {
         console.error('Erro ao buscar pedidos:', error);
       }
     };
-  
+
     fetchOrders();
   }, []);
-  
 
   const getStatusColor = (status: StatusOrder) => {
     switch (status) {
@@ -103,90 +114,100 @@ export default function Home() {
 
   return (
     <Container>
+      <View style={styles.header}>
+        <View>
+          <Title style={styles.welcomeText}>
+            Bem-vindo de volta, {user?.name}
+          </Title>
+        </View>
+      </View>
+
+      <Card style={styles.statsCard}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <CardTitle style={styles.statValue}>{orders.length}</CardTitle>
+            <CardText style={styles.statLabel}>Entregas de hoje</CardText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <CardTitle style={styles.statValue}>
+              {
+                orders.filter(
+                  (order) =>
+                    order.status === 'em progresso' &&
+                    Date.now() - order.scheduledTimestamp >= 65 * 60 * 1000
+                ).length
+              }
+            </CardTitle>
+
+            <CardText style={styles.statLabel}>Retiradas de hoje</CardText>
+          </View>
+        </View>
+      </Card>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Title style={styles.sectionTitle}>Agenda de hoje</Title>
+          <Button
+            onPress={() => router.push('/orders/create')}
+            style={styles.addButton}
+          >
+            <ButtonText>Novo Pedido</ButtonText>
+          </Button>
+        </View>
+      </View>
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <View>
-            <Title style={styles.welcomeText}>
-              Bem-vindo de volta, {user?.name}
-            </Title>
-          </View>
-        </View>
-
-        <Card style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <CardTitle style={styles.statValue}>{orders.length}</CardTitle>
-              <CardText style={styles.statLabel}>Entregas de hoje</CardText>
+        {orders.map((delivery) => (
+          <Pressable
+            key={delivery.id}
+            style={styles.deliveryCard}
+            onPress={() => {
+              setSelectedDelivery(delivery);
+              setProductModal(true);
+              // setScanVisible(true);
+            }}
+          >
+            <View style={styles.deliveryHeader}>
+              <View style={styles.deliveryTime}>
+                <Ionicons name="time-outline" size={20} color="#666" />
+                <Text style={styles.timeText}>{delivery.time}</Text>
+              </View>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(delivery.status) },
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {delivery.status.replace('_', ' ').toUpperCase()}
+                </Text>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <CardTitle style={styles.statValue}>
-                {
-                  orders.filter(
-                    (order) =>
-                      order.status === 'em progresso' &&
-                      Date.now() - order.scheduledTimestamp >= 65 * 60 * 1000
-                  ).length
-                }
-              </CardTitle>
 
-              <CardText style={styles.statLabel}>Retiradas de hoje</CardText>
-            </View>
-          </View>
-        </Card>
+            <Text style={styles.customerName}>{delivery.customerName}</Text>
+            <Text style={styles.address}>{delivery.address}</Text>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Title style={styles.sectionTitle}>Agenda de hoje</Title>
-            <Button
-              onPress={() => router.push('/orders/create')}
-              style={styles.addButton}
-            >
-              <ButtonText>Novo Pedido</ButtonText>
-            </Button>
-          </View>
-
-          {orders.map((delivery) => (
-            <Pressable
-              key={delivery.id}
-              style={styles.deliveryCard}
-              onPress={() => router.push(`/orders/${delivery.id}` as any)}
-            >
-              <View style={styles.deliveryHeader}>
-                <View style={styles.deliveryTime}>
-                  <Ionicons name="time-outline" size={20} color="#666" />
-                  <Text style={styles.timeText}>{delivery.time}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: getStatusColor(delivery.status) },
-                  ]}
-                >
-                  <Text style={styles.statusText}>
-                    {delivery.status.replace('_', ' ').toUpperCase()}
+            <View style={styles.itemsList}>
+              {delivery.items.map((item, index) => (
+                <View key={index} style={styles.itemRow}>
+                  <Text style={styles.itemName}>
+                    {item.name}
+                    {item.size ? ` ${item.size}` : ''}
                   </Text>
+                  <Text style={styles.itemQuantity}>x{item.quantity}</Text>
                 </View>
-              </View>
-
-              <Text style={styles.customerName}>{delivery.customerName}</Text>
-              <Text style={styles.address}>{delivery.address}</Text>
-
-              <View style={styles.itemsList}>
-                {delivery.items.map((item, index) => (
-                  <View key={index} style={styles.itemRow}>
-                    <Text style={styles.itemName}>
-                      {item.name}
-                      {item.size ? ` ${item.size}` : ''}
-                    </Text>
-                    <Text style={styles.itemQuantity}>x{item.quantity}</Text>
-                  </View>
-                ))}
-              </View>
-            </Pressable>
-          ))}
-        </View>
+              ))}
+            </View>
+          </Pressable>
+        ))}
       </ScrollView>
+      <ProductModal
+        visible={productModal}
+        onClose={() => setProductModal(false)}
+        onRefresh={() => setOrders([])}
+        items={selectedDelivery?.items || []}
+        deliveryId={selectedDelivery?.id || ''}
+      />
     </Container>
   );
 }
@@ -332,4 +353,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007AFF',
   },
+  qrActions: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 12,
+},
+qrButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 4,
+  backgroundColor: '#f0f0f0',
+  padding: 8,
+  borderRadius: 6,
+  flex: 0.48,
+},
+qrText: {
+  fontWeight: '500',
+  color: '#333',
+},
+
 });

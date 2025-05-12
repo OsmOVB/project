@@ -127,15 +127,15 @@ export default function Stock() {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.enumButton} onPress={() => setShowList(!showList)}>
-        <Ionicons name="list-outline" size={28} color="#007AFF" />
-        <Text style={styles.enumButtonText}>Ver Lista de Produtos</Text>
+        <Ionicons name="list-outline" size={28} color="#28A745" />
+        <Text style={styles.enumButtonText}>Lista de Produtos</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.enumButton, { backgroundColor: '#ddd' }]}
+        style={[styles.enumButton]}
         onPress={() => router.push('/stock/lotes')}
       >
-        <Ionicons name="cube-outline" size={24} color="#000" />
+        <Ionicons name="cube-outline" size={24} color="#28A745"/>
         <Text style={styles.enumButtonText}>Lotes de Produtos</Text>
       </TouchableOpacity>
 

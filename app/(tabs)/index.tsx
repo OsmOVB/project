@@ -1,84 +1,154 @@
 //caminho do arquivo: app/(tabs)/index.tsx
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, Pressable, Image } from 'react-native';
-import { Container, Title, Card, CardTitle, CardText, Button, ButtonText } from '../../components/styled';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  Pressable,
+  Image,
+  Modal,
+} from 'react-native';
+import {
+  Container,
+  Title,
+  Card,
+  CardTitle,
+  CardText,
+  Button,
+  ButtonText,
+} from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StatusOrder } from '@/types';
+import { StatusOrder } from '@/src/types';
+import { useAuth } from '@/src/hooks/useAuth';
+import { db } from '@/src/firebase/config';
+import { getDocs, collection } from 'firebase/firestore';
+import ProductModal from '@/src/components/modal/ProductModal';
+import ScanItemsModal from '@/src/components/modal/ScanItemsModal';
 
-const mockDeliveries = [
-  {
-    id: '1',
-    customerName: 'João Silva',
-    address: 'Rua Principal, 123',
-    time: '09:00',
-    date: '2024-02-20',
-    items: [
-      { name: 'Pilsen 50L', quantity: 2 },
-      { name: 'Cilindro de CO2', quantity: 1 }
-    ],
-    status: 'pendente' as StatusOrder
-  },
-  {
-    id: '2',
-    customerName: 'Maria Souza',
-    address: 'Avenida das Acácias, 456',
-    time: '14:30',
-    date: '2024-02-20',
-    items: [
-      { name: 'Pilsen 50L', quantity: 1 },
-      { name: 'Torneira de Chopp', quantity: 1 }
-    ],
-    status: 'em progresso' as StatusOrder
-  }
-];
+export interface DeliveryItem {
+  name: string;
+  quantity: number;
+  size?: string;
+}
+export interface Delivery {
+  scheduledTimestamp: number;
+  id: string;
+  customerName: string;
+  address: string;
+  time: string;
+  date: string;
+  items: DeliveryItem[];
+  status: StatusOrder;
+}
 
 export default function Home() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [orders, setOrders] = useState<Delivery[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null
+  );
+  const [modalVisible, setModalVisible] = useState(false);
+  const [productModal, setProductModal] = useState(false);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'orders'));
+
+        const data = await Promise.all(
+          snapshot.docs.map(async (doc) => {
+            const orderData = doc.data();
+            const scheduledDate = new Date(
+              orderData.scheduledDate?.seconds * 1000 || 0
+            );
+            const iso = scheduledDate.toISOString();
+
+            //Enriquecer cada item com o tamanho (size)
+            const enrichedItems = await Promise.all(
+              (orderData.items || []).map(async (item: any) => {
+                const productDoc = await getDocs(collection(db, 'product'));
+                const matchedDoc = productDoc.docs.find(
+                  (d) => d.id === item.id
+                );
+                const size = matchedDoc?.data().size || '';
+                return { ...item, size };
+              })
+            );
+
+            return {
+              id: doc.id,
+              customerName: orderData.customerName,
+              address: orderData.address,
+              date: iso.split('T')[0],
+              time: iso.split('T')[1]?.slice(0, 5),
+              items: enrichedItems,
+              status: orderData.status || 'pendente',
+            } as Delivery;
+          })
+        );
+
+        setOrders(data);
+      } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const getStatusColor = (status: StatusOrder) => {
     switch (status) {
-      case 'pendente': return '#FFA500';
-      case 'em progresso': return '#007AFF';
-      case 'finalizado': return '#34C759';
-      default: return '#666';
+      case 'pendente':
+        return '#FFA500';
+      case 'em progresso':
+        return '#007AFF';
+      case 'finalizado':
+        return '#34C759';
+      default:
+        return '#666';
     }
   };
 
   return (
     <Container>
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <View>
-            <Title style={styles.welcomeText}>Bem-vindo de volta,</Title>
-            <Text style={styles.userName}>{user?.name}</Text>
-          </View>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=100' }}
-            style={styles.avatar}
-          />
+      <View style={styles.header}>
+        <View>
+          <Title style={styles.welcomeText}>
+            Bem-vindo de volta, {user?.name}
+          </Title>
         </View>
+      </View>
 
-        <Card style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <CardTitle style={styles.statValue}>12</CardTitle>
-              <CardText style={styles.statLabel}>Entregas de hoje</CardText>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <CardTitle style={styles.statValue}>85%</CardTitle>
-              <CardText style={styles.statLabel}>Taxa de pontualidade</CardText>
-            </View>
+      <Card style={styles.statsCard}>
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <CardTitle style={styles.statValue}>{orders.length}</CardTitle>
+            <CardText style={styles.statLabel}>Entregas de hoje</CardText>
           </View>
-        </Card>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <CardTitle style={styles.statValue}>
+              {
+                orders.filter(
+                  (order) =>
+                    order.status === 'em progresso' &&
+                    Date.now() - order.scheduledTimestamp >= 65 * 60 * 1000
+                ).length
+              }
+            </CardTitle>
+
+            <CardText style={styles.statLabel}>Retiradas de hoje</CardText>
+          </View>
+        </View>
+      </Card>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Title style={styles.sectionTitle}>Agenda de hoje</Title>
-            <Button
+            <Button 
               onPress={() => router.push('/orders/create')}
               style={styles.addButton}
             >
@@ -87,7 +157,7 @@ export default function Home() {
           </View>
 
           {mockDeliveries.map((delivery) => (
-            <Pressable
+            <Pressable 
               key={delivery.id}
               style={styles.deliveryCard}
               onPress={() => router.push(`/orders/${delivery.id}` as any)}
@@ -104,21 +174,30 @@ export default function Home() {
                 </View>
               </View>
 
-              <Text style={styles.customerName}>{delivery.customerName}</Text>
-              <Text style={styles.address}>{delivery.address}</Text>
+            <Text style={styles.customerName}>{delivery.customerName}</Text>
+            <Text style={styles.address}>{delivery.address}</Text>
 
-              <View style={styles.itemsList}>
-                {delivery.items.map((item, index) => (
-                  <View key={index} style={styles.itemRow}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemQuantity}>x{item.quantity}</Text>
-                  </View>
-                ))}
-              </View>
-            </Pressable>
-          ))}
-        </View>
+            <View style={styles.itemsList}>
+              {delivery.items.map((item, index) => (
+                <View key={index} style={styles.itemRow}>
+                  <Text style={styles.itemName}>
+                    {item.name}
+                    {item.size ? ` ${item.size}` : ''}
+                  </Text>
+                  <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                </View>
+              ))}
+            </View>
+          </Pressable>
+        ))}
       </ScrollView>
+      <ProductModal
+        visible={productModal}
+        onClose={() => setProductModal(false)}
+        onRefresh={() => setOrders([])}
+        items={selectedDelivery?.items || []}
+        deliveryId={selectedDelivery?.id || ''}
+      />
     </Container>
   );
 }
@@ -264,4 +343,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007AFF',
   },
+  qrActions: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 12,
+},
+qrButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 4,
+  backgroundColor: '#f0f0f0',
+  padding: 8,
+  borderRadius: 6,
+  flex: 0.48,
+},
+qrText: {
+  fontWeight: '500',
+  color: '#333',
+},
+
 });

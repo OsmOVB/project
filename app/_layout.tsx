@@ -1,11 +1,9 @@
 import { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../hooks/useAuth';
 import React from 'react';
-import { ThemeProvider, useThemeContext } from '../context/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { View, StyleSheet, useColorScheme } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
   const { user } = useAuth();
@@ -27,7 +25,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <SafeAreaProvider>
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent={false} backgroundColor="transparent" />
+          <StatusBar style="auto" />
           <Slot />
         </SafeAreaView>
       </SafeAreaProvider>

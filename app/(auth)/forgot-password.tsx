@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Alert, View, StyleSheet } from 'react-native';
-import { z } from 'zod';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../../firebase/config';
-import { Container, Title, Input, ErrorText } from '../../components/styled';
+import { auth } from '@/firebase/config';
+import { Container, Title, Input, ErrorText } from '@/components/styled';
 import Button from '@/components/Button';
+import { router } from 'expo-router';
 
 const forgotPasswordSchema = z.object({
     email: z.string().email('Email inválido'),
@@ -14,24 +15,19 @@ const forgotPasswordSchema = z.object({
 
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
-export default function ForgotPassword() {
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<ForgotPasswordForm>({
+export default function ForgotPasswordScreen() {
+    const { control, handleSubmit, formState: { errors } } = useForm<ForgotPasswordForm>({
         resolver: zodResolver(forgotPasswordSchema),
     });
-
     const [isLoading, setIsLoading] = useState(false);
 
     const onSubmit = async (data: ForgotPasswordForm) => {
         setIsLoading(true);
         try {
             await sendPasswordResetEmail(auth, data.email);
-            Alert.alert('Sucesso', 'Email de recuperação enviado!');
+            Alert.alert('Recuperação enviada', 'Verifique seu e-mail para redefinir a senha.');
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível enviar o email.');
+            Alert.alert('Erro', 'Não foi possível enviar o e-mail de recuperação.');
         } finally {
             setIsLoading(false);
         }
@@ -47,7 +43,7 @@ export default function ForgotPassword() {
                     name="email"
                     render={({ field: { onChange, value } }) => (
                         <Input
-                            placeholder="Digite seu email"
+                            placeholder="Digite seu e-mail"
                             keyboardType="email-address"
                             autoCapitalize="none"
                             value={value}
@@ -57,10 +53,13 @@ export default function ForgotPassword() {
                 />
                 {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
 
+                <Button title="Enviar e-mail" onPress={handleSubmit(onSubmit)} isLoading={isLoading} fullWidth />
+
                 <Button
-                    title="Enviar Email"
-                    onPress={handleSubmit(onSubmit)}
-                    isLoading={isLoading}
+                    title="Voltar para Login"
+                    type="outline"
+                    onPress={() => router.push('/(auth)/login')}
+                    style={{ marginTop: 12 }}
                 />
             </View>
         </Container>

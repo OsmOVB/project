@@ -7,12 +7,12 @@ import {
   Alert,
   Text,
 } from 'react-native';
-import { Container, Title, Button, ButtonText } from '../../components/styled';
-import { useAuth } from '../../hooks/useAuth';
+import { Container, Title, Button, ButtonText } from '../../src/components/styled';
+import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useThemeContext } from '@/context/ThemeContext';
+import { db } from '../../src/firebase/config';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 export default function EditProfile() {
   const { darkMode } = useThemeContext();

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
-import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../components/styled';
-import { useAuth } from '../../hooks/useAuth';
+import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useThemeContext } from '../../context/ThemeContext';
+import { useAuth } from '@/src/hooks/useAuth';
+import { useThemeContext } from '@/src/context/ThemeContext';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -18,9 +18,9 @@ export default function Settings() {
 
         {user && <ProfileCard user={user} />}
 
-        <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
+        {/* <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
           <ButtonText>Editar Perfil</ButtonText>
-        </Button>
+        </Button> */}
 
         <Card>
           <CardTitle>Preferências</CardTitle>

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, Text, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../src/firebase/config';
-import { collection, doc, setDoc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '@/src/components/Button';
 import { Container, Title, Input, ErrorText } from '../../src/components/styled';
@@ -67,29 +67,6 @@ export default function Register() {
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (!user) throw new Error('Usuário não encontrado.');
-
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userRef, { uid: user.uid, name: user.displayName, email: user.email, role: 'customer' });
-      }
-
-      await AsyncStorage.setItem('user', JSON.stringify(userDoc.data() || { uid: user.uid, name: user.displayName, email: user.email }));
-      router.replace('/(tabs)');
-    } catch (error) {
-      console.error('❌ Erro ao fazer login com Google:', error);
-      Alert.alert('Erro', 'Falha ao autenticar com Google.');
-    }
-  };
-
   return (
     <Container>
       <View style={styles.formContainer}>
@@ -114,11 +91,7 @@ export default function Register() {
           <Input placeholder="Confirmar Senha" secureTextEntry value={value} onChangeText={onChange} />
         )} />
         {errors.confirmPassword && <ErrorText>{errors.confirmPassword.message}</ErrorText>}
-
-     
-
         {errors.role && <ErrorText>{errors.role.message}</ErrorText>}
-
         <Button title="Registrar" onPress={handleSubmit(onSubmit)} />
         <Button title="Voltar para Login" type="outline" onPress={() => router.back()} />
       </View>

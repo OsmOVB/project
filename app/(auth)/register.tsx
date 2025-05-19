@@ -115,27 +115,11 @@ export default function Register() {
         )} />
         {errors.confirmPassword && <ErrorText>{errors.confirmPassword.message}</ErrorText>}
 
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.input}>
-          <Text style={styles.selectedRole}>{watch('role')}</Text>
-        </TouchableOpacity>
-
-        <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              {['customer', 'delivery', 'admin'].map((role) => (
-                <TouchableOpacity key={role} onPress={() => { setValue('role', role as RegisterForm['role']); setModalVisible(false); }} style={styles.roleOption}>
-                  <Text style={styles.roleText}>{role.charAt(0).toUpperCase() + role.slice(1)}</Text>
-                </TouchableOpacity>
-              ))}
-              <Button title="Fechar" type="outline" onPress={() => setModalVisible(false)} />
-            </View>
-          </View>
-        </Modal>
+     
 
         {errors.role && <ErrorText>{errors.role.message}</ErrorText>}
 
         <Button title="Registrar" onPress={handleSubmit(onSubmit)} />
-        <Button title="Registrar com Google" onPress={signInWithGoogle} />
         <Button title="Voltar para Login" type="outline" onPress={() => router.back()} />
       </View>
     </Container>

@@ -145,34 +145,44 @@ export default function Home() {
         </View>
       </Card>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Title style={styles.sectionTitle}>Agenda de hoje</Title>
-            <Button 
-              onPress={() => router.push('/orders/create')}
-              style={styles.addButton}
-            >
-              <ButtonText>Novo Pedido</ButtonText>
-            </Button>
-          </View>
-
-          {mockDeliveries.map((delivery) => (
-            <Pressable 
-              key={delivery.id}
-              style={styles.deliveryCard}
-              onPress={() => router.push(`/orders/${delivery.id}` as any)}
-            >
-              <View style={styles.deliveryHeader}>
-                <View style={styles.deliveryTime}>
-                  <Ionicons name="time-outline" size={20} color="#666" />
-                  <Text style={styles.timeText}>{delivery.time}</Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
-                  <Text style={styles.statusText}>
-                    {delivery.status.replace('_', ' ').toUpperCase()}
-                  </Text>
-                </View>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Title style={styles.sectionTitle}>Agenda de hoje</Title>
+          <Button
+            onPress={() => router.push('/orders/create')}
+            style={styles.addButton}
+          >
+            <ButtonText>Novo Pedido</ButtonText>
+          </Button>
+        </View>
+      </View>
+      <ScrollView style={styles.container}>
+        {orders.map((delivery) => (
+          <Pressable
+            key={delivery.id}
+            style={styles.deliveryCard}
+            onPress={() => {
+              setSelectedDelivery(delivery);
+              setProductModal(true);
+              // setScanVisible(true);
+            }}
+          >
+            <View style={styles.deliveryHeader}>
+              <View style={styles.deliveryTime}>
+                <Ionicons name="time-outline" size={20} color="#666" />
+                <Text style={styles.timeText}>{delivery.time}</Text>
               </View>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(delivery.status) },
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {delivery.status.replace('_', ' ').toUpperCase()}
+                </Text>
+              </View>
+            </View>
 
             <Text style={styles.customerName}>{delivery.customerName}</Text>
             <Text style={styles.address}>{delivery.address}</Text>

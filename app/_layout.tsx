@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, StyleSheet } from 'react-native';
+import { useAuth } from '@/src/hooks/useAuth';
+import { ThemeProvider } from '@/src/context/ThemeContext';
 
 export default function RootLayout() {
   const { user } = useAuth();
@@ -24,7 +26,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <SafeAreaProvider>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={styles.safeArea}>
           <StatusBar style="auto" />
           <Slot />
         </SafeAreaView>

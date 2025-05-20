@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DeliveryItem } from '@/app/(tabs)/index';
 import ScanItemsModal from '../ScanItemsModal';
 import Button from '../../Button';
+import { useTheme } from '@/src/context/ThemeContext';
 
 interface ProductModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export default function ProductModal({
   items,
   deliveryId,
 }: ProductModalProps) {
+  const { theme } = useTheme();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [qrItem, setQrItem] = useState<string | null>(null);
@@ -75,8 +77,8 @@ export default function ProductModal({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.title}>Itens do Pedido: {deliveryId}</Text>
+        <View style={[styles.modal, { backgroundColor: theme.card }]}>
+          <Text style={[styles.title, { color: theme.textPrimary }]}>Itens do Pedido: {deliveryId}</Text>
 
           <ScrollView contentContainerStyle={styles.itemsContainer}>
             {items.map((item, index) => {
@@ -87,28 +89,13 @@ export default function ProductModal({
               return (
                 <View key={itemKey} style={styles.itemRow}>
                   <View style={styles.itemInfo}>
-                    <Text style={styles.itemText}>
-                      🔹 {item.name} {item.size ? `(${item.size})` : ''}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: '#666' }}>
+                    <Text style={[styles.itemText, { color: theme.textPrimary }]}>🔹 {item.name} {item.size ? `(${item.size})` : ''}</Text>
+                    <Text style={{ fontSize: 13, color: theme.textSecondary }}>
                       Quantidade: {currentQuantity} / {item.quantity}
                     </Text>
                   </View>
 
-                  <View style={styles.inputGroup}>
-                    {/* <TextInput
-                      placeholder="Qtd."
-                      keyboardType="numeric"
-                      style={styles.input}
-                      value={currentQuantity.toString()}
-                      onChangeText={(text) =>
-                        setQuantities((prev) => ({
-                          ...prev,
-                          [itemKey]: parseInt(text) || 0,
-                        }))
-                      }
-                    /> */}
-
+                  <View style={[styles.inputGroup, { backgroundColor: theme.inputBg }]}>
                     <TouchableOpacity
                       style={styles.qrButton}
                       onPress={() => {
@@ -117,11 +104,9 @@ export default function ProductModal({
                       }}
                     >
                       <Ionicons
-                        name={
-                          isChecked ? 'checkmark-circle' : 'qr-code-outline'
-                        }
+                        name={isChecked ? 'checkmark-circle' : 'qr-code-outline'}
                         size={24}
-                        color={isChecked ? '#28A745' : '#333'}
+                        color={isChecked ? theme.green : theme.textPrimary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -131,22 +116,14 @@ export default function ProductModal({
 
             {checkedItems.length > 0 && (
               <View style={styles.checkedSection}>
-                <Text style={styles.checkedTitle}>Itens Conferidos:</Text>
+                <Text style={[styles.checkedTitle, { color: theme.green }]}>Itens Conferidos:</Text>
                 {checkedItems.map((itemKey) => {
                   const [name, size] = itemKey.split('_');
                   return (
-                    <View key={itemKey} style={styles.checkedItem}>
-                      <Text style={styles.checkedText}>
-                        {name} {size ? `(${size})` : ''}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => handleRemoveItem(itemKey)}
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={20}
-                          color="#FF3B30"
-                        />
+                    <View key={itemKey} style={[styles.checkedItem, { backgroundColor: theme.inputBg }]}>
+                      <Text style={[styles.checkedText, { color: theme.textPrimary }]}> {name} {size ? `(${size})` : ''}</Text>
+                      <TouchableOpacity onPress={() => handleRemoveItem(itemKey)}>
+                        <Ionicons name="close-circle" size={20} color={theme.red} />
                       </TouchableOpacity>
                     </View>
                   );
@@ -184,16 +161,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modal: {
-    backgroundColor: '#eee',
     borderRadius: 12,
     padding: 18,
     width: '92%',
     maxHeight: '90%',
-  },
-  headerText: { 
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
   },
   title: {
     fontSize: 18,
@@ -214,46 +185,19 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 15,
-    color: '#000',
   },
   inputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 6,
-  },
-  input: {
-    backgroundColor: '#f5f5f5',
-    padding: 8,
-    borderRadius: 6,
-    width: 60,
-    textAlign: 'center',
   },
   qrButton: {
     padding: 6,
   },
   footer: {
     marginTop: 20,
-  },
-  confirmButton: {
-    backgroundColor: '#34C759',
-    padding: 12,
-    borderRadius: 6,
-  },
-  confirmText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  cancelButton: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  cancelText: {
-    color: '#FF3B30',
-    fontWeight: 'bold',
   },
   checkedSection: {
     marginTop: 20,
@@ -262,19 +206,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#28A745',
   },
   checkedItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#d4f8dc',
     padding: 10,
     borderRadius: 8,
     marginBottom: 6,
   },
   checkedText: {
     fontSize: 15,
-    color: '#000',
   },
 });

@@ -7,6 +7,7 @@ import {
   TextInput,
   Modal,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import { Container, Title } from '../../src/components/styled';
 import { db } from '../../src/firebase/config';
@@ -23,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ConfirmModal from '@/src/components/ConfirmModal';
 import StarRating from '@/src/components/StarRating';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockProduct[]>([]);
@@ -35,6 +37,8 @@ export default function Stock() {
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [productList, setProductList] = useState<Product[]>([]);
   const [showList, setShowList] = useState(false);
+
+  const { theme } = useTheme();
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -53,7 +57,7 @@ export default function Stock() {
 
   function updateProductField<T extends keyof typeof productForm>(
     field: T,
-    value: typeof productForm[T]
+    value: (typeof productForm)[T]
   ) {
     setProductForm((prev) => ({
       ...prev,
@@ -121,23 +125,44 @@ export default function Stock() {
     <Container>
       <Title>Gestão de Estoque</Title>
 
-      <TouchableOpacity style={styles.enumButton} onPress={() => setProductModalVisible(true)}>
-        <Ionicons name="list-circle-outline" size={28} color="#28A745" />
-        <Text style={styles.enumButtonText}>Cadastrar Produto</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.enumButton} onPress={() => setShowList(!showList)}>
-        <Ionicons name="list-outline" size={28} color="#28A745" />
-        <Text style={styles.enumButtonText}>Lista de Produtos</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.enumButton]}
-        onPress={() => router.push('/stock/lotes')}
-      >
-        <Ionicons name="cube-outline" size={24} color="#28A745"/>
-        <Text style={styles.enumButtonText}>Lotes de Produtos</Text>
-      </TouchableOpacity>
+      <Text style={[styles.tabLabel, { color: theme.primary }]}>Produtos</Text>
+      <View style={[styles.card, { backgroundColor: theme.card }]}>
+        <View style={styles.tabRow}>
+          <Pressable
+            style={[styles.tabItem, { backgroundColor: theme.background }]}
+            onPress={() => setProductModalVisible(true)}
+          >
+            <Ionicons
+              name="list-circle-outline"
+              size={28}
+              color={theme.primary}
+            />
+            <Text style={[styles.tabLabel, { color: theme.primary }]}>
+              Cadastrar
+            </Text>
+          </Pressable>
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Pressable
+            style={[styles.tabItem, { backgroundColor: theme.background }]}
+            onPress={() => setShowList(!showList)}
+          >
+            <Ionicons name="list-outline" size={28} color={theme.primary} />
+            <Text style={[styles.tabLabel, { color: theme.primary }]}>
+              Lista
+            </Text>
+          </Pressable>
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Pressable
+            style={[styles.tabItem, { backgroundColor: theme.background }]}
+            onPress={() => router.push('/stock/lotes')}
+          >
+            <Ionicons name="cube-outline" size={28} color={theme.primary} />
+            <Text style={[styles.tabLabel, { color: theme.primary }]}>
+              Lotes
+            </Text>
+          </Pressable>
+        </View>
+      </View>
 
       <ScrollView>
         {productList.map((product, index) => (
@@ -147,12 +172,16 @@ export default function Stock() {
             <Text>{product.brand && `Marca: ${product.brand}`}</Text>
             <StarRating
               rating={product.favorite}
-              onChange={showList ? (val) => {
-                updateDoc(doc(db, 'product', product.id), {
-                  favorite: val,
-                });
-                fetchProduct();
-              } : undefined}
+              onChange={
+                showList
+                  ? (val) => {
+                      updateDoc(doc(db, 'product', product.id), {
+                        favorite: val,
+                      });
+                      fetchProduct();
+                    }
+                  : undefined
+              }
               disabled={!showList}
             />
             {!showList && (
@@ -173,7 +202,9 @@ export default function Stock() {
                     openConfirm('Deseja adicionar ao estoque?', addStockItem)
                   }
                 >
-                  <Text style={styles.saveButtonText}>Adicionar ao Estoque</Text>
+                  <Text style={styles.saveButtonText}>
+                    Adicionar lote ao estoque
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -208,7 +239,9 @@ export default function Stock() {
               onChangeText={(text) => updateProductField('unit', text)}
               style={styles.input}
             />
-            <Text style={{ marginVertical: 8 }}>Favoritos (1 a 5 estrelas):</Text>
+            <Text style={{ marginVertical: 8 }}>
+              Favoritos (1 a 5 estrelas):
+            </Text>
             <StarRating
               rating={productForm.favorite}
               onChange={(val: number) => updateProductField('favorite', val)}
@@ -240,6 +273,36 @@ export default function Stock() {
 }
 
 const styles = StyleSheet.create({
+  card: {
+    borderRadius: 12,
+    padding: 5,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    gap: 12,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  tabItem: {
+    flexDirection: 'row',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 3,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+  },
+  tabLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   enumButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -310,5 +373,9 @@ const styles = StyleSheet.create({
     width: '85%',
     padding: 20,
     borderRadius: 10,
+  },
+    statDivider: {
+    width: 1,
+    height: '100%',
   },
 });

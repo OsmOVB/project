@@ -276,12 +276,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     padding: 5,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     gap: 12,
   },
   tabRow: {
@@ -301,7 +295,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
   },
   enumButton: {
     flexDirection: 'row',
@@ -321,11 +314,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginVertical: 8,
-    marginHorizontal: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     elevation: 2,
   },
   itemName: {

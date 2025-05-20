@@ -4,10 +4,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/firebase/config';
-import { Container, Title, Input, ErrorText } from '@/components/styled';
-import Button from '@/components/Button';
+import { auth } from '@/src/firebase/config';
+import Button from '@/src/components/Button';
 import { router } from 'expo-router';
+import { Container, ErrorText, Input, Title } from '@/src/components/styled';
+
+
 
 const forgotPasswordSchema = z.object({
     email: z.string().email('Email inválido'),
@@ -59,7 +61,6 @@ export default function ForgotPasswordScreen() {
                     title="Voltar para Login"
                     type="outline"
                     onPress={() => router.push('/(auth)/login')}
-                    style={{ marginTop: 12 }}
                 />
             </View>
         </Container>

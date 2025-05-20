@@ -1,6 +1,9 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { ThemeProvider } from '@/src/context/ThemeContext';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet } from 'react-native';
 
 export default function AuthLayout() {
   return (

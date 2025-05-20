@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
+  View,
   ScrollView,
   StyleSheet,
   Modal,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +21,7 @@ import {
   ErrorText,
   Card,
   CardTitle,
+  CardText,
 } from '../../src/components/styled';
 import { router } from 'expo-router';
 import { db } from '../../src/firebase/config';
@@ -27,7 +30,6 @@ import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
 
-// Validação do pedido
 const orderSchema = z.object({
   customerName: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
@@ -47,22 +49,23 @@ const orderSchema = z.object({
 type OrderForm = z.infer<typeof orderSchema>;
 
 export default function CreateOrder() {
-  const { darkMode } = useTheme();
+  const { theme, darkMode } = useTheme();
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanningItemId, setScanningItemId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [products, setProducts] = useState<
-    {
-      quantity: any;
-      size: string;
-      id: string;
-      name: string;
-      price: number;
-    }[]
-  >([]);
+
+  type Product = {
+    id: string;
+    name: string;
+    price: number;
+    size: string;
+    quantity: number;
+  };
+  
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState<
-    { id: string; name: string; quantity: number }[]
-  >([]);
+  const [selectedItems, setSelectedItems] = useState<Product[]>([]);
 
   const {
     control,
@@ -81,17 +84,16 @@ export default function CreateOrder() {
 
   const scheduledDate = watch('scheduledDate');
 
-  // 🔥 Buscar produtos do Firestore ao carregar a tela
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'product'));
         const productsList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          name: doc.data().name || 'Produto sem nome', // Ensure name is present
-          price: doc.data().price || 0, // Ensure price is present
-          size: doc.data().size || '', // Set a default string value for size
-          quantity: doc.data().quantity || 0, // Ensure quantity is present
+          name: doc.data().name || 'Produto sem nome',
+          price: doc.data().price || 0,
+          size: doc.data().size || '',
+          quantity: doc.data().quantity || 0,
         }));
         setProducts(productsList);
       } catch (error) {
@@ -112,6 +114,7 @@ export default function CreateOrder() {
         name: item.name,
         quantity: item.quantity,
         size: item.size,
+        price: item.price, // Add price property to match Product type
       };
       const updatedItems = [...selectedItems, newItem];
       setSelectedItems(updatedItems);
@@ -119,14 +122,12 @@ export default function CreateOrder() {
     }
   };
 
-  // 📌 Remover item do pedido
   const removeItem = (itemId: string) => {
     const updatedItems = selectedItems.filter((item) => item.id !== itemId);
     setSelectedItems(updatedItems);
     setValue('items', updatedItems);
   };
 
-  // 📌 Atualizar quantidade de item
   const updateQuantity = (itemId: string, quantity: number) => {
     if (quantity < 1) return;
     const updatedItems = selectedItems.map((item) =>
@@ -136,7 +137,6 @@ export default function CreateOrder() {
     setValue('items', updatedItems);
   };
 
-  // 📌 Salvar pedido no Firestore
   const onSubmit = async (data: OrderForm) => {
     try {
       await addDoc(collection(db, 'orders'), data);
@@ -148,20 +148,18 @@ export default function CreateOrder() {
   };
 
   return (
-    <Container>
-      <ScrollView>
-        <Title>Criar Novo Pedido</Title>
+    <View style={{ backgroundColor: theme.background, flex: 1 }}>
+      <Container>
+        <ScrollView>
+          <Title style={{ color: theme.textPrimary }}>Criar Novo Pedido</Title>
 
-        {/* 🔹 SELEÇÃO DE DATA MANTIDA */}
-        <Card>
-          <CardTitle>Agendar Entrega</CardTitle>
+        <Card style={{ backgroundColor: theme.card }}>
+          <CardTitle style={{ color: theme.textPrimary }}>Agendar Entrega</CardTitle>
           <TouchableOpacity
             onPress={() => setCalendarVisible(true)}
-            style={styles.dateButton}
+            style={[styles.dateButton, { backgroundColor: theme.inputBg }]}
           >
-            <Text style={styles.dateButtonText}>
-              {scheduledDate.toLocaleString()}
-            </Text>
+            <Text style={{ color: theme.text }}> {scheduledDate.toLocaleString()} </Text>
           </TouchableOpacity>
           <Modal visible={calendarVisible} transparent={true}>
             <Calendar
@@ -173,13 +171,13 @@ export default function CreateOrder() {
               mode="datetime"
               visible={calendarVisible}
               onClose={() => setCalendarVisible(false)}
-              theme={darkMode ? '#1c1c1e' : '#f5f5f5'}
+              theme={theme.card}
             />
           </Modal>
         </Card>
 
-        <Card>
-          <CardTitle>Informações do Cliente</CardTitle>
+        <Card style={{ backgroundColor: theme.card }}>
+          <CardTitle style={{ color: theme.textPrimary }}>Informações do Cliente</CardTitle>
           <Controller
             control={control}
             name="customerName"
@@ -210,8 +208,8 @@ export default function CreateOrder() {
           {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
         </Card>
 
-        <Card>
-          <CardTitle>Produtos</CardTitle>
+        <Card style={{ backgroundColor: theme.card }}>
+          <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
           <ProductSelector
             products={products}
             loading={loading}
@@ -222,21 +220,21 @@ export default function CreateOrder() {
             onOpenAddModal={() => setModalVisible(true)}
           />
         </Card>
-
-      </ScrollView>
+        </ScrollView>
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Cadastrar Pedido</ButtonText>
         </Button>
-      <AddProductModal
-        visible={modalVisible}
-        products={products}
-        onAdd={(product: any) => {
-          addItem(product.id);
-          setModalVisible(false);
-        }}
-        onClose={() => setModalVisible(false)}
-      />
-    </Container>
+        <AddProductModal
+          visible={modalVisible}
+          products={products}
+          onAdd={(product: any) => {
+            addItem(product.id);
+            setModalVisible(false);
+          }}
+          onClose={() => setModalVisible(false)}
+        />
+      </Container>
+    </View>
   );
 }
 
@@ -248,7 +246,6 @@ const styles = StyleSheet.create({
   submitButton: {
     marginVertical: 20,
   },
-
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -282,13 +279,11 @@ const styles = StyleSheet.create({
   addButton: {
     width: 80,
   },
-
   picker: {
     borderRadius: 8,
     marginTop: 10,
   },
   dateButton: {
-    backgroundColor: '#f5f5f5',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',

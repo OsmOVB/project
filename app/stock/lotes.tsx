@@ -5,11 +5,13 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert
+  Alert,
 } from 'react-native';
 import { getDocs, collection, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
+import { useTheme } from '@/src/context/ThemeContext';
+import { Card, CardTitle } from '@/src/components/styled';
 
 interface StockItem {
   id: string;
@@ -23,6 +25,7 @@ interface StockItem {
 export default function Lotes() {
   const [lotes, setLotes] = useState<{ loteId: string; dataLote: string; items: StockItem[] }[]>([]);
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchLotes();
@@ -65,38 +68,37 @@ export default function Lotes() {
           );
           await Promise.all(deletions);
           fetchLotes();
-        }
-      }
+        },
+      },
     ]);
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>📦 Lotes de Produtos</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.header, { color: theme.textPrimary }]}>📦 Lotes de Produtos</Text>
 
       {lotes.map((lote, index) => (
-        <View key={index} style={styles.card}>
+        <Card key={index} style={{ backgroundColor: theme.card }}>
           <TouchableOpacity
-            style={styles.cardContent}
             onPress={() =>
               router.push({
                 pathname: '/stock/lote_details',
-                params: { loteId: lote.loteId, dataLote: lote.dataLote }
+                params: { loteId: lote.loteId, dataLote: lote.dataLote },
               })
             }
           >
-            <Text style={styles.loteTitle}>Lote #{lote.loteId}</Text>
-            <Text style={styles.loteDate}>🗓️ {lote.dataLote}</Text>
-            <Text style={styles.loteItems}>📋 {lote.items.length} Produto(s)</Text>
+            <CardTitle style={{ color: theme.primary }}>Lote #{lote.loteId}</CardTitle>
+            <Text style={[styles.loteDate, { color: theme.text }]}>🗓️ {lote.dataLote}</Text>
+            <Text style={[styles.loteItems, { color: theme.text }]}>📋 {lote.items.length} Produto(s)</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.deleteButton}
+            style={[styles.deleteButton, { backgroundColor: theme.background }]}
             onPress={() => handleDeleteLote(lote.loteId, lote.dataLote)}
           >
             <Text style={styles.deleteText}>Apagar Lote</Text>
           </TouchableOpacity>
-        </View>
+        </Card>
       ))}
     </ScrollView>
   );
@@ -105,49 +107,25 @@ export default function Lotes() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#f9f9f9',
   },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 24,
-    color: '#333',
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  cardContent: {
-    marginBottom: 12,
-  },
-  loteTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-    color: '#007AFF',
   },
   loteDate: {
     fontSize: 14,
-    color: '#555',
     marginBottom: 2,
   },
   loteItems: {
     fontSize: 14,
-    color: '#333',
   },
   deleteButton: {
-    backgroundColor: '#FF3B30',
     paddingVertical: 8,
     borderRadius: 6,
     alignItems: 'center',
+    marginTop: 12,
   },
   deleteText: {
     color: '#fff',

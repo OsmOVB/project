@@ -1,16 +1,18 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  View,
-  Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  View,
+  Text,
 } from 'react-native';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from '@/src/firebase/config';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/src/context/ThemeContext';
+import { Card, CardTitle } from '@/src/components/styled';
 
 interface StockItem {
   id: string;
@@ -25,6 +27,7 @@ export default function LoteDetails() {
   const { loteId, dataLote } = useLocalSearchParams();
   const [barris, setBarris] = useState<StockItem[]>([]);
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     fetchBarris();
@@ -56,33 +59,36 @@ export default function LoteDetails() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>📦 Lote #{loteId}</Text>
-      <Text style={styles.subtitle}>🗓️ Data: {dataLote}</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.textPrimary }]}>📦 Lote #{loteId}</Text>
+      <Text style={[styles.subtitle, { color: theme.text }]}>🗓️ Data: {dataLote}</Text>
 
       {barris.map((item, i) => (
-        <View key={i} style={styles.card}>
-          <Text style={styles.label}>
-            Tipo: <Text style={styles.value}>{item.tipoItemName}</Text>
-          </Text>
-          <Text style={styles.label}>
+        <Card key={i} style={{ backgroundColor: theme.card }}>
+          <CardTitle>{item.tipoItemName}</CardTitle>
+
+          <Text style={[styles.label, { color: theme.text }]}>
             Marca: <Text style={styles.value}>{item.marca}</Text>
           </Text>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: theme.text }]}>
             Capacidade: <Text style={styles.value}>{item.capacidade}</Text>
           </Text>
 
           <View style={styles.qrActions}>
-            {/* Gerar QR Code */}
-            <TouchableOpacity style={styles.qrButton} onPress={() => {}}>
-              <Ionicons name="qr-code-outline" size={22} color="#000" />
-              <Text style={styles.qrText}>Gerar QR Code</Text>
+            <TouchableOpacity
+              style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
+              onPress={() => {}}
+            >
+              <Ionicons name="qr-code-outline" size={20} color={theme.text} />
+              <Text style={[styles.qrText, { color: theme.text }]}>Gerar QR Code</Text>
             </TouchableOpacity>
 
-            {/* Vincular QR Existente */}
-            <TouchableOpacity style={styles.qrButton} onPress={() => {}}>
-              <Ionicons name="qr-code-outline" size={22} color="#000" />
-              <Text style={styles.qrText}>Ler QR Existente</Text>
+            <TouchableOpacity
+              style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
+              onPress={() => {}}
+            >
+              <Ionicons name="qr-code-outline" size={20} color={theme.text} />
+              <Text style={[styles.qrText, { color: theme.text }]}>Ler QR Existente</Text>
             </TouchableOpacity>
           </View>
 
@@ -96,18 +102,18 @@ export default function LoteDetails() {
                 })
               }
             >
-              <Ionicons name="create-outline" size={22} color="#007AFF" />
-              <Text style={styles.edit}>Editar</Text>
+              <Ionicons name="create-outline" size={20} color={theme.primary} />
+              <Text style={[styles.edit, { color: theme.primary }]}>Editar</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => handleDeleteItem(item.id)}
             >
-              <Ionicons name="trash-outline" size={22} color="#FF3B30" />
-              <Text style={styles.delete}>Apagar</Text>
+              <Ionicons name="trash-outline" size={20} color={theme.danger} />
+              <Text style={[styles.delete, { color: theme.danger }]}>Apagar</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Card>
       ))}
     </ScrollView>
   );
@@ -116,41 +122,25 @@ export default function LoteDetails() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#f9f9f9',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
     textAlign: 'center',
-    color: '#333',
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
-    color: '#666',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
   label: {
     fontWeight: 'bold',
     fontSize: 15,
-    color: '#444',
     marginBottom: 4,
   },
   value: {
     fontWeight: 'normal',
-    color: '#000',
   },
   actions: {
     flexDirection: 'row',
@@ -164,29 +154,26 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   edit: {
-    color: '#007AFF',
     fontWeight: '500',
   },
   delete: {
-    color: '#FF3B30',
     fontWeight: '500',
   },
   qrActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 12,
+    gap: 8,
   },
   qrButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f0f0f0',
     padding: 8,
     borderRadius: 6,
-    flex: 0.48,
+    flex: 1,
   },
   qrText: {
     fontWeight: '500',
-    color: '#333',
   },
 });

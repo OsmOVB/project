@@ -109,8 +109,8 @@ export default function LoteDetails() {
               style={styles.actionBtn}
               onPress={() => handleDeleteItem(item.id)}
             >
-              <Ionicons name="trash-outline" size={20} color={theme.danger} />
-              <Text style={[styles.delete, { color: theme.danger }]}>Apagar</Text>
+              <Ionicons name="trash-outline" size={20} color={theme.red} />
+              <Text style={[styles.delete, { color: theme.red }]}>Apagar</Text>
             </TouchableOpacity>
           </View>
         </Card>

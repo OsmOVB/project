@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
   ScrollView,
   StyleSheet,
   Modal,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,16 +19,15 @@ import {
   ErrorText,
   Card,
   CardTitle,
-  CardText,
 } from '../../src/components/styled';
 import { router } from 'expo-router';
 import { db } from '../../src/firebase/config';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
 
-// 📌 Validação do pedido
+// Validação do pedido
 const orderSchema = z.object({
   customerName: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
@@ -50,10 +47,8 @@ const orderSchema = z.object({
 type OrderForm = z.infer<typeof orderSchema>;
 
 export default function CreateOrder() {
-  const { darkMode } = useThemeContext();
+  const { darkMode } = useTheme();
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [scannerVisible, setScannerVisible] = useState(false);
-  const [scanningItemId, setScanningItemId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [products, setProducts] = useState<
     {
@@ -246,12 +241,6 @@ export default function CreateOrder() {
 }
 
 const styles = StyleSheet.create({
-  qrButton: {
-    backgroundColor: '#007AFF',
-    padding: 8,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
   removeButton: {
     backgroundColor: '#FF3B30',
     marginLeft: 10,
@@ -259,9 +248,7 @@ const styles = StyleSheet.create({
   submitButton: {
     marginVertical: 20,
   },
-  qrButtonText: {
-    color: '#FFF',
-  },
+
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

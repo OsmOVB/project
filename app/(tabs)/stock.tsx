@@ -25,6 +25,7 @@ import ConfirmModal from '@/src/components/ConfirmModal';
 import StarRating from '@/src/components/StarRating';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/context/ThemeContext';
+import StockCard from '@/src/components/stock/StockCard';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockProduct[]>([]);
@@ -141,7 +142,9 @@ export default function Stock() {
               Cadastrar
             </Text>
           </Pressable>
-          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <View
+            style={[styles.statDivider, { backgroundColor: theme.border }]}
+          />
           <Pressable
             style={[styles.tabItem, { backgroundColor: theme.background }]}
             onPress={() => setShowList(!showList)}
@@ -151,7 +154,9 @@ export default function Stock() {
               Lista
             </Text>
           </Pressable>
-          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <View
+            style={[styles.statDivider, { backgroundColor: theme.border }]}
+          />
           <Pressable
             style={[styles.tabItem, { backgroundColor: theme.background }]}
             onPress={() => router.push('/stock/lotes')}
@@ -166,49 +171,19 @@ export default function Stock() {
 
       <ScrollView>
         {productList.map((product, index) => (
-          <View key={index} style={styles.itemContainer}>
-            <Text style={styles.itemName}>{product.name}</Text>
-            <Text>{product.size && `Tamanho: ${product.size}`}</Text>
-            <Text>{product.brand && `Marca: ${product.brand}`}</Text>
-            <StarRating
-              rating={product.favorite}
-              onChange={
-                showList
-                  ? (val) => {
-                      updateDoc(doc(db, 'product', product.id), {
-                        favorite: val,
-                      });
-                      fetchProduct();
-                    }
-                  : undefined
-              }
-              disabled={!showList}
-            />
-            {!showList && (
-              <>
-                <TextInput
-                  placeholder="Quantidade"
-                  keyboardType="numeric"
-                  value={selected?.id === product.id ? quantity : ''}
-                  onChangeText={(text) => {
-                    setSelected(product);
-                    setQuantity(text);
-                  }}
-                  style={styles.input}
-                />
-                <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={() =>
-                    openConfirm('Deseja adicionar ao estoque?', addStockItem)
-                  }
-                >
-                  <Text style={styles.saveButtonText}>
-                    Adicionar lote ao estoque
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
+          <StockCard
+            key={index}
+            product={product}
+            index={index}
+            selected={selected}
+            quantity={quantity}
+            showList={showList}
+            setSelected={setSelected}
+            setQuantity={setQuantity}
+            openConfirm={openConfirm}
+            addStockItem={addStockItem}
+            fetchProduct={fetchProduct}
+          />
         ))}
       </ScrollView>
 
@@ -363,7 +338,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
   },
-    statDivider: {
+  statDivider: {
     width: 1,
     height: '100%',
   },

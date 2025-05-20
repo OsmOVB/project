@@ -1,15 +1,25 @@
 import React from 'react';
-import styled, { css, useTheme } from 'styled-components/native';
-import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import { ThemeType } from '../../theme';
+import {
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
+import { useTheme } from '@/src/context/ThemeContext';
+
+type TypeButton = 'primary' | 'secondary' | 'danger' | 'outline' | 'fab';
 
 interface ButtonProps {
-  title: string;
+  title?: string;
   onPress: () => void;
-  type?: 'primary' | 'secondary' | 'danger' | 'outline';
+  type?: TypeButton;
   isLoading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
+  style?: ViewStyle;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -19,91 +29,125 @@ const Button: React.FC<ButtonProps> = ({
   isLoading = false,
   disabled = false,
   fullWidth = false,
+  style,
 }) => {
-  const theme = useTheme() as ThemeType;
+  const { theme } = useTheme(); // <- tema sem styled-components
+
+  const isFab = type === 'fab';
+
+  const containerStyle: ViewStyle[] = [
+    !isFab && styles.base,
+    fullWidth && styles.fullWidth,
+    isFab ? fabStyle(theme) : getTypeStyle(type, disabled, theme),
+    style ?? {},
+  ].filter(Boolean) as ViewStyle[];
+
+  const textStyle: TextStyle = getTextStyle(type, theme);
 
   return (
-    <ButtonContainer
+    <TouchableOpacity
+      style={containerStyle}
       onPress={onPress}
-      type={type}
       disabled={disabled || isLoading}
-      fullWidth={fullWidth}
       activeOpacity={0.8}
     >
       {isLoading ? (
         <ActivityIndicator
           color={type === 'outline' ? theme.primary : theme.buttonText}
         />
+      ) : isFab ? (
+        <AntDesign name="plus" size={26} color={theme.primary} />
       ) : (
-        <ButtonText type={type}>{title}</ButtonText>
+        <Text style={textStyle}>{title}</Text>
       )}
-    </ButtonContainer>
+    </TouchableOpacity>
   );
 };
 
-const ButtonContainer = styled(TouchableOpacity)<{
-  type: 'primary' | 'secondary' | 'danger' | 'outline';
-  disabled: boolean;
-  fullWidth: boolean;
-}>`
-  padding: 14px 20px;
-  border-radius: 12px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-vertical: 8px;
-  ${({ fullWidth }: { fullWidth: boolean }) =>
-    fullWidth &&
-    css`
-      width: 100%;
-    `}
-  ${({
-    type,
-    disabled,
-    theme,
-  }: {
-    type: 'primary' | 'secondary' | 'danger' | 'outline';
-    disabled: boolean;
-    theme: ThemeType;
-  }) => {
-    switch (type) {
-      case 'primary':
-        return css`
-          background-color: ${disabled ? theme.separator : theme.primary};
-        `;
-      case 'secondary':
-        return css`
-          background-color: ${disabled ? theme.secondary : theme.card};
-          border: 1px solid ${theme.primary};
-        `;
-      case 'danger':
-        return css`
-          background-color: ${disabled ? theme.separator : theme.red};
-        `;
-      case 'outline':
-        return css`
-          background-color: transparent;
-          border: 1px solid ${disabled ? theme.separator : theme.primary};
-        `;
-      default:
-        return null;
-    }
-  }}
-`;
+function fabStyle(theme: any): ViewStyle {
+  return {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: theme.primary,
+    backgroundColor: theme.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  };
+}
 
-const ButtonText = styled(Text)<{
-  type: 'primary' | 'secondary' | 'danger' | 'outline';
-}>`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${({
-    type,
-    theme,
-  }: {
-    type: 'primary' | 'secondary' | 'danger' | 'outline';
-    theme: ThemeType;
-  }) =>
-    type === 'primary' || type === 'danger' ? theme.buttonText : theme.primary};
-`;
+function getTypeStyle(
+  type: TypeButton,
+  disabled: boolean,
+  theme: any
+): ViewStyle {
+  const base: ViewStyle = {
+    height: 50,
+    width: '100%',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  };
+
+  switch (type) {
+    case 'primary':
+      return { ...base, backgroundColor: disabled ? theme.separator : theme.primary };
+    case 'secondary':
+      return {
+        ...base,
+        backgroundColor: disabled ? theme.secondary : theme.card,
+        borderWidth: 1,
+        borderColor: theme.primary,
+      };
+    case 'danger':
+      return { ...base, backgroundColor: disabled ? theme.separator : theme.red };
+    case 'outline':
+      return {
+        ...base,
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: disabled ? theme.separator : theme.primary,
+      };
+    default:
+      return base;
+  }
+}
+
+function getTextStyle(type: TypeButton, theme: any): TextStyle {
+  return {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    color:
+      type === 'primary' || type === 'danger'
+        ? theme.buttonText
+        : theme.primary,
+  };
+}
+
+const styles = StyleSheet.create({
+  base: {
+    height: 60,
+    width: '100%',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+});
 
 export default Button;

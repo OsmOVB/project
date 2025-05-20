@@ -4,11 +4,11 @@ import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, The
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function Settings() {
   const { user, logout } = useAuth();
-  const { darkMode, toggleTheme } = useThemeContext();
+  const { darkMode, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
 
   return (
@@ -48,10 +48,14 @@ export default function Settings() {
         {user?.role === 'admin' && (
           <Card>
             <CardTitle>Administração</CardTitle>
-            <Button onPress={() => router.push('/users')} style={styles.button}>
+            <Button 
+            onPress={() => {console.log('Gerenciar usuários') }}
+             style={styles.button}>
               <ButtonText>Gerenciar Usuários</ButtonText>
             </Button>
-            <Button onPress={() => router.push('/settings/company')} style={styles.button}>
+            <Button 
+            onPress={() => {console.log('Configurações da Empresa') }}
+            style={styles.button}>
               <ButtonText>Configurações da Empresa</ButtonText>
             </Button>
           </Card>

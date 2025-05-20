@@ -15,7 +15,7 @@ import {
   Card,
   CardTitle,
   CardText,
-  Button,
+  // Button,
   ButtonText,
 } from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +26,7 @@ import { db } from '@/src/firebase/config';
 import { getDocs, collection } from 'firebase/firestore';
 import ProductModal from '@/src/components/modal/ProductModal';
 import ScanItemsModal from '@/src/components/modal/ScanItemsModal';
+import Button from '@/src/components/Button';
 
 export interface DeliveryItem {
   name: string;
@@ -52,6 +53,9 @@ export default function Home() {
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [productModal, setProductModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'entregas' | 'retiradas'>(
+    'entregas'
+  );
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -121,16 +125,50 @@ export default function Home() {
           </Title>
         </View>
       </View>
+      <Title style={styles.sectionTitle}>Pedidos de hoje</Title>
 
       <Card style={styles.statsCard}>
         <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <CardTitle style={styles.statValue}>{orders.length}</CardTitle>
-            <CardText style={styles.statLabel}>Entregas de hoje</CardText>
-          </View>
+          <Pressable
+            style={[
+              styles.statItem,
+              activeTab === 'entregas' && styles.activeStatItem,
+            ]}
+            onPress={() => setActiveTab('entregas')}
+          >
+            <CardTitle
+              style={[
+                styles.statValue,
+                activeTab === 'entregas' && styles.activeStatText,
+              ]}
+            >
+              {orders.length}
+            </CardTitle>
+            <CardText
+              style={[
+                styles.statLabel,
+                activeTab === 'entregas' && styles.activeStatText,
+              ]}
+            >
+              Entregas de hoje
+            </CardText>
+          </Pressable>
+
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <CardTitle style={styles.statValue}>
+
+          <Pressable
+            style={[
+              styles.statItem,
+              activeTab === 'retiradas' && styles.activeStatItem,
+            ]}
+            onPress={() => setActiveTab('retiradas')}
+          >
+            <CardTitle
+              style={[
+                styles.statValue,
+                activeTab === 'retiradas' && styles.activeStatText,
+              ]}
+            >
               {
                 orders.filter(
                   (order) =>
@@ -139,67 +177,72 @@ export default function Home() {
                 ).length
               }
             </CardTitle>
-
-            <CardText style={styles.statLabel}>Retiradas de hoje</CardText>
-          </View>
+            <CardText
+              style={[
+                styles.statLabel,
+                activeTab === 'retiradas' && styles.activeStatText,
+              ]}
+            >
+              Retiradas de hoje
+            </CardText>
+          </Pressable>
         </View>
       </Card>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Agenda de hoje</Title>
-          <Button
-            onPress={() => router.push('/orders/create')}
-            style={styles.addButton}
-          >
-            <ButtonText>Novo Pedido</ButtonText>
-          </Button>
-        </View>
-      </View>
       <ScrollView style={styles.container}>
-        {orders.map((delivery) => (
-          <Pressable
-            key={delivery.id}
-            style={styles.deliveryCard}
-            onPress={() => {
-              setSelectedDelivery(delivery);
-              setProductModal(true);
-              // setScanVisible(true);
-            }}
-          >
-            <View style={styles.deliveryHeader}>
-              <View style={styles.deliveryTime}>
-                <Ionicons name="time-outline" size={20} color="#666" />
-                <Text style={styles.timeText}>{delivery.time}</Text>
-              </View>
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: getStatusColor(delivery.status) },
-                ]}
-              >
-                <Text style={styles.statusText}>
-                  {delivery.status.replace('_', ' ').toUpperCase()}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.customerName}>{delivery.customerName}</Text>
-            <Text style={styles.address}>{delivery.address}</Text>
-
-            <View style={styles.itemsList}>
-              {delivery.items.map((item, index) => (
-                <View key={index} style={styles.itemRow}>
-                  <Text style={styles.itemName}>
-                    {item.name}
-                    {item.size ? ` ${item.size}` : ''}
-                  </Text>
-                  <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+        {orders
+          .filter((delivery) => {
+            if (activeTab === 'entregas') {
+              return true;
+            }
+            return (
+              delivery.status === 'em progresso' &&
+              Date.now() - delivery.scheduledTimestamp >= 65 * 60 * 1000
+            );
+          })
+          .map((delivery) => (
+            <Pressable
+              key={delivery.id}
+              style={styles.deliveryCard}
+              onPress={() => {
+                setSelectedDelivery(delivery);
+                setProductModal(true);
+                // setScanVisible(true);
+              }}
+            >
+              <View style={styles.deliveryHeader}>
+                <View style={styles.deliveryTime}>
+                  <Ionicons name="time-outline" size={20} color="#666" />
+                  <Text style={styles.timeText}>{delivery.time}</Text>
                 </View>
-              ))}
-            </View>
-          </Pressable>
-        ))}
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(delivery.status) },
+                  ]}
+                >
+                  <Text style={styles.statusText}>
+                    {delivery.status.replace('_', ' ').toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.customerName}>{delivery.customerName}</Text>
+              <Text style={styles.address}>{delivery.address}</Text>
+
+              <View style={styles.itemsList}>
+                {delivery.items.map((item, index) => (
+                  <View key={index} style={styles.itemRow}>
+                    <Text style={styles.itemName}>
+                      {item.name}
+                      {item.size ? ` ${item.size}` : ''}
+                    </Text>
+                    <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
+          ))}
       </ScrollView>
       <ProductModal
         visible={productModal}
@@ -208,6 +251,7 @@ export default function Home() {
         items={selectedDelivery?.items || []}
         deliveryId={selectedDelivery?.id || ''}
       />
+      <Button type="fab" onPress={() => router.push('/orders/create')} />
     </Container>
   );
 }
@@ -215,6 +259,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
   },
   header: {
     flexDirection: 'row',
@@ -226,17 +271,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 4,
     color: '#666',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1c1c1e',
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f5f5f5',
   },
   statsCard: {
     marginBottom: 24,
@@ -264,6 +298,14 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: '#666',
+  },
+  activeStatItem: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 8,
+  },
+  activeStatText: {
+    color: '#fff',
   },
   section: {
     marginBottom: 24,
@@ -353,23 +395,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007AFF',
   },
-  qrActions: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginTop: 12,
-},
-qrButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 4,
-  backgroundColor: '#f0f0f0',
-  padding: 8,
-  borderRadius: 6,
-  flex: 0.48,
-},
-qrText: {
-  fontWeight: '500',
-  color: '#333',
-},
-
 });

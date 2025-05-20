@@ -11,7 +11,6 @@ import {
   TextProps,
 } from 'react-native';
 import { useTheme } from '@/src/context/ThemeContext';
-import { ThemeType } from '../../theme';
 
 // Container
 export const Container = ({ children }: { children: React.ReactNode }) => {

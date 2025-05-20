@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { DeliveryItem } from '@/app/(tabs)/index';
 import ScanItemsModal from '../ScanItemsModal';
 import Button from '../../Button';
-import { ButtonText } from '../../styled';
 
 interface ProductModalProps {
   visible: boolean;

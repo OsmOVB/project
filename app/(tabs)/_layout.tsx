@@ -1,10 +1,23 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function Layout() {
+  const { theme } = useTheme();
+
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: theme.card, 
+          borderTopColor: theme.border,
+        },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -14,7 +27,7 @@ export default function Layout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="orders"
         options={{
           title: 'Pedidos',
@@ -22,7 +35,7 @@ export default function Layout() {
             <Ionicons name="list" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="stock"
         options={{

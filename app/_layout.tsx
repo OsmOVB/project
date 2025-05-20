@@ -1,21 +1,36 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { View, StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
+import * as NavigationBar from 'expo-navigation-bar';
+
+import { ThemeProvider, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/hooks/useAuth';
-import { ThemeProvider } from '@/src/context/ThemeContext';
+
+function InnerLayout() {
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    NavigationBar.setBackgroundColorAsync(theme.background);
+    NavigationBar.setButtonStyleAsync(theme.background === '#121212' ? 'light' : 'dark');
+  }, [theme]);
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <StatusBar style={theme.background === '#121212' ? 'light' : 'dark'} />
+      <Slot />
+    </SafeAreaView>
+  );
+}
 
 export default function RootLayout() {
   const { user } = useAuth();
   const router = useRouter();
   const segments = useSegments();
-  const colorScheme = useColorScheme(); // Detecta o modo claro/escuro do sistema
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
-
     if (user && inAuthGroup) {
       router.replace('/(tabs)');
     } else if (!user && !inAuthGroup) {
@@ -26,10 +41,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <SafeAreaProvider>
-        <SafeAreaView style={styles.safeArea}>
-          <StatusBar style="auto" />
-          <Slot />
-        </SafeAreaView>
+        <InnerLayout />
       </SafeAreaProvider>
     </ThemeProvider>
   );
@@ -38,6 +50,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });

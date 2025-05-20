@@ -68,11 +68,11 @@ export default function Login() {
       const userData = userDoc.exists()
         ? userDoc.data()
         : {
-            uid: user.uid,
-            name: user.displayName || 'Usuário',
-            email: user.email,
-            role: 'customer',
-          };
+          uid: user.uid,
+          name: user.displayName || 'Usuário',
+          email: user.email,
+          role: 'customer',
+        };
 
       if (!userDoc.exists()) {
         await setDoc(userRef, userData);
@@ -100,6 +100,7 @@ export default function Login() {
     <Container>
       <View style={styles.formContainer}>
         <Title>Bem-vindo de volta</Title>
+
         <Controller
           control={control}
           name="email"
@@ -141,6 +142,13 @@ export default function Login() {
           isLoading={isLoading}
           fullWidth
         />
+
+        <Button
+          title="Recuperar Senha"
+          type="ghost"
+          onPress={() => router.push('/forgot-password')}
+        />
+
         <Button
           title="Criar Conta"
           type="outline"

@@ -5,7 +5,7 @@ import { darkTheme, lightTheme } from '@/src/theme';
 import TimePicker from '../TimePicker/TimePicker';
 import HourSelection from './HourSelection';
 import Button from '../Button';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 
 const getMonthName = (month: number) =>
   [
@@ -49,7 +49,7 @@ const Calendar: React.FC<CalendarProps> = ({
   theme,
   bookedTimes = [],
 }) => {
-  const { darkMode } = useThemeContext();
+  const { darkMode } = useTheme();
   const appliedTheme = darkMode ? darkTheme.calendar : lightTheme.calendar;
   const textColor = darkMode ? darkTheme.text : lightTheme.text;
   const headerColor = darkMode ? darkTheme.primary : lightTheme.primary;

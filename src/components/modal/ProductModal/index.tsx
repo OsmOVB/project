@@ -5,8 +5,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DeliveryItem } from '@/app/(tabs)/index';
@@ -75,10 +75,20 @@ export default function ProductModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.overlay}>
-        <View style={[styles.modal, { backgroundColor: theme.card }]}>
-          <Text style={[styles.title, { color: theme.textPrimary }]}>Itens do Pedido: {deliveryId}</Text>
+        <View
+          style={[
+            styles.modal,
+            {
+              backgroundColor: theme.card,
+              marginBottom: Platform.OS === 'android' ? 32 : 0,
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: theme.textPrimary }]}>
+            Itens do Pedido: {deliveryId}
+          </Text>
 
           <ScrollView contentContainerStyle={styles.itemsContainer}>
             {items.map((item, index) => {
@@ -89,7 +99,9 @@ export default function ProductModal({
               return (
                 <View key={itemKey} style={styles.itemRow}>
                   <View style={styles.itemInfo}>
-                    <Text style={[styles.itemText, { color: theme.textPrimary }]}>🔹 {item.name} {item.size ? `(${item.size})` : ''}</Text>
+                    <Text style={[styles.itemText, { color: theme.textPrimary }]}>
+                      🔹 {item.name} {item.size ? `(${item.size})` : ''}
+                    </Text>
                     <Text style={{ fontSize: 13, color: theme.textSecondary }}>
                       Quantidade: {currentQuantity} / {item.quantity}
                     </Text>
@@ -116,12 +128,19 @@ export default function ProductModal({
 
             {checkedItems.length > 0 && (
               <View style={styles.checkedSection}>
-                <Text style={[styles.checkedTitle, { color: theme.green }]}>Itens Conferidos:</Text>
+                <Text style={[styles.checkedTitle, { color: theme.green }]}>
+                  Itens Conferidos:
+                </Text>
                 {checkedItems.map((itemKey) => {
                   const [name, size] = itemKey.split('_');
                   return (
-                    <View key={itemKey} style={[styles.checkedItem, { backgroundColor: theme.inputBg }]}>
-                      <Text style={[styles.checkedText, { color: theme.textPrimary }]}> {name} {size ? `(${size})` : ''}</Text>
+                    <View
+                      key={itemKey}
+                      style={[styles.checkedItem, { backgroundColor: theme.inputBg }]}
+                    >
+                      <Text style={[styles.checkedText, { color: theme.textPrimary }]}>
+                        {name} {size ? `(${size})` : ''}
+                      </Text>
                       <TouchableOpacity onPress={() => handleRemoveItem(itemKey)}>
                         <Ionicons name="close-circle" size={20} color={theme.red} />
                       </TouchableOpacity>
@@ -138,7 +157,6 @@ export default function ProductModal({
               type="primary"
               title="Finalizar Conferência"
             />
-
             <Button onPress={onClose} type="outline" title="Cancelar" />
           </View>
         </View>

@@ -8,7 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import Wheel, { WheelStyleProps } from './Wheel';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { darkTheme, lightTheme } from '@/src/theme';
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
@@ -71,7 +71,7 @@ export default function TimePicker({
   wheelProps = {},
   timeFormat = DEFAULT_TYPE_TYPES,
 }: Props): React.ReactElement {
-  const { darkMode } = useThemeContext();
+  const { darkMode } = useTheme();
   const appliedTheme = darkMode ? darkTheme.background : lightTheme.background;
   const textColor = darkMode ? '#fff' : lightTheme.text;
 

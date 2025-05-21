@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 
 interface CheckboxProps {
   label?: string;
@@ -10,7 +10,7 @@ interface CheckboxProps {
 }
 
 export default function Checkbox({ label, value, onValueChange }: CheckboxProps) {
-  const { darkMode } = useThemeContext();
+  const { darkMode } = useTheme();
 
   return (
     <TouchableOpacity style={styles.container} onPress={() => onValueChange(!value)}>

@@ -12,10 +12,10 @@ import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
-import { useThemeContext } from '@/src/context/ThemeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function EditProfile() {
-  const { darkMode } = useThemeContext();
+  const { darkMode } = useTheme();
   const { user, setUser } = useAuth();
   const [name, setName] = useState(user?.name || '');
   const [address, setAddress] = useState(user?.address || '');

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useTheme } from '@/src/context/ThemeContext';
+import { ThemeType } from '@/src/theme';
 
 type TypeButton = 'primary' | 'secondary' | 'danger' | 'outline' | 'fab';
 
@@ -84,7 +85,7 @@ function fabStyle(theme: any): ViewStyle {
 function getTypeStyle(
   type: TypeButton,
   disabled: boolean,
-  theme: any
+  theme: ThemeType
 ): ViewStyle {
   const base: ViewStyle = {
     height: 50,
@@ -93,16 +94,14 @@ function getTypeStyle(
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   };
 
   switch (type) {
     case 'primary':
-      return { ...base, backgroundColor: disabled ? theme.separator : theme.primary };
+      return {
+        ...base,
+        backgroundColor: disabled ? theme.separator : theme.primary,
+      };
     case 'secondary':
       return {
         ...base,
@@ -111,7 +110,10 @@ function getTypeStyle(
         borderColor: theme.primary,
       };
     case 'danger':
-      return { ...base, backgroundColor: disabled ? theme.separator : theme.red };
+      return {
+        ...base,
+        backgroundColor: disabled ? theme.separator : theme.red,
+      };
     case 'outline':
       return {
         ...base,
@@ -124,16 +126,21 @@ function getTypeStyle(
   }
 }
 
-function getTextStyle(type: TypeButton, theme: any): TextStyle {
-  return {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    color:
-      type === 'primary' || type === 'danger'
-        ? theme.buttonText
-        : theme.primary,
-  };
+function getTextStyle(type: TypeButton, theme: ThemeType): TextStyle {
+return {
+  fontSize: 16,
+  fontWeight: '600',
+  textAlign: 'center',
+  color:
+    type === 'primary' || type === 'danger'
+      ? theme.buttonText
+      : type === 'secondary'
+      ? theme.textPrimary
+      : type === 'outline' || type === 'fab'
+      ? theme.primary
+      : theme.buttonText,
+};
+
 }
 
 const styles = StyleSheet.create({

@@ -26,6 +26,7 @@ import StarRating from '@/src/components/StarRating';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/context/ThemeContext';
 import StockCard from '@/src/components/stock/StockCard';
+import Button from '@/src/components/Button';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<StockProduct[]>([]);
@@ -189,47 +190,52 @@ export default function Stock() {
 
       <Modal visible={productModalVisible} transparent>
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <TextInput
               placeholder="Tipo do produto (ex: Barril, CO2)"
               value={productForm.name}
               onChangeText={(text) => updateProductField('name', text)}
               style={styles.input}
+              placeholderTextColor={theme.textSecondary}
             />
             <TextInput
               placeholder="Especificação (ex: 30, 50, 2 torneiras)"
               value={productForm.size}
               onChangeText={(text) => updateProductField('size', text)}
               style={styles.input}
+              placeholderTextColor={theme.textSecondary}
             />
             <TextInput
               placeholder="Marca (ex: Premium, Larger)"
               value={productForm.brand}
               onChangeText={(text) => updateProductField('brand', text)}
               style={styles.input}
+              placeholderTextColor={theme.textSecondary}
             />
             <TextInput
               placeholder="Unidade (ex: UN, KG)"
               value={productForm.unit}
               onChangeText={(text) => updateProductField('unit', text)}
               style={styles.input}
+              placeholderTextColor={theme.textSecondary}
             />
-            <Text style={{ marginVertical: 8 }}>
+            <Text style={{ marginVertical: 8, color: theme.textPrimary }}>
               Favoritos (1 a 5 estrelas):
             </Text>
             <StarRating
               rating={productForm.favorite}
               onChange={(val: number) => updateProductField('favorite', val)}
             />
-            <TouchableOpacity style={styles.saveButton} onPress={saveProduct}>
-              <Text style={styles.saveButtonText}>Salvar Produto</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
+            <Button
+              type="primary"
+              onPress={() => saveProduct()}
+              title="Salvar Produto"
+            />
+            <Button
+              type="outline"
               onPress={() => setProductModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
+              title="Cancelar"
+            />
           </View>
         </View>
       </Modal>
@@ -333,11 +339,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
     width: '85%',
     padding: 20,
     borderRadius: 10,
   },
+
   statDivider: {
     width: 1,
     height: '100%',

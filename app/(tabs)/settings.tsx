@@ -1,26 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
 import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useTheme } from '@/src/context/ThemeContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/src/firebase/config';
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
+  const [companyName, setCompanyName] = useState<string>('');
+
+  useEffect(() => {
+    if (user?.companyId) {
+      const fetchCompany = async () => {
+        const snap = await getDoc(doc(db, 'companies', user.companyId));
+        if (snap.exists()) setCompanyName(snap.data().name);
+      };
+      fetchCompany();
+    }
+  }, [user?.companyId]);
 
   return (
     <Container>
       <ScrollView>
         <Title>Configurações</Title>
 
-        {user && <ProfileCard user={user} />}
-
-        {/* <Button style={{ marginTop: 10 }} onPress={() => router.push('/settings/edit-profile')}>
-          <ButtonText>Editar Perfil</ButtonText>
-        </Button> */}
+        {user && <ProfileCard user={user} companyName={companyName} />}
 
         <Card>
           <CardTitle>Preferências</CardTitle>
@@ -48,14 +57,16 @@ export default function Settings() {
         {user?.role === 'admin' && (
           <Card>
             <CardTitle>Administração</CardTitle>
-            <Button 
-            onPress={() => {console.log('Gerenciar usuários') }}
-             style={styles.button}>
-              <ButtonText>Gerenciar Usuários</ButtonText>
+            <Button
+              onPress={() => router.push('/admin/ManageDeliveries')}
+              style={styles.button}
+            >
+              <ButtonText>Gerenciar Entregadores</ButtonText>
             </Button>
-            <Button 
-            onPress={() => {console.log('Configurações da Empresa') }}
-            style={styles.button}>
+            <Button
+              onPress={() => console.log('Configurações da Empresa')}
+              style={styles.button}
+            >
               <ButtonText>Configurações da Empresa</ButtonText>
             </Button>
           </Card>
@@ -82,7 +93,7 @@ export default function Settings() {
   );
 }
 
-function ProfileCard({ user }: { user: any }) {
+function ProfileCard({ user, companyName }: { user: any, companyName: string }) {
   return (
     <Card style={styles.profileCard}>
       <View style={styles.profileHeader}>
@@ -92,6 +103,7 @@ function ProfileCard({ user }: { user: any }) {
         <View style={styles.profileInfo}>
           <Text style={styles.name}>{user?.name}</Text>
           <Text style={styles.role}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}</Text>
+          {companyName && <Text style={styles.company}>{companyName}</Text>}
         </View>
       </View>
     </Card>
@@ -136,6 +148,10 @@ const styles = StyleSheet.create({
   role: {
     fontSize: 16,
     color: '#666',
+  },
+  company: {
+    fontSize: 14,
+    color: '#999',
   },
   settingItem: {
     flexDirection: 'row',

@@ -10,7 +10,12 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import Button from '@/src/components/Button';
-import { Container, Title, Input, ErrorText } from '../../src/components/styled';
+import {
+  Container,
+  Title,
+  Input,
+  ErrorText,
+} from '../../src/components/styled';
 import Checkbox from '@/src/components/CheckBox';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -68,11 +73,11 @@ export default function Login() {
       const userData = userDoc.exists()
         ? userDoc.data()
         : {
-          uid: user.uid,
-          name: user.displayName || 'Usuário',
-          email: user.email,
-          role: 'customer',
-        };
+            uid: user.uid,
+            name: user.displayName || 'Usuário',
+            email: user.email,
+            role: 'customer',
+          };
 
       if (!userDoc.exists()) {
         await setDoc(userRef, userData);
@@ -87,7 +92,10 @@ export default function Login() {
         await AsyncStorage.removeItem('@email');
         await AsyncStorage.removeItem('@password');
       }
-
+      if (userData.role === 'admin' && !userData.companyId) {
+        router.replace('/screens/RegisterCompany');
+        return;
+      }
       router.replace('/(tabs)');
     } catch (error) {
       Alert.alert('Erro', 'Falha ao autenticar.');

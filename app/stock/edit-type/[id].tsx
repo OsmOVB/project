@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { Text, TextInput, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import Button from '@/src/components/Button';
 
 
 export default function EditTypeScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [item, setItem] = useState<StockItem | null>(null);
+  const [item, setItem] = useState<null>(null);
 
   const [tipoItemName, setTipoItemName] = useState('');
   const [marca, setMarca] = useState('');
@@ -23,7 +24,7 @@ export default function EditTypeScreen() {
     const ref = doc(db, 'stock', id);
     const snap = await getDoc(ref);
     if (snap.exists()) {
-      const data = snap.data() as StockItem;
+      const data = snap.data();
       setItem({ ...data, id });
       setTipoItemName(data.tipoItemName);
       setMarca(data.marca);

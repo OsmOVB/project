@@ -13,6 +13,10 @@ import { db } from '@/src/firebase/config';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
+import {
+  generateNextQrCode,
+  generateNextQrCodeByAdmin,
+} from '@/src/utils/qrCodeUtils';
 
 interface StockItem {
   id: string;
@@ -59,9 +63,15 @@ export default function LoteDetails() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.textPrimary }]}>📦 Lote #{loteId}</Text>
-      <Text style={[styles.subtitle, { color: theme.text }]}>🗓️ Data: {dataLote}</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <Text style={[styles.title, { color: theme.textPrimary }]}>
+        📦 Lote #{loteId}
+      </Text>
+      <Text style={[styles.subtitle, { color: theme.text }]}>
+        🗓️ Data: {dataLote}
+      </Text>
 
       {barris.map((item, i) => (
         <Card key={i} style={{ backgroundColor: theme.card }}>
@@ -77,10 +87,28 @@ export default function LoteDetails() {
           <View style={styles.qrActions}>
             <TouchableOpacity
               style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
-              onPress={() => {}}
+              onPress={async () => {
+                //deve gerar o qr code apartir do id do item mas deve ser um sequencial
+                //exemplo: 1, 2, 3, 4, 5
+                //deve ser gerado um qr code para cada item do lote
+                console.log(await generateNextQrCode());
+             
+                // console.log(await generateNextQrCodeByAdmin(item.adminEmail));
+
+                // const adminEmail = user.email; // ou de onde você pega o e-mail do admin
+                // const qrCode = await generateNextQrCodeByAdmin(adminEmail);
+
+                // await addDoc(collection(db, 'stock'), {
+                //   ...dadosDoProduto,
+                //   adminEmail,
+                //   qrCode,
+                // });
+              }}
             >
               <Ionicons name="qr-code-outline" size={20} color={theme.text} />
-              <Text style={[styles.qrText, { color: theme.text }]}>Gerar QR Code</Text>
+              <Text style={[styles.qrText, { color: theme.text }]}>
+                Gerar QR Code
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -88,7 +116,9 @@ export default function LoteDetails() {
               onPress={() => {}}
             >
               <Ionicons name="qr-code-outline" size={20} color={theme.text} />
-              <Text style={[styles.qrText, { color: theme.text }]}>Ler QR Existente</Text>
+              <Text style={[styles.qrText, { color: theme.text }]}>
+                Ler QR Existente
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -103,7 +133,9 @@ export default function LoteDetails() {
               }
             >
               <Ionicons name="create-outline" size={20} color={theme.primary} />
-              <Text style={[styles.edit, { color: theme.primary }]}>Editar</Text>
+              <Text style={[styles.edit, { color: theme.primary }]}>
+                Editar
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionBtn}

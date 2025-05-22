@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import Button from '../../Button';
-import { Product } from '../../ProductSelector';
+import { Product } from '@/src/types';
 
 interface AddProductModalProps {
   visible: boolean;
@@ -42,6 +42,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, products, on
             renderItem={({ item }) => (
               <View style={styles.itemRow}>
                 <Text>{item.name}</Text>
+                <Text>{item.size}</Text>
                 <View style={styles.buttonWrapper}>
                   <Button
                     title="Adicionar"

@@ -57,6 +57,7 @@ export type Product = {
   favorite: number;     // Nota de 1 a 5 estrelas
   createdAt: string;    // Data de criação
   companyId: string;    // ID da empresa que criou o produto
+  unity: string;      // Unidade de medida (ex: L, mL, m³)
 };
 
 

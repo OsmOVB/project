@@ -153,7 +153,7 @@ export default function Login() {
 
         <Button
           title="Recuperar Senha"
-          type="ghost"
+          type="outline"
           onPress={() => router.push('/forgot-password')}
         />
 

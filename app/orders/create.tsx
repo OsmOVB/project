@@ -121,12 +121,24 @@ export default function CreateOrder() {
 
   useEffect(() => {
     const fetchAddresses = async () => {
+      if (!user?.companyId || !watch('customerName')) return;
+
       const snapshot = await getDocs(collection(db, 'addresses'));
-      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setAddresses(list as Address[]);
+      const list = snapshot.docs
+        .map((doc) => ({ ...(doc.data() as Address), id: doc.id }))
+        .filter(
+          (addr) =>
+            addr.name
+              .toLowerCase()
+              .includes(watch('customerName').toLowerCase()) &&
+            addr.companyId === user.companyId
+        );
+
+      setAddresses(list);
     };
+
     fetchAddresses();
-  }, []);
+  }, [user?.companyId, watch('customerName')]);
 
   const updateFormItems = (items: SelectableProduct[]) => {
     setValue(

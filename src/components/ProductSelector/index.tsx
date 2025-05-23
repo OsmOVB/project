@@ -9,12 +9,6 @@ import {
 import Button from '../Button';
 import { Product } from '@/src/types';
 
-// export interface Product {
-//   id: string;
-//   name: string;
-//   price?: number;
-// }
-
 export interface SelectedItem {
   id: string;
   name: string;

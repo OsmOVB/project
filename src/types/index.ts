@@ -58,6 +58,8 @@ export type Product = {
   createdAt: string;    // Data de criação
   companyId: string;    // ID da empresa que criou o produto
   unity: string;      // Unidade de medida (ex: L, mL, m³)
+  price: number;        // Preço do produto
+  type: string;         // Tipo do produto (ex: cerveja, refrigerante)
 };
 
 
@@ -127,3 +129,15 @@ export type PaymentMethod = 'crédito' | 'débito' | 'dinheiro' | 'pix';
 
 // Status do pedido
 export type StatusOrder = 'pendente' | 'em progresso' | 'finalizado';
+export interface Address {
+  id: string;
+  name: string; // nome do local ou do cliente
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  reference?: string;
+  companyId: string;
+  createdAt: string;
+}

@@ -1,3 +1,4 @@
+// CreateOrder.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,7 +7,6 @@ import {
   Modal,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,6 @@ import {
   ErrorText,
   Card,
   CardTitle,
-  CardText,
 } from '../../src/components/styled';
 import { router } from 'expo-router';
 import { db } from '../../src/firebase/config';
@@ -29,10 +28,13 @@ import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
+import { Product } from '@/src/types';
+import { Picker } from '@react-native-picker/picker';
+import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
 
 const orderSchema = z.object({
-  customerName: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
-  address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
+  customerName: z.string().min(2),
+  address: z.string().min(5),
   scheduledDate: z.date(),
   paymentMethod: z.enum(['crédito', 'débito', 'dinheiro', 'pix']),
   items: z.array(
@@ -47,25 +49,29 @@ const orderSchema = z.object({
 });
 
 type OrderForm = z.infer<typeof orderSchema>;
+type SelectableProduct = Product & { quantity: number };
+type Address = {
+  id: string;
+  name: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  reference?: string;
+  companyId: string;
+  createdAt: string;
+};
 
 export default function CreateOrder() {
-  const { theme, darkMode } = useTheme();
+  const { theme } = useTheme();
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [scannerVisible, setScannerVisible] = useState(false);
-  const [scanningItemId, setScanningItemId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  type Product = {
-    id: string;
-    name: string;
-    price: number;
-    size: string;
-    quantity: number;
-  };
-  
-  const [products, setProducts] = useState<Product[]>([]);
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedItems, setSelectedItems] = useState<SelectableProduct[]>([]);
 
   const {
     control,
@@ -94,6 +100,11 @@ export default function CreateOrder() {
           price: doc.data().price || 0,
           size: doc.data().size || '',
           quantity: doc.data().quantity || 0,
+          favorite: doc.data().favorite ?? false,
+          createdAt: doc.data().createdAt ?? '',
+          companyId: doc.data().companyId ?? '',
+          unity: doc.data().unity ?? '',
+          type: doc.data().type || '',
         }));
         setProducts(productsList);
       } catch (error) {
@@ -106,41 +117,79 @@ export default function CreateOrder() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const snapshot = await getDocs(collection(db, 'addresses'));
+      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setAddresses(list as Address[]);
+    };
+    fetchAddresses();
+  }, []);
+
+  const updateFormItems = (items: SelectableProduct[]) => {
+    setValue(
+      'items',
+      items.map(({ id, name, quantity, size, price }) => ({
+        id,
+        name,
+        quantity,
+        size,
+        price,
+      }))
+    );
+  };
+
   const addItem = (itemId: string) => {
     const item = products.find((i) => i.id === itemId);
     if (item) {
-      const newItem = {
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        size: item.size,
-        price: item.price, // Add price property to match Product type
-      };
-      const updatedItems = [...selectedItems, newItem];
-      setSelectedItems(updatedItems);
-      setValue('items', updatedItems);
+      const withQty: SelectableProduct = { ...item, quantity: 1 };
+      const updated = [...selectedItems, withQty];
+      setSelectedItems(updated);
+      updateFormItems(updated);
     }
   };
 
   const removeItem = (itemId: string) => {
-    const updatedItems = selectedItems.filter((item) => item.id !== itemId);
-    setSelectedItems(updatedItems);
-    setValue('items', updatedItems);
+    const updated = selectedItems.filter((i) => i.id !== itemId);
+    setSelectedItems(updated);
+    updateFormItems(updated);
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity < 1) return;
-    const updatedItems = selectedItems.map((item) =>
+    const updated = selectedItems.map((item) =>
       item.id === itemId ? { ...item, quantity } : item
     );
-    setSelectedItems(updatedItems);
-    setValue('items', updatedItems);
+    setSelectedItems(updated);
+    updateFormItems(updated);
   };
 
   const onSubmit = async (data: OrderForm) => {
     try {
-      await addDoc(collection(db, 'orders'), data);
-      console.log('Pedido salvo com sucesso:', data);
+      const user = {
+        email: '',
+        companyId: 'empresa-123',
+      };
+      const totalLiters = data.items.reduce(
+        (sum, item) => sum + item.quantity * (parseInt(item.size || '0') || 0),
+        0
+      );
+      const newOrder = {
+        customerName: data.customerName,
+        items: data.items.map(({ id, name, quantity }) => ({
+          id,
+          stockItemId: id,
+          name,
+          quantity,
+        })),
+        status: 'pendente',
+        deliveryPersonId: undefined,
+        date: data.scheduledDate,
+        paymentMethod: data.paymentMethod,
+        totalLiters,
+        adminEmail: user.email,
+        companyId: user.companyId,
+      };
+      await addDoc(collection(db, 'orders'), newOrder);
       router.back();
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
@@ -153,77 +202,93 @@ export default function CreateOrder() {
         <ScrollView>
           <Title style={{ color: theme.textPrimary }}>Criar Novo Pedido</Title>
 
-        <Card style={{ backgroundColor: theme.card }}>
-          <CardTitle style={{ color: theme.textPrimary }}>Agendar Entrega</CardTitle>
-          <TouchableOpacity
-            onPress={() => setCalendarVisible(true)}
-            style={[styles.dateButton, { backgroundColor: theme.inputBg }]}
-          >
-            <Text style={{ color: theme.text }}> {scheduledDate.toLocaleString()} </Text>
-          </TouchableOpacity>
-          <Modal visible={calendarVisible} transparent={true}>
-            <Calendar
-              initialDate={scheduledDate}
-              onDateChange={(date) => {
-                setValue('scheduledDate', date);
-                setCalendarVisible(false);
-              }}
-              mode="datetime"
-              visible={calendarVisible}
-              onClose={() => setCalendarVisible(false)}
-              theme={theme.card}
+          <Card style={{ backgroundColor: theme.card }}>
+            <CardTitle style={{ color: theme.textPrimary }}>
+              Agendar Entrega
+            </CardTitle>
+            <TouchableOpacity
+              onPress={() => setCalendarVisible(true)}
+              style={[styles.dateButton, { backgroundColor: theme.inputBg }]}
+            >
+              <Text style={{ color: theme.text }}>
+                {scheduledDate.toLocaleString()}
+              </Text>
+            </TouchableOpacity>
+            <Modal visible={calendarVisible} transparent>
+              <Calendar
+                initialDate={scheduledDate}
+                onDateChange={(date) => {
+                  setValue('scheduledDate', date);
+                  setCalendarVisible(false);
+                }}
+                mode="datetime"
+                visible={calendarVisible}
+                onClose={() => setCalendarVisible(false)}
+                theme={theme.card}
+              />
+            </Modal>
+          </Card>
+
+          <Card style={{ backgroundColor: theme.card }}>
+            <CardTitle style={{ color: theme.textPrimary }}>Informações do Cliente</CardTitle>
+            <Controller
+              control={control}
+              name="customerName"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  placeholder="Nome do Cliente"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
-          </Modal>
-        </Card>
-
-        <Card style={{ backgroundColor: theme.card }}>
-          <CardTitle style={{ color: theme.textPrimary }}>Informações do Cliente</CardTitle>
-          <Controller
-            control={control}
-            name="customerName"
-            render={({ field: { onChange, value } }) => (
-              <Input
-                placeholder="Nome do Cliente"
-                value={value}
-                onChangeText={onChange}
-              />
+            {errors.customerName && (
+              <ErrorText>{errors.customerName.message}</ErrorText>
             )}
-          />
-          {errors.customerName && (
-            <ErrorText>{errors.customerName.message}</ErrorText>
-          )}
 
-          <Controller
-            control={control}
-            name="address"
-            render={({ field: { onChange, value } }) => (
-              <Input
-                placeholder="Endereço de Entrega"
-                value={value}
-                onChangeText={onChange}
-                multiline
-              />
-            )}
-          />
-          {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
-        </Card>
+            <CardTitle style={{ color: theme.textPrimary }}>Endereço</CardTitle>
+            <Controller
+              control={control}
+              name="address"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Picker selectedValue={value} onValueChange={onChange}>
+                    <Picker.Item label="Selecione um endereço" value="" />
+                    {addresses.map((addr) => (
+                      <Picker.Item
+                        key={addr.id}
+                        label={`${addr.name} - ${addr.street}, ${addr.number}`}
+                        value={`${addr.street}, ${addr.number} - ${addr.neighborhood}, ${addr.city} - ${addr.state}`}
+                      />
+                    ))}
+                  </Picker>
+                  <Button onPress={() => setAddressModalVisible(true)}>
+                    <ButtonText>Novo Endereço</ButtonText>
+                  </Button>
+                </>
+              )}
+            />
+            {errors.address && <ErrorText>{errors.address.message}</ErrorText>}
+          </Card>
 
-        <Card style={{ backgroundColor: theme.card }}>
-          <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
-          <ProductSelector
-            products={products}
-            loading={loading}
-            selectedItems={selectedItems}
-            onAddItem={addItem}
-            onRemoveItem={removeItem}
-            onUpdateQuantity={updateQuantity}
-            onOpenAddModal={() => setModalVisible(true)}
-          />
-        </Card>
+          <Card style={{ backgroundColor: theme.card }}>
+            <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
+            <ProductSelector
+              products={products}
+              loading={loading}
+              selectedItems={selectedItems}
+              onAddItem={addItem}
+              onRemoveItem={removeItem}
+              onUpdateQuantity={updateQuantity}
+              onOpenAddModal={() => setModalVisible(true)}
+            />
+          </Card>
         </ScrollView>
+
         <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
           <ButtonText>Cadastrar Pedido</ButtonText>
         </Button>
+
         <AddProductModal
           visible={modalVisible}
           products={products}
@@ -233,60 +298,31 @@ export default function CreateOrder() {
           }}
           onClose={() => setModalVisible(false)}
         />
+
+        <AddressModal
+          visible={addressModalVisible}
+          onClose={() => setAddressModalVisible(false)}
+          onAddressAdded={async () => {
+            const snapshot = await getDocs(collection(db, 'addresses'));
+            const list = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setAddresses(list as Address[]);
+          }}
+        />
       </Container>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  removeButton: {
-    backgroundColor: '#FF3B30',
-    marginLeft: 10,
-  },
   submitButton: {
     marginVertical: 20,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  price: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  quantityButton: {
-    width: 40,
-    height: 40,
-    marginHorizontal: 5,
-  },
-  quantity: {
-    marginHorizontal: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    width: 80,
-  },
-  picker: {
-    borderRadius: 8,
-    marginTop: 10,
   },
   dateButton: {
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
   },
-  dateButtonText: { color: '#1c1c1e' },
 });

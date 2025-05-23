@@ -17,7 +17,7 @@ export default function Settings() {
   useEffect(() => {
     if (user?.companyId) {
       const fetchCompany = async () => {
-        const snap = await getDoc(doc(db, 'companies', user.companyId));
+        const snap = await getDoc(doc(db, 'companies', user.companyId!));
         if (snap.exists()) setCompanyName(snap.data().name);
       };
       fetchCompany();
@@ -63,12 +63,12 @@ export default function Settings() {
             >
               <ButtonText>Gerenciar Entregadores</ButtonText>
             </Button>
-            <Button
+            {/* <Button
               onPress={() => console.log('Configurações da Empresa')}
               style={styles.button}
             >
               <ButtonText>Configurações da Empresa</ButtonText>
-            </Button>
+            </Button> */}
           </Card>
         )}
 

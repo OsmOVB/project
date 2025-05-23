@@ -31,6 +31,7 @@ import AddProductModal from '@/src/components/modal/AddProductModal';
 import { Product } from '@/src/types';
 import { Picker } from '@react-native-picker/picker';
 import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
+import { useAuth } from '@/src/hooks/useAuth';
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
@@ -65,6 +66,7 @@ type Address = {
 
 export default function CreateOrder() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -165,10 +167,11 @@ export default function CreateOrder() {
 
   const onSubmit = async (data: OrderForm) => {
     try {
-      const user = {
-        email: '',
-        companyId: 'empresa-123',
-      };
+      if (!user?.email || !user?.companyId) {
+        console.error('Usuário não autenticado ou sem empresa vinculada.');
+        return;
+      }
+
       const totalLiters = data.items.reduce(
         (sum, item) => sum + item.quantity * (parseInt(item.size || '0') || 0),
         0
@@ -182,7 +185,8 @@ export default function CreateOrder() {
           quantity,
         })),
         status: 'pendente',
-        deliveryPersonId: undefined,
+        deliveryPersonId: null,
+        address: data.address,
         date: data.scheduledDate,
         paymentMethod: data.paymentMethod,
         totalLiters,
@@ -230,7 +234,9 @@ export default function CreateOrder() {
           </Card>
 
           <Card style={{ backgroundColor: theme.card }}>
-            <CardTitle style={{ color: theme.textPrimary }}>Informações do Cliente</CardTitle>
+            <CardTitle style={{ color: theme.textPrimary }}>
+              Informações do Cliente
+            </CardTitle>
             <Controller
               control={control}
               name="customerName"

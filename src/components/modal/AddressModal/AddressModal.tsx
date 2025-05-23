@@ -12,6 +12,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
 import Button from '../../Button';
+import { useAuth } from '@/src/hooks/useAuth';
 
 interface Props {
   visible: boolean;
@@ -25,6 +26,8 @@ export default function AddressModal({
   onAddressAdded,
 }: Props) {
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: '',
     street: '',
@@ -40,11 +43,17 @@ export default function AddressModal({
 
   const handleSubmit = async () => {
     try {
+      if (!user?.companyId) {
+        console.error('Sem empresa vinculada ao usuário');
+        return;
+      }
+
       await addDoc(collection(db, 'addresses'), {
         ...form,
-        companyId: 'empresa-123',
+        companyId: user.companyId,
         createdAt: new Date().toISOString(),
       });
+
       onAddressAdded();
       onClose();
     } catch (err) {
@@ -65,25 +74,26 @@ export default function AddressModal({
             Novo Endereço
           </Text>
           {[
-            'nome',
-            'rua',
-            'número',
-            'bairro',
-            'cidade',
-            'estado',
-            'referência',
-          ].map((field) => (
+            { key: 'name', label: 'Nome' },
+            { key: 'street', label: 'Rua' },
+            { key: 'number', label: 'Número' },
+            { key: 'neighborhood', label: 'Bairro' },
+            { key: 'city', label: 'Cidade' },
+            { key: 'state', label: 'Estado' },
+            { key: 'reference', label: 'Referência' },
+          ].map(({ key, label }) => (
             <TextInput
-              key={field}
-              placeholder={field}
-              value={(form as any)[field]}
-              onChangeText={(text) => handleChange(field, text)}
+              key={key}
+              placeholder={label}
+              value={(form as any)[key]}
+              onChangeText={(text) => handleChange(key, text)}
               style={[
                 styles.input,
                 { backgroundColor: theme.inputBg, color: theme.text },
               ]}
             />
           ))}
+
           <Button type="primary" title="Salvar" onPress={handleSubmit} />
           <Button type="outline" title="Cancelar" onPress={onClose} />
         </ScrollView>

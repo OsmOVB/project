@@ -5,8 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
-  TouchableOpacity,
-  Text,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,8 +14,6 @@ import {
   Container,
   Title,
   Input,
-  Button,
-  ButtonText,
   ErrorText,
   Card,
   CardTitle,
@@ -32,6 +28,7 @@ import { Product } from '@/src/types';
 import { Picker } from '@react-native-picker/picker';
 import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
 import { useAuth } from '@/src/hooks/useAuth';
+import Button from '@/src/components/Button';
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
@@ -222,14 +219,14 @@ export default function CreateOrder() {
             <CardTitle style={{ color: theme.textPrimary }}>
               Agendar Entrega
             </CardTitle>
-            <TouchableOpacity
+
+            <Button
+              type="icon"
+              iconName="calendar-outline"
               onPress={() => setCalendarVisible(true)}
-              style={[styles.dateButton, { backgroundColor: theme.inputBg }]}
-            >
-              <Text style={{ color: theme.text }}>
-                {scheduledDate.toLocaleString()}
-              </Text>
-            </TouchableOpacity>
+              title={scheduledDate.toLocaleString()}
+            />
+
             <Modal visible={calendarVisible} transparent>
               <Calendar
                 initialDate={scheduledDate}
@@ -280,9 +277,11 @@ export default function CreateOrder() {
                       />
                     ))}
                   </Picker>
-                  <Button onPress={() => setAddressModalVisible(true)}>
-                    <ButtonText>Novo Endereço</ButtonText>
-                  </Button>
+                  <Button
+                    title="Novo Endereço"
+                    type="primary"
+                    onPress={() => setAddressModalVisible(true)}
+                  />
                 </>
               )}
             />
@@ -303,9 +302,11 @@ export default function CreateOrder() {
           </Card>
         </ScrollView>
 
-        <Button onPress={handleSubmit(onSubmit)} style={styles.submitButton}>
-          <ButtonText>Cadastrar Pedido</ButtonText>
-        </Button>
+        <Button
+          onPress={handleSubmit(onSubmit)}
+          style={styles.submitButton}
+          title="Salvar Pedido"
+        />
 
         <AddProductModal
           visible={modalVisible}

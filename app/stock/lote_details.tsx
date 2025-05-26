@@ -17,6 +17,8 @@ import {
   generateNextQrCode,
   generateNextQrCodeByAdmin,
 } from '@/src/utils/qrCodeUtils';
+import Button from '@/src/components/Button';
+import { QRCode } from 'react-native-qrcode-svg';
 
 interface StockItem {
   id: string;
@@ -76,6 +78,9 @@ export default function LoteDetails() {
       {barris.map((item, i) => (
         <Card key={i} style={{ backgroundColor: theme.card }}>
           <CardTitle>{item.tipoItemName}</CardTitle>
+          <Text style={[styles.label, { color: theme.text }]}>
+            ID do Item: <Text style={styles.value}>{item.id}</Text>
+          </Text>
 
           <Text style={[styles.label, { color: theme.text }]}>
             Marca: <Text style={styles.value}>{item.marca}</Text>
@@ -85,7 +90,7 @@ export default function LoteDetails() {
           </Text>
 
           <View style={styles.qrActions}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
               onPress={async () => {
                 //deve gerar o qr code apartir do id do item mas deve ser um sequencial
@@ -109,9 +114,19 @@ export default function LoteDetails() {
               <Text style={[styles.qrText, { color: theme.text }]}>
                 Gerar QR Code
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <Button
+              type="icon" 
+              title='Gerar Novo'
+              iconName="qr-code-outline"
+              iconColor={theme.text}
+              onPress={async () => {
+                const qrCode = await generateNextQrCode();
+                Alert.alert('QR Code Gerado', qrCode);
+              }}
+            />
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
               onPress={() => {}}
             >
@@ -119,31 +134,40 @@ export default function LoteDetails() {
               <Text style={[styles.qrText, { color: theme.text }]}>
                 Ler QR Existente
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <Button
+              type="icon"
+              title='Adicionar Existente'
+              iconName="qr-code-outline"
+              iconColor={theme.text}
+              onPress={async () => {
+                const qrCode = await generateNextQrCode();
+                Alert.alert('QR Code Gerado', qrCode);
+              }}
+              
+            />
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={styles.actionBtn}
+            <Button
+              type="icon"
+              iconName="create-outline"
+              iconColor={theme.primary}
               onPress={() =>
                 router.push({
                   pathname: '/stock/edit-type/[id]',
                   params: { id: item.id },
                 })
               }
-            >
-              <Ionicons name="create-outline" size={20} color={theme.primary} />
-              <Text style={[styles.edit, { color: theme.primary }]}>
-                Editar
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionBtn}
+              title="Editar"
+            />
+            <Button
+              type="icon"
+              iconName="trash-outline"
+              iconColor={theme.red}
               onPress={() => handleDeleteItem(item.id)}
-            >
-              <Ionicons name="trash-outline" size={20} color={theme.red} />
-              <Text style={[styles.delete, { color: theme.red }]}>Apagar</Text>
-            </TouchableOpacity>
+              title="Apagar"
+            />
           </View>
         </Card>
       ))}

@@ -180,18 +180,25 @@ export default function ManageDeliveries() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: theme.card }]}>
-            <Text style={[styles.name, { color: theme.textPrimary }]}>
-              {item.name || 'Entregador sem nome'} ({item.email})
+            <Text style={[styles.name, { color: !item.active ? theme.red : theme.green  }]}>
+              {item.name || 'Sem nome'} ({item.email}) {' '}
+              {item.active ? 'Ativo' : 'Bloqueado'} 
             </Text>
             <View style={styles.actions}>
-              <TouchableOpacity onPress={() => toggleBlock(item)}>
-                <Text style={{ color: theme.primary }}>
-                  {item.active ? 'Bloquear' : 'Reativar'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => removeDeliverer(item.email)}>
-                <Text style={{ color: theme.red }}>Remover</Text>
-              </TouchableOpacity>
+              <Button
+                type="icon"
+                title={item.active ? 'Bloquear' : 'Reativar'}
+                iconName={item.active ? 'lock-closed' : 'lock-open'}
+                iconColor={item.active ? theme.red : theme.green}
+                onPress={() => toggleBlock(item)}
+              />
+              <Button
+                type="icon"
+                title="Remover"
+                iconName="trash"
+                iconColor={theme.red}
+                onPress={() => removeDeliverer(item.email)}
+              />
             </View>
           </View>
         )}

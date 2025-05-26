@@ -9,7 +9,6 @@ export interface User {
   createdAt: Date;
 }
 
-
 export interface OrderItem {
   id: string;
   stockItemId: string;
@@ -79,20 +78,6 @@ export type Stock = {
   companyId: string;
 };
 
-
-// export type Stock = {
-//   id: string;                    // ID do estoque
-//   tipoItemId: string;            // ID do tipoItem relacionado
-//   tipoItemName: string;          // Nome do tipo item (para renderização rápida)
-//   quantity: number;              // Quantidade
-//   liters?: number;               // Capacidade em litros (se aplicável)
-//   loteId: number;                // Número do lote
-//   dataLote: string;              // Data do lote (formato dd/MM/yyyy)
-//   sequenciaLote: number;         // Sequência do item no lote
-//   pendenciaImpressao: 'S' | 'N'; // Pendência de impressão
-// };
-
-
 // Item de um pedido (referencia um Stock específico)
 export interface OrderItem {
   id: string;
@@ -128,7 +113,7 @@ export interface QRCode {
 export type PaymentMethod = 'crédito' | 'débito' | 'dinheiro' | 'pix';
 
 // Status do pedido
-export type StatusOrder = 'pendente' | 'em progresso' | 'finalizado';
+export type StatusOrder = 'pendente' | 'cancelado' | 'a caminho' | 'em progresso' | 'finalizado';
 export interface Address {
   id: string;
   name: string; // nome do local ou do cliente

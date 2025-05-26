@@ -43,6 +43,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, products, on
               <View style={styles.itemRow}>
                 <Text>{item.name}</Text>
                 <Text>{item.size}</Text>
+                <Text>{item.unity}</Text>
                 <View style={styles.buttonWrapper}>
                   <Button
                     title="Adicionar"

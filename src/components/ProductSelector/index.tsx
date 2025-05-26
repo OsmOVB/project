@@ -13,6 +13,9 @@ export interface SelectedItem {
   id: string;
   name: string;
   quantity: number;
+  size?: string;
+  brand?: string;
+  unity?: string;
 }
 
 interface ProductSelectorProps {
@@ -42,20 +45,23 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
         <View>
           {selectedItems.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
-              <Text style={styles.productText}>• {item.name}</Text>
+              <Text style={styles.productText}>{item.name} { item.size }{ item.unity }</Text>
               <View style={styles.quantityContainer}>
                 <Button
+                  style={{ width: 40 }}
                   title="-"
                   onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
                   type="primary"
                 />
                 <Text style={styles.quantityText}>{item.quantity}</Text>
                 <Button
+                  style={{ width: 40 }}
                   title="+"
                   onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
                   type="primary"
                 />
                 <Button
+                  style={{ width: 100 }}
                   title="Remover"
                   onPress={() => onRemoveItem(item.id)}
                   type="danger"

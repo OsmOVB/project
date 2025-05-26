@@ -1,9 +1,16 @@
 // app/screens/StockLots.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../src/firebase/config';
 import { useRouter } from 'expo-router';
+import Button from '@/src/components/Button';
 
 export default function StockLots() {
   const [lotes, setLotes] = useState<any[]>([]);
@@ -15,29 +22,33 @@ export default function StockLots() {
 
   async function fetchLotes() {
     const stockSnapshot = await getDocs(collection(db, 'stock'));
-    const allItems = stockSnapshot.docs.map(doc => doc.data());
+    const allItems = stockSnapshot.docs.map((doc) => doc.data());
 
-    const agrupado = allItems.reduce((acc, item) => {
+    const grouped = allItems.reduce((acc, item) => {
       const key = `${item.loteId}_${item.dataLote}`;
-      if (!acc[key]) acc[key] = { loteId: item.loteId, dataLote: item.dataLote, items: [] };
+      if (!acc[key])
+        acc[key] = { loteId: item.loteId, dataLote: item.dataLote, items: [] };
       acc[key].items.push(item);
       return acc;
     }, {} as Record<string, any>);
 
-    setLotes(Object.values(agrupado));
+    setLotes(Object.values(grouped));
   }
 
   return (
     <ScrollView style={styles.container}>
       {lotes.map((lote, index) => (
-        <TouchableOpacity
+        <Button
           key={index}
-          style={styles.card}
-          onPress={() => router.push({ pathname: '/screens/LoteDetails', params: { loteId: lote.loteId, dataLote: lote.dataLote } })}
-        >
-          <Text style={styles.cardText}>Lote #{lote.loteId} - {lote.dataLote}</Text>
-          <Text>Itens: {lote.items.length}</Text>
-        </TouchableOpacity>
+          onPress={() =>
+            router.push({
+              pathname: '/screens/LoteDetails',
+              params: { loteId: lote.loteId, dataLote: lote.dataLote },
+            })
+          }
+          title={`Ver Lote ${lote.loteId} - ${lote.dataLote} (${lote.items.length} itens)`}
+          style={{ marginVertical: 8 }}
+        />
       ))}
     </ScrollView>
   );
@@ -53,8 +64,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
   },
-  cardText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
 });

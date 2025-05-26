@@ -18,7 +18,6 @@ import {
   generateNextQrCodeByAdmin,
 } from '@/src/utils/qrCodeUtils';
 import Button from '@/src/components/Button';
-import { QRCode } from 'react-native-qrcode-svg';
 
 interface StockItem {
   id: string;

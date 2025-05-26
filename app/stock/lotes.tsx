@@ -7,11 +7,20 @@ import {
   View,
   Alert,
 } from 'react-native';
-import { getDocs, collection, deleteDoc, doc, query, where } from 'firebase/firestore';
+import {
+  getDocs,
+  collection,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
+import Button from '@/src/components/Button';
+import { dateUtils } from '@/src/utils/date';
 
 interface StockItem {
   id: string;
@@ -23,7 +32,9 @@ interface StockItem {
 }
 
 export default function Lotes() {
-  const [lotes, setLotes] = useState<{ loteId: string; dataLote: string; items: StockItem[] }[]>([]);
+  const [lotes, setLotes] = useState<
+    { loteId: string; dataLote: string; items: StockItem[] }[]
+  >([]);
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -33,10 +44,15 @@ export default function Lotes() {
 
   async function fetchLotes() {
     const snapshot = await getDocs(collection(db, 'stock'));
-    const allItems: StockItem[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockItem));
-    const grouped: Record<string, { loteId: string; dataLote: string; items: StockItem[] }> = {};
+    const allItems: StockItem[] = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as StockItem)
+    );
+    const grouped: Record<
+      string,
+      { loteId: string; dataLote: string; items: StockItem[] }
+    > = {};
 
-    allItems.forEach(item => {
+    allItems.forEach((item) => {
       const key = `${item.loteId}_${item.dataLote}`;
       if (!grouped[key]) {
         grouped[key] = {
@@ -58,12 +74,14 @@ export default function Lotes() {
         text: 'Apagar',
         style: 'destructive',
         onPress: async () => {
-          const snapshot = await getDocs(query(
-            collection(db, 'stock'),
-            where('loteId', '==', loteId),
-            where('dataLote', '==', dataLote)
-          ));
-          const deletions = snapshot.docs.map(docSnap =>
+          const snapshot = await getDocs(
+            query(
+              collection(db, 'stock'),
+              where('loteId', '==', loteId),
+              where('dataLote', '==', dataLote)
+            )
+          );
+          const deletions = snapshot.docs.map((docSnap) =>
             deleteDoc(doc(db, 'stock', docSnap.id))
           );
           await Promise.all(deletions);
@@ -74,12 +92,17 @@ export default function Lotes() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.header, { color: theme.textPrimary }]}>📦 Lotes de Produtos</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <Text style={[styles.header, { color: theme.textPrimary }]}>
+        📦 Lotes de Produtos
+      </Text>
 
       {lotes.map((lote, index) => (
         <Card key={index} style={{ backgroundColor: theme.card }}>
-          <TouchableOpacity
+          <Button
+            type="card"
             onPress={() =>
               router.push({
                 pathname: '/stock/lote_details',
@@ -87,17 +110,24 @@ export default function Lotes() {
               })
             }
           >
-            <CardTitle style={{ color: theme.primary }}>Lote #{lote.loteId}</CardTitle>
-            <Text style={[styles.loteDate, { color: theme.text }]}>🗓️ {lote.dataLote}</Text>
-            <Text style={[styles.loteItems, { color: theme.text }]}>📋 {lote.items.length} Produto(s)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.deleteButton, { backgroundColor: theme.background }]}
+            <CardTitle style={{ color: theme.primary }}>
+              Lote: {lote.loteId}
+            </CardTitle>
+            <Text style={[styles.loteDate, { color: theme.text }]}>
+              🗓️ {dateUtils.formatDateString(lote.dataLote)}
+            </Text>
+            <Text style={[styles.loteItems, { color: theme.text }]}>
+              📋 {lote.items.length} Produto(s)
+            </Text>
+          </Button>
+          <Button
+            title="Apagar Lote"
+            type="icon"
+            iconColor={theme.red}
+            iconName="trash"
             onPress={() => handleDeleteLote(lote.loteId, lote.dataLote)}
-          >
-            <Text style={styles.deleteText}>Apagar Lote</Text>
-          </TouchableOpacity>
+            style={{ marginTop: 8 }}
+          />
         </Card>
       ))}
     </ScrollView>

@@ -12,7 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/context/ThemeContext';
 import { ThemeType } from '@/src/theme';
 
-type TypeButton = 'primary' | 'secondary' | 'danger' | 'outline' | 'fab' | 'icon';
+type TypeButton =
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'outline'
+  | 'fab'
+  | 'icon'
+  | 'card';
 
 interface BaseButtonProps {
   onPress: () => void;
@@ -23,7 +30,7 @@ interface BaseButtonProps {
 }
 
 interface TextButtonProps extends BaseButtonProps {
-  type?: Exclude<TypeButton, 'icon' | 'fab'>;
+  type?: Exclude<TypeButton, 'icon' | 'fab' | 'card'>;
   title: string;
 }
 
@@ -38,18 +45,31 @@ interface FabButtonProps extends BaseButtonProps {
   type: 'fab';
 }
 
-type ButtonProps = TextButtonProps | IconButtonProps | FabButtonProps;
+interface CardButtonProps extends BaseButtonProps {
+  type: 'card';
+  title?: string;
+  children?: React.ReactNode; // <-- ADICIONE ISTO
+}
+
+type ButtonProps =
+  | TextButtonProps
+  | IconButtonProps
+  | FabButtonProps
+  | CardButtonProps;
 
 const Button: React.FC<ButtonProps> = (props) => {
   const { theme } = useTheme();
   const isIcon = props.type === 'icon';
   const isFab = props.type === 'fab';
+  const isCard = props.type === 'card';
 
   const containerStyle: ViewStyle[] = [
-    !isIcon && !isFab && styles.base,
+    !isIcon && !isFab && !isCard && styles.base,
     props.fullWidth && styles.fullWidth,
     isFab
       ? fabStyle(theme)
+      : isCard
+      ? cardStyle(theme)
       : isIcon
       ? styles.iconButton
       : getTypeStyle(props.type ?? 'primary', props.disabled ?? false, theme),
@@ -57,10 +77,9 @@ const Button: React.FC<ButtonProps> = (props) => {
   ].filter(Boolean) as ViewStyle[];
 
   const textStyle: TextStyle = getTextStyle(props.type ?? 'primary', theme);
+
   const iconColor =
-    isIcon && 'iconColor' in props && props.iconColor
-      ? props.iconColor
-      : theme.primary;
+    'iconColor' in props && props.iconColor ? props.iconColor : theme.primary;
 
   return (
     <TouchableOpacity
@@ -82,6 +101,8 @@ const Button: React.FC<ButtonProps> = (props) => {
         </View>
       ) : isFab ? (
         <Ionicons name="add" size={28} color={theme.primary} />
+      ) : isCard ? (
+        <View>{props.children}</View>
       ) : (
         <Text style={textStyle}>{(props as TextButtonProps).title}</Text>
       )}
@@ -103,6 +124,19 @@ function fabStyle(theme: ThemeType): ViewStyle {
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  };
+}
+
+function cardStyle(theme: ThemeType): ViewStyle {
+  return {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: theme.card,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    marginVertical: 6,
   };
 }
 

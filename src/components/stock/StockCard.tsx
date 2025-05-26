@@ -1,18 +1,27 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import { db } from '@/src/firebase/config';
 import StarRating from '../StarRating';
+import Button from '../Button';
 
 interface Props {
   product: any;
   index: number;
   selected: any;
+  price: string;
   quantity: string;
   showList: boolean;
   setSelected: (product: any) => void;
   setQuantity: (value: string) => void;
+  setPrice: (value: string) => void;
   openConfirm: (msg: string, action: () => void) => void;
   addStockItem: () => void;
   fetchProduct: () => void;
@@ -22,10 +31,12 @@ const StockCard: React.FC<Props> = ({
   product,
   index,
   selected,
+  price,
   quantity,
   showList,
   setSelected,
   setQuantity,
+  setPrice,
   openConfirm,
   addStockItem,
   fetchProduct,
@@ -34,9 +45,15 @@ const StockCard: React.FC<Props> = ({
 
   return (
     <View key={index} style={[styles.card, { backgroundColor: theme.card }]}>
-      <Text style={[styles.title, { color: theme.textPrimary }]}>{product.name}</Text>
-      <Text style={{ color: theme.text }}>{product.size && `Tamanho: ${product.size}`}</Text>
-      <Text style={{ color: theme.text }}>{product.brand && `Marca: ${product.brand}`}</Text>
+      <Text style={[styles.title, { color: theme.textPrimary }]}>
+        {product.name}
+      </Text>
+      <Text style={{ color: theme.text }}>
+        {product.size && `Tamanho: ${product.size}`}
+      </Text>
+      <Text style={{ color: theme.text }}>
+        {product.brand && `Marca: ${product.brand}`}
+      </Text>
 
       <StarRating
         rating={product.favorite}
@@ -58,21 +75,37 @@ const StockCard: React.FC<Props> = ({
           <TextInput
             placeholder="Quantidade"
             keyboardType="numeric"
+            placeholderTextColor={theme.textSecondary}
             value={selected?.id === product.id ? quantity : ''}
             onChangeText={(text) => {
               setSelected(product);
               setQuantity(text);
             }}
-            style={[styles.input, { borderColor: theme.border, color: theme.text }]}
-            placeholderTextColor={theme.background}
+            style={[
+              styles.input,
+              { borderColor: theme.border, color: theme.text },
+            ]}
           />
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.primary }]}
-            onPress={() => openConfirm('Deseja adicionar ao estoque?', addStockItem)}
-          >
-            <Text style={styles.buttonText}>Adicionar lote ao estoque</Text>
-          </TouchableOpacity>
+          <TextInput
+            placeholder="Preço unitário"
+            value={selected?.id === product.id ? price : ''}
+            onChangeText={(text) => {
+              setSelected(product);
+              setPrice(text);
+            }}
+            keyboardType="numeric"
+            style={[
+              styles.input,
+              { borderColor: theme.border, color: theme.text },
+            ]}
+          />
+          <Button
+            title="Adicionar lote ao estoque"
+            onPress={() =>
+              openConfirm('Deseja adicionar ao estoque?', addStockItem)
+            }
+          />
         </>
       )}
     </View>

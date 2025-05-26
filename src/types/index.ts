@@ -64,6 +64,8 @@ export type Product = {
 
 // Itens no estoque (relacionados ao produto)
 export type Stock = {
+  ProductItemId: string;
+  price: number;
   id: string;
   tipoItemId: string;
   tipoItemName: string;

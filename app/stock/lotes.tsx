@@ -21,6 +21,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
 import Button from '@/src/components/Button';
 import { dateUtils } from '@/src/utils/date';
+import { RefreshControl } from 'react-native';
 
 interface StockItem {
   id: string;
@@ -35,12 +36,19 @@ export default function Lotes() {
   const [lotes, setLotes] = useState<
     { loteId: string; dataLote: string; items: StockItem[] }[]
   >([]);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
 
   useEffect(() => {
     fetchLotes();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchLotes();
+    setRefreshing(false);
+  };
 
   async function fetchLotes() {
     const snapshot = await getDocs(collection(db, 'stock'));
@@ -94,9 +102,12 @@ export default function Lotes() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       <Text style={[styles.header, { color: theme.textPrimary }]}>
-        📦 Lotes de Produtos
+        Lotes de Produtos
       </Text>
 
       {lotes.map((lote, index) => (

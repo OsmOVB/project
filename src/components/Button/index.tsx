@@ -23,7 +23,7 @@ interface BaseButtonProps {
 }
 
 interface TextButtonProps extends BaseButtonProps {
-  type?: Exclude<TypeButton, 'icon'>;
+  type?: Exclude<TypeButton, 'icon' | 'fab'>;
   title: string;
 }
 
@@ -34,23 +34,33 @@ interface IconButtonProps extends BaseButtonProps {
   title?: string;
 }
 
-type ButtonProps = TextButtonProps | IconButtonProps;
+interface FabButtonProps extends BaseButtonProps {
+  type: 'fab';
+}
+
+type ButtonProps = TextButtonProps | IconButtonProps | FabButtonProps;
 
 const Button: React.FC<ButtonProps> = (props) => {
   const { theme } = useTheme();
   const isIcon = props.type === 'icon';
+  const isFab = props.type === 'fab';
 
   const containerStyle: ViewStyle[] = [
-    !isIcon && styles.base,
+    !isIcon && !isFab && styles.base,
     props.fullWidth && styles.fullWidth,
-    isIcon
+    isFab
+      ? fabStyle(theme)
+      : isIcon
       ? styles.iconButton
       : getTypeStyle(props.type ?? 'primary', props.disabled ?? false, theme),
     props.style ?? {},
   ].filter(Boolean) as ViewStyle[];
 
   const textStyle: TextStyle = getTextStyle(props.type ?? 'primary', theme);
-  const iconColor = 'iconColor' in props && props.iconColor ? props.iconColor : theme.primary;
+  const iconColor =
+    isIcon && 'iconColor' in props && props.iconColor
+      ? props.iconColor
+      : theme.primary;
 
   return (
     <TouchableOpacity
@@ -61,19 +71,40 @@ const Button: React.FC<ButtonProps> = (props) => {
     >
       {props.isLoading ? (
         <ActivityIndicator color={theme.buttonText} />
-      ) : isIcon ? (
+      ) : isIcon && 'iconName' in props ? (
         <View style={styles.iconWrapper}>
           <Ionicons name={props.iconName} size={20} color={iconColor} />
           {props.title && (
-            <Text style={[styles.iconTitle, { color: iconColor }]}>{props.title}</Text>
+            <Text style={[styles.iconTitle, { color: iconColor }]}>
+              {props.title}
+            </Text>
           )}
         </View>
+      ) : isFab ? (
+        <Ionicons name="add" size={28} color={theme.primary} />
       ) : (
-        <Text style={textStyle}>{props.title}</Text>
+        <Text style={textStyle}>{(props as TextButtonProps).title}</Text>
       )}
     </TouchableOpacity>
   );
 };
+
+function fabStyle(theme: ThemeType): ViewStyle {
+  return {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: theme.primary,
+    backgroundColor: theme.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  };
+}
 
 function getTypeStyle(
   type: TypeButton,
@@ -146,7 +177,7 @@ const styles = StyleSheet.create({
   iconButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     padding: 8,
     borderRadius: 8,
   },

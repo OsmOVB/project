@@ -18,6 +18,7 @@ import { db } from '@/src/firebase/config';
 import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
+import { create } from 'zustand';
 
 interface ProductModalProps {
   visible: boolean;
@@ -143,15 +144,6 @@ export default function ProductModal({
           <Text style={[styles.title, { color: theme.textPrimary }]}>
             Itens do Pedido: {deliveryId}
           </Text>
-          {user?.role === 'admin' && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => router.push(`/orders/edit/${delivery.id}`)}
-            >
-              <Ionicons name="create-outline" size={20} color="#007AFF" />
-              <Text style={styles.editText}>Editar</Text>
-            </TouchableOpacity>
-          )}
 
           <ScrollView contentContainerStyle={styles.itemsContainer}>
             {items.map((item, index) => {
@@ -178,21 +170,17 @@ export default function ProductModal({
                       { backgroundColor: theme.inputBg },
                     ]}
                   >
-                    <TouchableOpacity
-                      style={styles.qrButton}
+                    <Button
+                      type="icon"
+                      iconName={
+                        isChecked ? 'checkmark-circle' : 'qr-code-outline'
+                      }
+                      iconColor={isChecked ? theme.green : theme.textPrimary}
                       onPress={() => {
                         setQrItem(itemKey);
                         setScanVisible(true);
                       }}
-                    >
-                      <Ionicons
-                        name={
-                          isChecked ? 'checkmark-circle' : 'qr-code-outline'
-                        }
-                        size={24}
-                        color={isChecked ? theme.green : theme.textPrimary}
-                      />
-                    </TouchableOpacity>
+                    />
                   </View>
                 </View>
               );
@@ -221,7 +209,7 @@ export default function ProductModal({
                       >
                         {name} {size ? `(${size})` : ''}
                       </Text>
-                      <TouchableOpacity
+                      {/* <TouchableOpacity
                         onPress={() => handleRemoveItem(itemKey)}
                       >
                         <Ionicons
@@ -229,7 +217,13 @@ export default function ProductModal({
                           size={20}
                           color={theme.red}
                         />
-                      </TouchableOpacity>
+                      </TouchableOpacity> */}
+                      <Button
+                        type="icon"
+                        iconName="close-circle"
+                        iconColor={theme.red}
+                        onPress={() => handleRemoveItem(itemKey)}
+                      />
                     </View>
                   );
                 })}
@@ -239,11 +233,22 @@ export default function ProductModal({
 
           <View style={styles.footer}>
             {user?.role === 'admin' && (
-              <Button
-                onPress={handleCancel}
-                type="danger"
-                title="Cancelar Pedido"
-              />
+              <View style={styles.itemRow}>
+                <Button
+                  type="icon"
+                  iconName="create-outline"
+                  title="Editar"
+                  iconColor="#007AFF"
+                  onPress={() => router.push(`/orders/edit/${delivery.id}`)}
+                />
+                <Button
+                  onPress={handleCancel}
+                  type="icon"
+                  iconName="close-circle"
+                  iconColor={theme.red}
+                  title="Cancelar Pedido"
+                />
+              </View>
             )}
 
             <Button
@@ -330,16 +335,4 @@ const styles = StyleSheet.create({
   checkedText: {
     fontSize: 15,
   },
-  editButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 10,
-},
-editText: {
-  marginLeft: 6,
-  fontSize: 14,
-  color: '#007AFF',
-  fontWeight: '600',
-},
-
 });

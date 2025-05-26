@@ -6,81 +6,74 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  View,
 } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/context/ThemeContext';
 import { ThemeType } from '@/src/theme';
 
-type TypeButton = 'primary' | 'secondary' | 'danger' | 'outline' | 'fab';
+type TypeButton = 'primary' | 'secondary' | 'danger' | 'outline' | 'fab' | 'icon';
 
-interface ButtonProps {
-  title?: string;
+interface BaseButtonProps {
   onPress: () => void;
-  type?: TypeButton;
   isLoading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
   style?: ViewStyle;
 }
 
-const Button: React.FC<ButtonProps> = ({
-  title,
-  onPress,
-  type = 'primary',
-  isLoading = false,
-  disabled = false,
-  fullWidth = false,
-  style,
-}) => {
-  const { theme } = useTheme(); // <- tema sem styled-components
+interface TextButtonProps extends BaseButtonProps {
+  type?: Exclude<TypeButton, 'icon'>;
+  title: string;
+}
 
-  const isFab = type === 'fab';
+interface IconButtonProps extends BaseButtonProps {
+  type: 'icon';
+  iconName: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  title?: string;
+}
+
+type ButtonProps = TextButtonProps | IconButtonProps;
+
+const Button: React.FC<ButtonProps> = (props) => {
+  const { theme } = useTheme();
+  const isIcon = props.type === 'icon';
 
   const containerStyle: ViewStyle[] = [
-    !isFab && styles.base,
-    fullWidth && styles.fullWidth,
-    isFab ? fabStyle(theme) : getTypeStyle(type, disabled, theme),
-    style ?? {},
+    !isIcon && styles.base,
+    props.fullWidth && styles.fullWidth,
+    isIcon
+      ? styles.iconButton
+      : getTypeStyle(props.type ?? 'primary', props.disabled ?? false, theme),
+    props.style ?? {},
   ].filter(Boolean) as ViewStyle[];
 
-  const textStyle: TextStyle = getTextStyle(type, theme);
+  const textStyle: TextStyle = getTextStyle(props.type ?? 'primary', theme);
+  const iconColor = 'iconColor' in props && props.iconColor ? props.iconColor : theme.primary;
 
   return (
     <TouchableOpacity
       style={containerStyle}
-      onPress={onPress}
-      disabled={disabled || isLoading}
+      onPress={props.onPress}
+      disabled={props.disabled || props.isLoading}
       activeOpacity={0.8}
     >
-      {isLoading ? (
-        <ActivityIndicator
-          color={type === 'outline' ? theme.primary : theme.buttonText}
-        />
-      ) : isFab ? (
-        <AntDesign name="plus" size={26} color={theme.primary} />
+      {props.isLoading ? (
+        <ActivityIndicator color={theme.buttonText} />
+      ) : isIcon ? (
+        <View style={styles.iconWrapper}>
+          <Ionicons name={props.iconName} size={20} color={iconColor} />
+          {props.title && (
+            <Text style={[styles.iconTitle, { color: iconColor }]}>{props.title}</Text>
+          )}
+        </View>
       ) : (
-        <Text style={textStyle}>{title}</Text>
+        <Text style={textStyle}>{props.title}</Text>
       )}
     </TouchableOpacity>
   );
 };
-
-function fabStyle(theme: any): ViewStyle {
-  return {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: theme.primary,
-    backgroundColor: theme.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  };
-}
 
 function getTypeStyle(
   type: TypeButton,
@@ -127,20 +120,15 @@ function getTypeStyle(
 }
 
 function getTextStyle(type: TypeButton, theme: ThemeType): TextStyle {
-return {
-  fontSize: 16,
-  fontWeight: '600',
-  textAlign: 'center',
-  color:
-    type === 'primary' || type === 'danger'
-      ? theme.buttonText
-      : type === 'secondary'
-      ? theme.textPrimary
-      : type === 'outline' || type === 'fab'
-      ? theme.primary
-      : theme.buttonText,
-};
-
+  return {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    color:
+      type === 'primary' || type === 'danger'
+        ? theme.buttonText
+        : theme.primary,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -154,6 +142,22 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: '100%',
+  },
+  iconButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    padding: 8,
+    borderRadius: 8,
+  },
+  iconWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconTitle: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 

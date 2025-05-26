@@ -4,11 +4,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { DeliveryItem } from '@/app/(tabs)/index';
 import ScanItemsModal from '../ScanItemsModal';
 import Button from '../../Button';
@@ -18,7 +16,6 @@ import { db } from '@/src/firebase/config';
 import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
-import { create } from 'zustand';
 
 interface ProductModalProps {
   visible: boolean;
@@ -209,15 +206,7 @@ export default function ProductModal({
                       >
                         {name} {size ? `(${size})` : ''}
                       </Text>
-                      {/* <TouchableOpacity
-                        onPress={() => handleRemoveItem(itemKey)}
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={20}
-                          color={theme.red}
-                        />
-                      </TouchableOpacity> */}
+
                       <Button
                         type="icon"
                         iconName="close-circle"
@@ -233,7 +222,7 @@ export default function ProductModal({
 
           <View style={styles.footer}>
             {user?.role === 'admin' && (
-              <View style={styles.itemRow}>
+              <View style={styles.row}>
                 <Button
                   type="icon"
                   iconName="create-outline"
@@ -296,6 +285,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   itemInfo: {
     flex: 1,

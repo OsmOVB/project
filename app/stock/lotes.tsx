@@ -22,6 +22,8 @@ import { Card, CardTitle } from '@/src/components/styled';
 import Button from '@/src/components/Button';
 import { dateUtils } from '@/src/utils/date';
 import { Stock } from '@/src/types';
+import { useFocusEffect } from 'expo-router';
+import { BackHandler } from 'react-native';
 
 interface BatchGroup {
   batchId: string;
@@ -34,6 +36,21 @@ export default function Batches() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
+
+  useFocusEffect(
+  React.useCallback(() => {
+    const onBackPress = () => {
+      router.replace('/stock');
+      return true;
+    };
+
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    };
+  }, [])
+);
 
   useEffect(() => {
     fetchBatches();

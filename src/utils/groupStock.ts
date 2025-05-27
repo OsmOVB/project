@@ -19,6 +19,7 @@ export function groupStockByProduct(
       groupedMap.set(key, {
         productItemId: item.productItemId,
         productItemName: item.productItemId,
+        name: product?.name ?? '',
         companyId: item.companyId,
         batchDate: item.batchDate,
         totalQuantity: 0,

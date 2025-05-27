@@ -9,11 +9,8 @@ import {
 } from 'react-native';
 import Button from '../../Button';
 import { GroupedProduct, Product, Stock } from '@/src/types';
-import { groupStockByProduct } from '@/src/utils/groupStock';
-
 interface AddProductModalProps {
   visible: boolean;
-  stock: Stock[];
   products: GroupedProduct[];
   onAdd: (product: GroupedProduct) => void;
   onClose: () => void;
@@ -22,7 +19,6 @@ interface AddProductModalProps {
 const AddProductModal: React.FC<AddProductModalProps> = ({
   visible,
   products,
-  stock,
   onAdd,
   onClose,
 }) => {
@@ -55,17 +51,16 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             keyExtractor={(item) => item.productItemId + item.batchDate}
             renderItem={({ item }) => (
               <View style={styles.itemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: 'bold' }}>
-                    {item.productItemName}
-                  </Text>
-                  <Text>Marca: {item.brand}</Text>
+                <View style={{ flex: 1 }}>           
+                  <Text>Nome: {item.name}</Text>
                   <Text>Tipo: {item.type}</Text>
                   <Text>
                     Tamanho: {item.size} {item.unity}
                   </Text>
+                  <Text>Marca: {item.brand}</Text>
                   <Text>Qtd total: {item.totalQuantity}</Text>
                   <Text>Preço médio: R$ {item.averagePrice.toFixed(2)}</Text>
+                  
                 </View>
                 <View style={styles.buttonWrapper}>
                   <Button

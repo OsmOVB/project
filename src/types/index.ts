@@ -127,6 +127,7 @@ export interface Address {
 export type GroupedProduct = {
   productItemId: string;
   productItemName: string;
+  name: string;
   companyId: string;
   batchDate: string;
   totalQuantity: number;

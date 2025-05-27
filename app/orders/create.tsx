@@ -144,12 +144,11 @@ export default function CreateOrder() {
   const updateFormItems = (items: SelectableProduct[]) => {
     setValue(
       'items',
-      items.map(({ id, name, quantity, size, price }) => ({
-        id,
-        name,
+      items.map(({ productItemId, productItemName, quantity, size }) => ({
+        id: productItemId,
+        name: productItemName,
         quantity,
         size,
-        price,
       }))
     );
   };
@@ -158,14 +157,8 @@ const addItem = (productId: string) => {
   const item = groupedProducts.find((i) => i.productItemId === productId);
   if (item) {
     const withQty: SelectableProduct = {
-      productItemId: item.productItemId,
-      productItemName: item.productItemName,
+      ...item,
       quantity: 1,
-      size: item.size,
-      unity: item.unity,
-      brand: item.brand,
-      type: item.type,
-      // price: item.averagePrice,
     };
     const updated = [...selectedItems, withQty];
     setSelectedItems(updated);
@@ -175,14 +168,14 @@ const addItem = (productId: string) => {
 
 
   const removeItem = (itemId: string) => {
-    const updated = selectedItems.filter((i) => i.id !== itemId);
+    const updated = selectedItems.filter((i) => i.productItemId !== itemId);
     setSelectedItems(updated);
     updateFormItems(updated);
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
     const updated = selectedItems.map((item) =>
-      item.id === itemId ? { ...item, quantity } : item
+      item.productItemId === itemId ? { ...item, quantity } : item
     );
     setSelectedItems(updated);
     updateFormItems(updated);
@@ -305,17 +298,17 @@ const addItem = (productId: string) => {
           <Card style={{ backgroundColor: theme.card }}>
             <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
             <ProductSelector
-              products={groupedProducts}
               loading={loading}
               selectedItems={selectedItems.map(item => ({
                 id: item.productItemId,
                 name: item.productItemName,
                 quantity: item.quantity,
                 size: item.size,
-                // price: item.price,
-                // add other fields if SelectedItem expects them
+                unity: item.unity,
+                brand: item.brand,
+                type: item.type,
+                companyId: user?.companyId || '',
               }))}
-              onAddItem={addItem}
               onRemoveItem={removeItem}
               onUpdateQuantity={updateQuantity}
               onOpenAddModal={() => setModalVisible(true)}

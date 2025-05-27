@@ -222,7 +222,6 @@ export default function Stock() {
   return (
     <Container>
       <Title>Gestão de Estoque</Title>
-
       <Text style={[styles.tabLabel, { color: theme.primary }]}>Produtos</Text>
       <View style={[styles.card, { backgroundColor: theme.card }]}>
         <View style={styles.tabRow}>
@@ -252,32 +251,39 @@ export default function Stock() {
           />
         </View>
       </View>
-
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {productList.map((product, index) => (
-          <StockCard
-            key={index}
-            product={product}
-            index={index}
-            selected={selected}
-            price={price}
-            quantity={quantity}
-            showList={showList}
-            loading={addingStock && selected?.id === product.id}
-            setPrice={setPrice}
-            setSelected={setSelected}
-            setQuantity={setQuantity}
-            openConfirm={openConfirm}
-            addStockItem={addStockItem}
-            fetchProduct={fetchProduct}
-          />
-        ))}
-      </ScrollView>
-
+      //se tiver vazio, mostra mensagem
+      {productList.length === 0 ? (
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <Text style={{ color: theme.textSecondary }}>
+            Nenhum produto cadastrado.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {productList.map((product, index) => (
+            <StockCard
+              key={index}
+              product={product}
+              index={index}
+              selected={selected}
+              price={price}
+              quantity={quantity}
+              showList={showList}
+              loading={addingStock && selected?.id === product.id}
+              setPrice={setPrice}
+              setSelected={setSelected}
+              setQuantity={setQuantity}
+              openConfirm={openConfirm}
+              addStockItem={addStockItem}
+              fetchProduct={fetchProduct}
+            />
+          ))}
+        </ScrollView>
+      )}
       <Modal visible={productModalVisible} transparent>
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
@@ -351,7 +357,6 @@ export default function Stock() {
           </View>
         </View>
       </Modal>
-
       <ConfirmModal
         visible={confirmVisible}
         message={confirmMessage}

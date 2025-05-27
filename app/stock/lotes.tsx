@@ -125,14 +125,10 @@ export default function Batches() {
                 Lote: {batch.batchId}
               </CardTitle>
               <Text style={[styles.batchDate, { color: theme.text }]}>
-                🗓️ {dateUtils.formatDateString(batch.batchDate)}
-              </Text>
+                {dateUtils.formatDateString(batch.batchDate)}
+              </Text>   
               <Text style={[styles.batchItems, { color: theme.text }]}>
-                📋{' '}
-                {batch.items.reduce(
-                  (total, item) => total + (item.quantity || 0),
-                  0
-                )}{' '}
+                {batch.items.length}{' '}
                 produto(s)
               </Text>
             </Button>

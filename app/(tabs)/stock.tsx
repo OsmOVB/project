@@ -39,8 +39,9 @@ export default function Stock() {
   const router = useRouter();
   const [addingStock, setAddingStock] = useState(false);
 
-
-  const [productForm, setProductForm] = useState<Omit<Product, 'id' | 'createdAt' | 'companyId'>>({
+  const [productForm, setProductForm] = useState<
+    Omit<Product, 'id' | 'createdAt' | 'companyId'>
+  >({
     name: '',
     type: '',
     size: '',
@@ -80,47 +81,51 @@ export default function Stock() {
     setProductList(items.sort((a, b) => b.favorite - a.favorite));
   };
 
-async function addStockItem() {
-  if (!selected || !quantity || !price) return;
+  async function addStockItem() {
+    if (!selected || !quantity || !price) return;
 
-  setAddingStock(true);
-  try {
-    const currentDate = new Date().toISOString().slice(0, 10);
-    const productId = selected.id;
-    const parsedPrice = parseFloat(price);
-    const qty = Number(quantity);
-    const companyId = selected.companyId || '';
+    setAddingStock(true);
+    try {
+      const currentDate = new Date().toISOString().slice(0, 10);
+      const productId = selected.id;
+      const parsedPrice = parseFloat(price);
+      const qty = Number(quantity);
+      const companyId = selected.companyId || '';
 
-    const batchId = await calculateNextBatchId(currentDate, productId, parsedPrice, companyId);
+      const batchId = await calculateNextBatchId(
+        currentDate,
+        productId,
+        parsedPrice,
+        companyId
+      );
 
-    const promises = Array.from({ length: qty }).map(async () => {
-      const newStockItem: Omit<Stock, 'id'> = {
-        productItemId: productId,
-        batchId,
-        companyId,
-        adminEmail: user?.email || '',
-        volumeLiters: selected.size ? parseInt(selected.size) : 0,
-        batchDate: currentDate,
-        pendingPrint: 'Y',
-        price: parsedPrice,
-        qrCode: '',
-      };
-      await addDoc(collection(db, 'stock'), newStockItem);
-    });
+      const promises = Array.from({ length: qty }).map(async () => {
+        const newStockItem: Omit<Stock, 'id'> = {
+          productItemId: productId,
+          batchId,
+          companyId,
+          adminEmail: user?.email || '',
+          volumeLiters: selected.size ? parseInt(selected.size) : 0,
+          batchDate: currentDate,
+          pendingPrint: 'Y',
+          price: parsedPrice,
+          qrCode: '',
+        };
+        await addDoc(collection(db, 'stock'), newStockItem);
+      });
 
-    await Promise.all(promises);
+      await Promise.all(promises);
 
-    setSelected(null);
-    setQuantity('');
-    setPrice('');
-    fetchStock();
-  } catch (err) {
-    console.error('Erro ao adicionar ao estoque:', err);
-  } finally {
-    setAddingStock(false);
+      setSelected(null);
+      setQuantity('');
+      setPrice('');
+      fetchStock();
+    } catch (err) {
+      console.error('Erro ao adicionar ao estoque:', err);
+    } finally {
+      setAddingStock(false);
+    }
   }
-}
-
 
   async function calculateNextBatchId(
     batchDate: string,
@@ -143,7 +148,11 @@ async function addStockItem() {
     stockSnapshot.docs.forEach((doc) => {
       const data = doc.data();
       if (typeof data.batchId === 'number') {
-        if (data.price === price && matchedBatchId === null) {
+        if (
+          data.price === price &&
+          data.productItemId === productId &&
+          data.volumeLiters === (selected?.size ? parseInt(selected.size) : 0)
+        ) {
           matchedBatchId = data.batchId;
         }
         if (data.batchId > maxBatchId) {
@@ -193,7 +202,9 @@ async function addStockItem() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={{ marginTop: 12, color: theme.textPrimary }}>Carregando estoque...</Text>
+        <Text style={{ marginTop: 12, color: theme.textPrimary }}>
+          Carregando estoque...
+        </Text>
       </View>
     );
   }

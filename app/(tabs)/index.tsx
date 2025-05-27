@@ -11,6 +11,7 @@ import Button from '@/src/components/Button';
 import { useTheme } from '@/src/context/ThemeContext';
 import { ThemeType } from '@/src/theme';
 import { RefreshControl } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
 export interface DeliveryItem {
   name: string;
@@ -43,10 +44,11 @@ export default function Home() {
     'entregas'
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // 1. Mova essa função para fora do useEffect para poder reutilizá-la
   const fetchOrders = async () => {
     try {
+      setLoading(true);
       const snapshot = await getDocs(collection(db, 'orders'));
       const data = await Promise.all(
         snapshot.docs.map(async (doc) => {
@@ -80,6 +82,8 @@ export default function Home() {
       setOrders(data);
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,64 +185,73 @@ export default function Home() {
           </Pressable>
         </View>
       </View>
-
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {orders
-          .filter(
-            (d) =>
-              activeTab === 'entregas' ||
-              (d.status === 'em progresso' &&
-                Date.now() - d.scheduledTimestamp >= 65 * 60 * 1000)
-          )
-          .map((delivery) => (
-            <Pressable
-              key={delivery.id}
-              style={styles.deliveryCard}
-              onPress={() => {
-                setSelectedDelivery(delivery);
-                setProductModal(true);
-              }}
-            >
-              <View style={styles.deliveryHeader}>
-                <View style={styles.deliveryTime}>
-                  <Ionicons
-                    name="time-outline"
-                    size={20}
-                    color={theme.textSecondary}
-                  />
-                  <Text style={styles.timeText}>{delivery.time}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: getStatusColor(delivery.status) },
-                  ]}
-                >
-                  <Text style={styles.statusText}>
-                    {delivery.status.replace('_', ' ').toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.customerName}>{delivery.customerName}</Text>
-              <Text style={styles.address}>{delivery.address}</Text>
-              <View style={styles.itemsList}>
-                {delivery.items.map((item, index) => (
-                  <View key={index} style={styles.itemRow}>
-                    <Text style={styles.itemName}>
-                      {item.name} {item.size}
-                    </Text>
-                    <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+      {loading ? (
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: theme.textPrimary, marginBottom: 8 }}>
+            Carregando pedidos...
+          </Text>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      ) : (
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {orders
+            .filter(
+              (d) =>
+                activeTab === 'entregas' ||
+                (d.status === 'em progresso' &&
+                  Date.now() - d.scheduledTimestamp >= 65 * 60 * 1000)
+            )
+            .map((delivery) => (
+              <Pressable
+                key={delivery.id}
+                style={styles.deliveryCard}
+                onPress={() => {
+                  setSelectedDelivery(delivery);
+                  setProductModal(true);
+                }}
+              >
+                <View style={styles.deliveryHeader}>
+                  <View style={styles.deliveryTime}>
+                    <Ionicons
+                      name="time-outline"
+                      size={20}
+                      color={theme.textSecondary}
+                    />
+                    <Text style={styles.timeText}>{delivery.time}</Text>
                   </View>
-                ))}
-              </View>
-            </Pressable>
-          ))}
-      </ScrollView>
-
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: getStatusColor(delivery.status) },
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {delivery.status.replace('_', ' ').toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.customerName}>{delivery.customerName}</Text>
+                <Text style={styles.address}>{delivery.address}</Text>
+                <View style={styles.itemsList}>
+                  {delivery.items.map((item, index) => (
+                    <View key={index} style={styles.itemRow}>
+                      <Text style={styles.itemName}>
+                        {item.name} {item.size}
+                      </Text>
+                      <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                    </View>
+                  ))}
+                </View>
+              </Pressable>
+            ))}
+        </ScrollView>
+      )}
       <ProductModal
         visible={productModal}
         onClose={() => setProductModal(false)}

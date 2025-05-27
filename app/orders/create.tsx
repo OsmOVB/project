@@ -314,12 +314,13 @@ export default function CreateOrder() {
               loading={loading}
               selectedItems={selectedItems.map((item) => ({
                 id: item.productItemId,
-                name: item.productItemName,
+                name: item.name,
                 quantity: item.quantity,
                 size: item.size,
                 unity: item.unity,
                 brand: item.brand,
                 type: item.type,
+                price: item.price,
                 companyId: user?.companyId || '',
               }))}
               onRemoveItem={removeItem}

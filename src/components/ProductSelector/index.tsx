@@ -35,8 +35,15 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
           {selectedItems.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
               <Text style={styles.productText}>
-                {item.name} - {item.size} {item.unity} | R$ {item.price?.toFixed(2)}
+                {item.name}
               </Text>
+              <Text style={styles.productText}>
+                {item.type}, {item.brand}
+              </Text>
+              <Text style={styles.productText}>
+                {item.size} {item.unity} 
+              </Text>
+             
               <View style={styles.quantityContainer}>
                 <Button    
                   iconName='remove'

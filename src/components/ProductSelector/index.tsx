@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import Button from '../Button';
 import { SelectableProduct } from '@/src/types';
+import { useTheme } from '@/src/context/ThemeContext';
 
 interface ProductSelectorProps {
   loading: boolean;
@@ -24,6 +25,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
   onUpdateQuantity,
   onOpenAddModal,
 }) => {
+  const { theme } = useTheme();
   return (
     <View>
       {loading ? (
@@ -36,24 +38,28 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                 {item.name} - {item.size} {item.unity} | R$ {item.price?.toFixed(2)}
               </Text>
               <View style={styles.quantityContainer}>
-                <Button
-                  style={{ width: 40 }}
-                  title="-"
-                  onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                  type="primary"
+                <Button    
+                  iconName='remove'
+                  onPress={() => {
+                    if (item.quantity > 1) {
+                      onUpdateQuantity(item.id, item.quantity - 1);
+                    }
+                  }}
+                  type="icon"
+                  disabled={item.quantity <= 1}
                 />
                 <Text style={styles.quantityText}>{item.quantity}</Text>
                 <Button
-                  style={{ width: 40 }}
-                  title="+"
+                  iconName='add'
                   onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                  type="primary"
+                  type="icon"
                 />
                 <Button
                   style={{ width: 100 }}
-                  title="Remover"
+                  iconName='trash'
+                  iconColor={theme.red}
                   onPress={() => onRemoveItem(item.id)}
-                  type="danger"
+                  type="icon"
                 />
               </View>
             </View>

@@ -56,39 +56,6 @@ export default function ProductModal({
     'finalizado',
   ];
 
-  // const handleConfirm = async () => {
-  //   try {
-  //     const orderRef = doc(db, 'orders', deliveryId);
-  //     const orderSnap = await getDoc(orderRef);
-
-  //     if (!orderSnap.exists()) {
-  //       alert('Pedido não encontrado.');
-  //       return;
-  //     }
-
-  //     const currentStatus = orderSnap.data().status as StatusOrder;
-  //     const currentIndex = statusSequence.indexOf(currentStatus);
-
-  //     if (currentIndex === -1 || currentIndex === statusSequence.length - 1) {
-  //       alert('Status não pode ser atualizado.');
-  //       return;
-  //     }
-
-  //     const nextStatus = statusSequence[currentIndex + 1];
-
-  //     await updateDoc(orderRef, {
-  //       status: nextStatus,
-  //     });
-
-  //     console.log(`Status atualizado: ${currentStatus} -> ${nextStatus}`);
-  //     onRefresh();
-  //     onClose();
-  //   } catch (err) {
-  //     console.error('Erro ao atualizar status:', err);
-  //     alert('Erro ao atualizar status. Tente novamente.');
-  //   }
-  // };
-
   const handleConfirm = async () => {
     try {
       const orderRef = doc(db, 'orders', deliveryId);

@@ -1,6 +1,6 @@
 // CreateOrder.tsx
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Modal } from 'react-native';
+import { View, ScrollView, StyleSheet, Modal, RefreshControl } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -67,6 +67,8 @@ export default function CreateOrder() {
   const [groupedProducts, setGroupedProducts] = useState<GroupedProduct[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedItems, setSelectedItems] = useState<SelectableProduct[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   const {
     control,
@@ -86,39 +88,41 @@ export default function CreateOrder() {
   const scheduledDate = watch('scheduledDate');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const stockSnap = await getDocs(collection(db, 'stock'));
-        const productSnap = await getDocs(collection(db, 'product'));
-
-        const stockItems = stockSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Stock[];
-
-        const productItems = productSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Product[];
-
-        const filteredStock = stockItems.filter(
-          (item) => item.companyId === user?.companyId
-        );
-        const filteredProducts = productItems.filter(
-          (prod) => prod.companyId === user?.companyId
-        );
-
-        const grouped = groupStockByProduct(filteredStock, filteredProducts);
-        setGroupedProducts(grouped);
-      } catch (err) {
-        console.error('Erro ao buscar dados:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const stockSnap = await getDocs(collection(db, 'stock'));
+      const productSnap = await getDocs(collection(db, 'product'));
+
+      const stockItems = stockSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Stock[];
+
+      const productItems = productSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Product[];
+
+      const filteredStock = stockItems.filter(
+        (item) => item.companyId === user?.companyId
+      );
+      const filteredProducts = productItems.filter(
+        (prod) => prod.companyId === user?.companyId
+      );
+
+      const grouped = groupStockByProduct(filteredStock, filteredProducts);
+      setGroupedProducts(grouped);
+    } catch (err) {
+      console.error('Erro ao buscar dados:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -141,6 +145,12 @@ export default function CreateOrder() {
     fetchAddresses();
   }, [user?.companyId, watch('customerName')]);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
   const updateFormItems = (items: SelectableProduct[]) => {
     setValue(
       'items',
@@ -153,19 +163,18 @@ export default function CreateOrder() {
     );
   };
 
-const addItem = (productId: string) => {
-  const item = groupedProducts.find((i) => i.productItemId === productId);
-  if (item) {
-    const withQty: SelectableProduct = {
-      ...item,
-      quantity: 1,
-    };
-    const updated = [...selectedItems, withQty];
-    setSelectedItems(updated);
-    updateFormItems(updated);
-  }
-};
-
+  const addItem = (productId: string) => {
+    const item = groupedProducts.find((i) => i.productItemId === productId);
+    if (item) {
+      const withQty: SelectableProduct = {
+        ...item,
+        quantity: 1,
+      };
+      const updated = [...selectedItems, withQty];
+      setSelectedItems(updated);
+      updateFormItems(updated);
+    }
+  };
 
   const removeItem = (itemId: string) => {
     const updated = selectedItems.filter((i) => i.productItemId !== itemId);
@@ -219,7 +228,11 @@ const addItem = (productId: string) => {
   return (
     <View style={{ backgroundColor: theme.background, flex: 1 }}>
       <Container>
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <Title style={{ color: theme.textPrimary }}>Criar Novo Pedido</Title>
 
           <Card style={{ backgroundColor: theme.card }}>
@@ -299,7 +312,7 @@ const addItem = (productId: string) => {
             <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
             <ProductSelector
               loading={loading}
-              selectedItems={selectedItems.map(item => ({
+              selectedItems={selectedItems.map((item) => ({
                 id: item.productItemId,
                 name: item.productItemName,
                 quantity: item.quantity,

@@ -3,9 +3,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import {
   getDocs,
@@ -21,79 +21,72 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
 import Button from '@/src/components/Button';
 import { dateUtils } from '@/src/utils/date';
-import { RefreshControl } from 'react-native';
+import { Stock } from '@/src/types';
 
-interface StockItem {
-  id: string;
-  loteId: string;
-  dataLote: string;
-  tipoItemName: string;
-  marca: string;
-  capacidade: string;
+interface BatchGroup {
+  batchId: string;
+  batchDate: string;
+  items: Stock[];
 }
 
-export default function Lotes() {
-  const [lotes, setLotes] = useState<
-    { loteId: string; dataLote: string; items: StockItem[] }[]
-  >([]);
+export default function Batches() {
+  const [batches, setBatches] = useState<BatchGroup[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
 
   useEffect(() => {
-    fetchLotes();
+    fetchBatches();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchLotes();
+    await fetchBatches();
     setRefreshing(false);
   };
 
-  async function fetchLotes() {
+  async function fetchBatches() {
     const snapshot = await getDocs(collection(db, 'stock'));
-    const allItems: StockItem[] = snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as StockItem)
+    const allItems: Stock[] = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as Stock)
     );
-    const grouped: Record<
-      string,
-      { loteId: string; dataLote: string; items: StockItem[] }
-    > = {};
+
+    const grouped: Record<string, BatchGroup> = {};
 
     allItems.forEach((item) => {
-      const key = `${item.loteId}_${item.dataLote}`;
+      const key = `${item.batchId}_${item.batchDate}`;
       if (!grouped[key]) {
         grouped[key] = {
-          loteId: item.loteId,
-          dataLote: item.dataLote,
+          batchId: String(item.batchId),
+          batchDate: item.batchDate,
           items: [],
         };
       }
       grouped[key].items.push(item);
     });
 
-    setLotes(Object.values(grouped));
+    setBatches(Object.values(grouped));
   }
 
-  function handleDeleteLote(loteId: string, dataLote: string) {
-    Alert.alert('Apagar Lote', 'Deseja apagar todos os produtos deste lote?', [
-      { text: 'Cancelar' },
+  function handleDeleteBatch(batchId: string, batchDate: string) {
+    Alert.alert('Delete Batch', 'Are you sure you want to delete this batch?', [
+      { text: 'Cancel' },
       {
-        text: 'Apagar',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           const snapshot = await getDocs(
             query(
               collection(db, 'stock'),
-              where('loteId', '==', loteId),
-              where('dataLote', '==', dataLote)
+              where('batchId', '==', batchId),
+              where('batchDate', '==', batchDate)
             )
           );
           const deletions = snapshot.docs.map((docSnap) =>
             deleteDoc(doc(db, 'stock', docSnap.id))
           );
           await Promise.all(deletions);
-          fetchLotes();
+          fetchBatches();
         },
       },
     ]);
@@ -110,37 +103,50 @@ export default function Lotes() {
         Lotes de Produtos
       </Text>
 
-      {lotes.map((lote, index) => (
-        <Card key={index} style={{ backgroundColor: theme.card }}>
-          <Button
-            type="card"
-            onPress={() =>
-              router.push({
-                pathname: '/stock/lote_details',
-                params: { loteId: lote.loteId, dataLote: lote.dataLote },
-              })
-            }
-          >
-            <CardTitle style={{ color: theme.primary }}>
-              Lote: {lote.loteId}
-            </CardTitle>
-            <Text style={[styles.loteDate, { color: theme.text }]}>
-              🗓️ {dateUtils.formatDateString(lote.dataLote)}
-            </Text>
-            <Text style={[styles.loteItems, { color: theme.text }]}>
-              📋 {lote.items.length} Produto(s)
-            </Text>
-          </Button>
-          <Button
-            title="Apagar Lote"
-            type="icon"
-            iconColor={theme.red}
-            iconName="trash"
-            onPress={() => handleDeleteLote(lote.loteId, lote.dataLote)}
-            style={{ marginTop: 8 }}
-          />
-        </Card>
-      ))}
+      {batches.length === 0 ? (
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <Text style={{ color: theme.textSecondary }}>
+            Nenhum lote encontrado.
+          </Text>
+        </View>
+      ) : (
+        batches.map((batch, index) => (
+          <Card key={index} style={{ backgroundColor: theme.card }}>
+            <Button
+              type="card"
+              onPress={() =>
+                router.push({
+                  pathname: '/stock/lote_details',
+                  params: { loteId: batch.batchId, dataLote: batch.batchDate },
+                })
+              }
+            >
+              <CardTitle style={{ color: theme.primary }}>
+                Lote: {batch.batchId}
+              </CardTitle>
+              <Text style={[styles.batchDate, { color: theme.text }]}>
+                🗓️ {dateUtils.formatDateString(batch.batchDate)}
+              </Text>
+              <Text style={[styles.batchItems, { color: theme.text }]}>
+                📋{' '}
+                {batch.items.reduce(
+                  (total, item) => total + (item.quantity || 0),
+                  0
+                )}{' '}
+                produto(s)
+              </Text>
+            </Button>
+            <Button
+              title="Apagar Lote"
+              type="icon"
+              iconColor={theme.red}
+              iconName="trash"
+              onPress={() => handleDeleteBatch(batch.batchId, batch.batchDate)}
+              style={{ marginTop: 8 }}
+            />
+          </Card>
+        ))
+      )}
     </ScrollView>
   );
 }
@@ -155,21 +161,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
-  loteDate: {
+  batchDate: {
     fontSize: 14,
     marginBottom: 2,
   },
-  loteItems: {
+  batchItems: {
     fontSize: 14,
-  },
-  deleteButton: {
-    paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  deleteText: {
-    color: '#fff',
-    fontWeight: 'bold',
   },
 });

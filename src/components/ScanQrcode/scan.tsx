@@ -1,6 +1,12 @@
-
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Camera, CameraView } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +17,9 @@ export default function ScanItems() {
   const [permission, setPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cameraType, setCameraType] = useState<'back' | 'front'>('back'); 
+  const [manualInput, setManualInput] = useState('');
+  const [cameraType, setCameraType] = useState<'back' | 'front'>('back');
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -20,11 +28,23 @@ export default function ScanItems() {
     })();
   }, []);
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = ({
+    type,
+    data,
+  }: {
+    type: string;
+    data: string;
+  }) => {
     if (!scanned) {
       setScanned(true);
-      alert(`Código QR escaneado: ${data}`);
+      alert(`QR Code escaneado: ${data}`);
     }
+  };
+
+  const handleManualSubmit = () => {
+    if (!manualInput.trim()) return;
+    alert(`Código inserido manualmente: ${manualInput}`);
+    setManualInput('');
   };
 
   if (loading) {
@@ -39,8 +59,13 @@ export default function ScanItems() {
   if (!permission) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>Precisamos de permissão para acessar a câmera.</Text>
-        <TouchableOpacity onPress={() => Camera.requestCameraPermissionsAsync()} style={styles.button}>
+        <Text style={styles.message}>
+          Precisamos de permissão para acessar a câmera.
+        </Text>
+        <TouchableOpacity
+          onPress={() => Camera.requestCameraPermissionsAsync()}
+          style={styles.button}
+        >
           <Text style={styles.buttonText}>Conceder Permissão</Text>
         </TouchableOpacity>
       </View>
@@ -59,8 +84,28 @@ export default function ScanItems() {
         />
       </View>
       <Text style={styles.instructions}>📷 Aponte a câmera para o QR Code</Text>
+
+      <Text style={{ marginTop: 20, fontSize: 14, color: '#555' }}>
+        Ou digite manualmente:
+      </Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Digite o código"
+        value={manualInput}
+        onChangeText={setManualInput}
+      />
+      <TouchableOpacity
+        onPress={handleManualSubmit}
+        style={styles.scanAgainButton}
+      >
+        <Text style={styles.buttonText}>Enviar Código Manual</Text>
+      </TouchableOpacity>
+
       {scanned && (
-        <TouchableOpacity onPress={() => setScanned(false)} style={styles.scanAgainButton}>
+        <TouchableOpacity
+          onPress={() => setScanned(false)}
+          style={styles.scanAgainButton}
+        >
           <Text style={styles.buttonText}>Escanear Novamente</Text>
         </TouchableOpacity>
       )}
@@ -80,39 +125,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F4',
     paddingHorizontal: 20,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#6200EE',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#6200EE' },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
   cameraContainer: {
     width: 250,
     height: 250,
     backgroundColor: '#000',
     borderRadius: 10,
     overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 20,
   },
-  camera: {
-    flex: 1,
+  camera: { flex: 1, width: '100%' },
+  instructions: { fontSize: 14, color: '#555', marginBottom: 10 },
+  textInput: {
     width: '100%',
-  },
-  instructions: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 20,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 10,
+    marginTop: 10,
+    backgroundColor: '#fff',
   },
   button: {
     flexDirection: 'row',
@@ -128,16 +161,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
-    marginBottom: 10,
+    marginTop: 10,
   },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    marginLeft: 5,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  buttonText: { color: '#FFF', fontSize: 16, marginLeft: 5 },
+  message: { fontSize: 16, textAlign: 'center', marginBottom: 20 },
 });

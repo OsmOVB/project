@@ -1,11 +1,6 @@
 // CreateOrder.tsx
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Modal,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, Modal } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,11 +19,12 @@ import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
-import { Product } from '@/src/types';
+import { GroupedProduct, Product, Stock } from '@/src/types';
 import { Picker } from '@react-native-picker/picker';
 import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
 import { useAuth } from '@/src/hooks/useAuth';
 import Button from '@/src/components/Button';
+import { groupStockByProduct } from '@/src/utils/groupStock';
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
@@ -47,7 +43,7 @@ const orderSchema = z.object({
 });
 
 type OrderForm = z.infer<typeof orderSchema>;
-type SelectableProduct = Product & { quantity: number };
+type SelectableProduct = GroupedProduct & { quantity: number };
 type Address = {
   id: string;
   name: string;
@@ -68,7 +64,7 @@ export default function CreateOrder() {
   const [modalVisible, setModalVisible] = useState(false);
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [groupedProducts, setGroupedProducts] = useState<GroupedProduct[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedItems, setSelectedItems] = useState<SelectableProduct[]>([]);
 
@@ -90,30 +86,38 @@ export default function CreateOrder() {
   const scheduledDate = watch('scheduledDate');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'product'));
-        const productsList = querySnapshot.docs.map((doc) => ({
+        const stockSnap = await getDocs(collection(db, 'stock'));
+        const productSnap = await getDocs(collection(db, 'product'));
+
+        const stockItems = stockSnap.docs.map((doc) => ({
           id: doc.id,
-          name: doc.data().name || 'Produto sem nome',
-          price: doc.data().price || 0,
-          size: doc.data().size || '',
-          quantity: doc.data().quantity || 0,
-          favorite: doc.data().favorite ?? false,
-          createdAt: doc.data().createdAt ?? '',
-          companyId: doc.data().companyId ?? '',
-          unity: doc.data().unity ?? '',
-          type: doc.data().type || '',
-        }));
-        setProducts(productsList);
-      } catch (error) {
-        console.error('Erro ao buscar produtos:', error);
+          ...doc.data(),
+        })) as Stock[];
+
+        const productItems = productSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Product[];
+
+        const filteredStock = stockItems.filter(
+          (item) => item.companyId === user?.companyId
+        );
+        const filteredProducts = productItems.filter(
+          (prod) => prod.companyId === user?.companyId
+        );
+
+        const grouped = groupStockByProduct(filteredStock, filteredProducts);
+        setGroupedProducts(grouped);
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -150,15 +154,25 @@ export default function CreateOrder() {
     );
   };
 
-  const addItem = (itemId: string) => {
-    const item = products.find((i) => i.id === itemId);
-    if (item) {
-      const withQty: SelectableProduct = { ...item, quantity: 1 };
-      const updated = [...selectedItems, withQty];
-      setSelectedItems(updated);
-      updateFormItems(updated);
-    }
-  };
+const addItem = (productId: string) => {
+  const item = groupedProducts.find((i) => i.productItemId === productId);
+  if (item) {
+    const withQty: SelectableProduct = {
+      productItemId: item.productItemId,
+      productItemName: item.productItemName,
+      quantity: 1,
+      size: item.size,
+      unity: item.unity,
+      brand: item.brand,
+      type: item.type,
+      // price: item.averagePrice,
+    };
+    const updated = [...selectedItems, withQty];
+    setSelectedItems(updated);
+    updateFormItems(updated);
+  }
+};
+
 
   const removeItem = (itemId: string) => {
     const updated = selectedItems.filter((i) => i.id !== itemId);
@@ -291,9 +305,16 @@ export default function CreateOrder() {
           <Card style={{ backgroundColor: theme.card }}>
             <CardTitle style={{ color: theme.textPrimary }}>Produtos</CardTitle>
             <ProductSelector
-              products={products}
+              products={groupedProducts}
               loading={loading}
-              selectedItems={selectedItems}
+              selectedItems={selectedItems.map(item => ({
+                id: item.productItemId,
+                name: item.productItemName,
+                quantity: item.quantity,
+                size: item.size,
+                // price: item.price,
+                // add other fields if SelectedItem expects them
+              }))}
               onAddItem={addItem}
               onRemoveItem={removeItem}
               onUpdateQuantity={updateQuantity}
@@ -310,9 +331,9 @@ export default function CreateOrder() {
 
         <AddProductModal
           visible={modalVisible}
-          products={products}
-          onAdd={(product: any) => {
-            addItem(product.id);
+          products={groupedProducts}
+          onAdd={(product) => {
+            addItem(product.productItemId);
             setModalVisible(false);
           }}
           onClose={() => setModalVisible(false)}

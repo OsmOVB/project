@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Pressable } from 'react-native';
-import {
-  Container,
-  Title,
-  Card,
-  CardTitle,
-  CardText,
-} from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusOrder } from '@/src/types';
@@ -101,7 +94,7 @@ export default function Home() {
     await fetchOrders(); // <- busca novamente os dados do banco
     setRefreshing(false);
   };
-  
+
   const getStatusColor = (status: StatusOrder) => {
     switch (status) {
       case 'pendente':

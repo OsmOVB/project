@@ -7,32 +7,19 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Button from '../Button';
-import { Product } from '@/src/types';
-
-export interface SelectedItem {
-  id: string;
-  name: string;
-  quantity: number;
-  size?: string;
-  brand?: string;
-  unity?: string;
-}
+import { SelectableProduct } from '@/src/types';
 
 interface ProductSelectorProps {
-  products: Product[];
   loading: boolean;
-  selectedItems: SelectedItem[];
-  onAddItem: (itemId: string) => void;
+  selectedItems: SelectableProduct[];
   onRemoveItem: (itemId: string) => void;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onOpenAddModal?: () => void;
 }
 
 const ProductSelector: React.FC<ProductSelectorProps> = ({
-  products,
   loading,
   selectedItems,
-  onAddItem,
   onRemoveItem,
   onUpdateQuantity,
   onOpenAddModal,
@@ -45,7 +32,9 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
         <View>
           {selectedItems.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
-              <Text style={styles.productText}>{item.name} { item.size }{ item.unity }</Text>
+              <Text style={styles.productText}>
+                {item.name} - {item.size} {item.unity} | R$ {item.price?.toFixed(2)}
+              </Text>
               <View style={styles.quantityContainer}>
                 <Button
                   style={{ width: 40 }}

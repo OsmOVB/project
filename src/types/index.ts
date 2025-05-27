@@ -1,5 +1,4 @@
 export type UserRole = 'admin' | 'delivery' | 'customer';
-
 export interface User {
   id: string;
   email: string;
@@ -47,38 +46,43 @@ export interface Company {
   createdAt: Date;
 }
 
-// Produto cadastrado pela empresa
 export type Product = {
-  id: string;           // ID do tipo cadastrado
-  name: string;         // Nome (ex: Pilsen, Barril, CO2)
-  size?: string;        // Tamanho (ex: 30L, 50L)
-  brand?: string;       // Marca (ex: Heineken)
-  favorite: number;     // Nota de 1 a 5 estrelas
-  createdAt: string;    // Data de criação
-  companyId: string;    // ID da empresa que criou o produto
-  unity: string;      // Unidade de medida (ex: L, mL, m³)
-  price: number;        // Preço do produto
-  type: string;         // Tipo do produto (ex: cerveja, refrigerante)
-};
-
-
-// Itens no estoque (relacionados ao produto)
-export type Stock = {
-  ProductItemId: string;
-  price: number;
   id: string;
-  tipoItemId: string;
-  tipoItemName: string;
-  quantity: number;
-  liters?: number;
-  loteId: number;
-  dataLote: string; // formato: dd/MM/yyyy
-  sequenciaLote: number;
-  pendenciaImpressao: 'S' | 'N';
-  adminEmail: string;     // para filtro de empresa
-  qrCode?: string;        // código único, sequencial (ex: I001, I002)
+  type: string;
+  name: string;
+  size?: string;
+  brand?: string;
+  favorite: number;
+  createdAt: string;
   companyId: string;
+  unity: string;
 };
+export type QrCodeStatus = 'free' | 'occupied';
+
+export interface QRCode {
+  id?: string;
+  code: string;
+  status: QrCodeStatus;
+  companyId: string;
+  createdAt: string;
+  usedByStockId?: string;
+}
+
+
+export interface Stock {
+  id?: string; // Optional, assigned by Firestore
+  productItemId: string;
+  batchId: number;
+  companyId: string;
+  adminEmail: string;
+  volumeLiters: number;
+  batchDate: string; // format: YYYY-MM-DD
+  pendingPrint: 'Y' | 'N';
+  price: number;
+  qrCode: string;
+  quantity?: number; // optional, used only in aggregated mode
+  batchSequence?: number; // optional, if you want to keep a sequence
+}
 
 // Item de um pedido (referencia um Stock específico)
 export interface OrderItem {
@@ -102,15 +106,6 @@ export interface Order {
   adminEmail: string;
 }
 
-// QR Code opcional como entidade separada (caso deseje mapear)
-export interface QRCode {
-  id: string;
-  stockId: string;
-  code: string; // Ex: I001, I002
-  used: boolean;
-  companyId: string;
-}
-
 // Métodos de pagamento
 export type PaymentMethod = 'crédito' | 'débito' | 'dinheiro' | 'pix';
 
@@ -128,3 +123,29 @@ export interface Address {
   companyId: string;
   createdAt: string;
 }
+
+export type GroupedProduct = {
+  productItemId: string;
+  productItemName: string;
+  companyId: string;
+  batchDate: string;
+  totalQuantity: number;
+  averagePrice: number;
+  volumeLiters: number;
+  brand?: string;
+  size?: string;
+  type?: string;
+  unity?: string;
+};
+
+export type SelectableProduct = {
+  id: string;
+  name: string;
+  quantity: number;
+  size?: string;
+  unity?: string;
+  brand?: string;
+  price?: number;
+  type?: string;
+  companyId: string;
+};

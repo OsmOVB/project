@@ -4,29 +4,34 @@ import {
   View,
   StyleSheet,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { Camera, CameraView } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import Button from '@/src/components/Button';
+import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 
 interface ScanItemsModalProps {
   visible: boolean;
   onClose: () => void;
-  onScanned: (data: string) => void;
+  onScannedSuccess: (qrCode: string) => void;
+  stockId: string;
+  companyId: string;
 }
 
 export default function ScanItemsModal({
   visible,
   onClose,
-  onScanned,
+  onScannedSuccess,
+  stockId,
+  companyId,
 }: ScanItemsModalProps) {
   const cameraRef = useRef<Camera>(null);
   const [permission, setPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cameraType, setCameraType] = useState<'back' | 'front'>('back');
-  const [scanVisible, setScanVisible] = useState(false);
+  const [manualQrCode, setManualQrCode] = useState('');
 
   useEffect(() => {
     if (visible) {
@@ -35,21 +40,35 @@ export default function ScanItemsModal({
         setPermission(status === 'granted');
         setLoading(false);
         setScanned(false);
+        setManualQrCode('');
       })();
     }
   }, [visible]);
 
-  const handleBarCodeScanned = ({
-    type,
-    data,
-  }: {
-    type: string;
-    data: string;
-  }) => {
+  const handleScannedQr = async (qrCode: string) => {
+    try {
+      await qrCodeUtils.assignQrCodeToStock(qrCode, stockId, companyId);
+      Alert.alert('QR Code atribuído', `QR ${qrCode} foi vinculado com sucesso.`);
+      onScannedSuccess(qrCode);
+      onClose();
+    } catch (err: any) {
+      Alert.alert('Erro ao vincular QR Code', err.message || 'Erro desconhecido.');
+    }
+  };
+
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
     if (!scanned) {
       setScanned(true);
-      onScanned(data);
+      await handleScannedQr(data);
     }
+  };
+
+  const handleManualSubmit = async () => {
+    if (!manualQrCode.trim()) {
+      Alert.alert('Erro', 'Digite um código válido.');
+      return;
+    }
+    await handleScannedQr(manualQrCode.trim());
   };
 
   return (
@@ -57,29 +76,15 @@ export default function ScanItemsModal({
       <View style={styles.overlay}>
         <View style={styles.modal}>
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#6200EE" />
-              <Text style={styles.loadingText}>Carregando câmera...</Text>
-            </View>
+            <ActivityIndicator size="large" color="#6200EE" />
           ) : !permission ? (
-            <View style={styles.permissionContainer}>
-              <Text style={styles.message}>
-                Precisamos de permissão para acessar a câmera.
-              </Text>
-              <TouchableOpacity
-                onPress={async () => {
-                  const { status } =
-                    await Camera.requestCameraPermissionsAsync();
-                  setPermission(status === 'granted');
-                }}
-                style={styles.button}
-              >
-                <Text style={styles.buttonText}>Conceder Permissão</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.message}>
+              É necessário conceder permissão à câmera.
+            </Text>
           ) : (
             <>
               <Text style={styles.title}>📷 Leitura de QR Code</Text>
+
               <View style={styles.cameraContainer}>
                 <CameraView
                   ref={cameraRef}
@@ -88,37 +93,35 @@ export default function ScanItemsModal({
                   ratio="1:1"
                 />
               </View>
-              <Text style={styles.instructions}>
-                📷 Aponte a câmera para o QR Code
-              </Text>
+
+              <Text style={styles.instructions}>Aponte para o QR Code</Text>
 
               {scanned && (
-                <TouchableOpacity
-                  onPress={() => setScanned(false)}
-                  style={styles.scanAgainButton}
-                >
-                  <Text style={styles.buttonText}>Escanear Novamente</Text>
-                </TouchableOpacity>
+                <Button title="Escanear novamente" onPress={() => setScanned(false)} />
               )}
 
-              <TouchableOpacity onPress={onClose} style={styles.button}>
-                <Ionicons name="arrow-back" size={18} color="#fff" />
-                <Text style={styles.buttonText}>Fechar</Text>
-              </TouchableOpacity>
+              <View style={{ width: '100%', marginTop: 20 }}>
+                <Text style={{ marginBottom: 6 }}>Ou digite manualmente:</Text>
+                <TextInput
+                  placeholder="Digite o QR Code"
+                  value={manualQrCode}
+                  onChangeText={setManualQrCode}
+                  style={styles.input}
+                  placeholderTextColor="#999"
+                />
+                <Button title="Vincular Manual" onPress={handleManualSubmit} />
+              </View>
+
+              <Button
+                title="Fechar"
+                type="outline"
+                onPress={onClose}
+                style={{ marginTop: 16 }}
+              />
             </>
           )}
         </View>
       </View>
-
-      <ScanItemsModal
-        visible={scanVisible}
-        onClose={() => setScanVisible(false)}
-        onScanned={(data) => {
-          console.log('QR lido:', data);
-          setScanVisible(false);
-          // Aqui você pode preencher a quantidade ou marcar o item como conferido
-        }}
-      />
     </Modal>
   );
 }
@@ -137,28 +140,10 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
   },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#6200EE',
-  },
-  permissionContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   cameraContainer: {
     width: 250,
@@ -166,9 +151,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderRadius: 10,
     overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   camera: {
     flex: 1,
@@ -176,28 +159,22 @@ const styles = StyleSheet.create({
   },
   instructions: {
     fontSize: 14,
-    color: '#555',
-    marginBottom: 20,
+    marginBottom: 12,
+    color: '#666',
   },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  scanAgainButton: {
-    backgroundColor: '#34C759',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+  input: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 10,
     marginBottom: 10,
+    color: '#000',
+    width: '100%',
   },
-  buttonText: {
-    color: '#FFF',
+  message: {
+    textAlign: 'center',
+    marginBottom: 20,
     fontSize: 16,
-    marginLeft: 5,
+    color: '#333',
   },
 });

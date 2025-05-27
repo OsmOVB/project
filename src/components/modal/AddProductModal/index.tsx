@@ -1,4 +1,3 @@
-// components/AddProductModal.tsx
 import React, { useState } from 'react';
 import {
   Modal,
@@ -9,21 +8,36 @@ import {
   StyleSheet,
 } from 'react-native';
 import Button from '../../Button';
-import { Product } from '@/src/types';
+import { GroupedProduct, Product, Stock } from '@/src/types';
+import { groupStockByProduct } from '@/src/utils/groupStock';
 
 interface AddProductModalProps {
   visible: boolean;
-  products: Product[];
-  onAdd: (product: Product) => void;
+  stock: Stock[];
+  products: GroupedProduct[];
+  onAdd: (product: GroupedProduct) => void;
   onClose: () => void;
 }
 
-const AddProductModal: React.FC<AddProductModalProps> = ({ visible, products, onAdd, onClose }) => {
+const AddProductModal: React.FC<AddProductModalProps> = ({
+  visible,
+  products,
+  stock,
+  onAdd,
+  onClose,
+}) => {
   const [search, setSearch] = useState('');
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products.filter((item) => {
+    const searchLower = search.toLowerCase();
+    return (
+      item.productItemName.toLowerCase().includes(searchLower) ||
+      item.brand?.toLowerCase().includes(searchLower) ||
+      item.type?.toLowerCase().includes(searchLower) ||
+      (item.size !== undefined && item.size.toString().toLowerCase().includes(searchLower)) ||
+      item.unity?.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -38,12 +52,21 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, products, on
           />
           <FlatList
             data={filteredProducts}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.productItemId + item.batchDate}
             renderItem={({ item }) => (
               <View style={styles.itemRow}>
-                <Text>{item.name}</Text>
-                <Text>{item.size}</Text>
-                <Text>{item.unity}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: 'bold' }}>
+                    {item.productItemName}
+                  </Text>
+                  <Text>Marca: {item.brand}</Text>
+                  <Text>Tipo: {item.type}</Text>
+                  <Text>
+                    Tamanho: {item.size} {item.unity}
+                  </Text>
+                  <Text>Qtd total: {item.totalQuantity}</Text>
+                  <Text>Preço médio: R$ {item.averagePrice.toFixed(2)}</Text>
+                </View>
                 <View style={styles.buttonWrapper}>
                   <Button
                     title="Adicionar"

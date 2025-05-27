@@ -1,55 +1,79 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Alert, View, Text, RefreshControl } from 'react-native';
 import {
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  View,
-  Text,
-} from 'react-native';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  updateDoc,
+} from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from '@/src/firebase/config';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
-import {
-  generateNextQrCode,
-  generateNextQrCodeByAdmin,
-} from '@/src/utils/qrCodeUtils';
+import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 import Button from '@/src/components/Button';
-
-interface StockItem {
-  id: string;
-  loteId: string;
-  dataLote: string;
-  tipoItemName: string;
-  marca: string;
-  capacidade: string;
-}
+import { Product, Stock } from '@/src/types';
+import { useAuth } from '@/src/hooks/useAuth';
+import { dateUtils } from '@/src/utils/date';
 
 export default function LoteDetails() {
   const { loteId, dataLote } = useLocalSearchParams();
-  const [barris, setBarris] = useState<StockItem[]>([]);
-  const router = useRouter();
+  const [items, setItems] = useState<(Stock & { productInfo?: Product })[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchBarris();
+    fetchItems();
   }, []);
+  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchItems();
+    setRefreshing(false);
+  };
 
-  async function fetchBarris() {
-    const snapshot = await getDocs(collection(db, 'stock'));
-    const docs: StockItem[] = snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as StockItem)
+  async function fetchItems() {
+    if (!user?.companyId) return;
+
+    const stockQuery = query(
+      collection(db, 'stock'),
+      where('companyId', '==', user.companyId),
+      where('batchId', '==', Number(loteId)),
+      where('batchDate', '==', dataLote)
     );
-    const filtrados = docs.filter(
-      (item) => item.loteId == loteId && item.dataLote == dataLote
+
+    const productQuery = query(
+      collection(db, 'product'),
+      where('companyId', '==', user.companyId)
     );
-    setBarris(filtrados);
+
+    const [stockSnapshot, productSnapshot] = await Promise.all([
+      getDocs(stockQuery),
+      getDocs(productQuery),
+    ]);
+
+    const productMap = new Map<string, Product>();
+    productSnapshot.docs.forEach((doc) => {
+      productMap.set(doc.id, { id: doc.id, ...doc.data() } as Product);
+    });
+
+    const enrichedItems = stockSnapshot.docs.map((doc) => {
+      const stock = { id: doc.id, ...doc.data() } as Stock;
+      return {
+        ...stock,
+        productInfo: productMap.get(stock.productItemId),
+      };
+    });
+
+    setItems(enrichedItems);
   }
 
-  function handleDeleteItem(itemId: string) {
+  async function handleDeleteItem(itemId: string) {
     Alert.alert('Confirmar', 'Deseja apagar este item?', [
       { text: 'Cancelar' },
       {
@@ -57,7 +81,7 @@ export default function LoteDetails() {
         style: 'destructive',
         onPress: async () => {
           await deleteDoc(doc(db, 'stock', itemId));
-          fetchBarris();
+          fetchItems();
         },
       },
     ]);
@@ -66,106 +90,119 @@ export default function LoteDetails() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       <Text style={[styles.title, { color: theme.textPrimary }]}>
-        📦 Lote #{loteId}
-      </Text>
-      <Text style={[styles.subtitle, { color: theme.text }]}>
-        🗓️ Data: {dataLote}
+        📦 Lote: {loteId} -{' '}
+        {dateUtils.formatDateString(
+          Array.isArray(dataLote) ? dataLote[0] : dataLote
+        )}
       </Text>
 
-      {barris.map((item, i) => (
+      {items.map((item, i) => (
         <Card key={i} style={{ backgroundColor: theme.card }}>
-          <CardTitle>{item.tipoItemName}</CardTitle>
+          <CardTitle>
+            Produto: {item.productInfo?.name || '-'} {item.volumeLiters}L
+          </CardTitle>
+
           <Text style={[styles.label, { color: theme.text }]}>
-            ID do Item: <Text style={styles.value}>{item.id}</Text>
+            Preço Unitário:{' '}
+            <Text style={styles.value}>R$ {item.price?.toFixed(2)}</Text>
           </Text>
 
           <Text style={[styles.label, { color: theme.text }]}>
-            Marca: <Text style={styles.value}>{item.marca}</Text>
+            Marca:{' '}
+            <Text style={styles.value}>{item.productInfo?.brand || '-'}</Text>
           </Text>
+
           <Text style={[styles.label, { color: theme.text }]}>
-            Capacidade: <Text style={styles.value}>{item.capacidade}</Text>
+            Capacidade:{' '}
+            <Text style={styles.value}>{item.productInfo?.size || '-'}</Text>
+          </Text>
+
+          <Text style={[styles.label, { color: theme.text }]}>
+            QR Code:{' '}
+            <Text style={styles.value}>{item.qrCode || 'Não gerado'}</Text>
           </Text>
 
           <View style={styles.qrActions}>
-            {/* <TouchableOpacity
-              style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
-              onPress={async () => {
-                //deve gerar o qr code apartir do id do item mas deve ser um sequencial
-                //exemplo: 1, 2, 3, 4, 5
-                //deve ser gerado um qr code para cada item do lote
-                console.log(await generateNextQrCode());
-             
-                // console.log(await generateNextQrCodeByAdmin(item.adminEmail));
-
-                // const adminEmail = user.email; // ou de onde você pega o e-mail do admin
-                // const qrCode = await generateNextQrCodeByAdmin(adminEmail);
-
-                // await addDoc(collection(db, 'stock'), {
-                //   ...dadosDoProduto,
-                //   adminEmail,
-                //   qrCode,
-                // });
-              }}
-            >
-              <Ionicons name="qr-code-outline" size={20} color={theme.text} />
-              <Text style={[styles.qrText, { color: theme.text }]}>
-                Gerar QR Code
-              </Text>
-            </TouchableOpacity> */}
             <Button
-              type="icon" 
-              title='Gerar Novo'
+              type="icon"
+              title="Novo QR"
               iconName="qr-code-outline"
               iconColor={theme.text}
               onPress={async () => {
-                const qrCode = await generateNextQrCode();
-                Alert.alert('QR Code Gerado', qrCode);
+                const qrCode = await qrCodeUtils.generateNextCompanyQrCode(user?.companyId || '');
+                if (item.id) {
+                  await updateDoc(doc(db, 'stock', item.id!), {
+                    qrCode,
+                    pendingPrint: 'Y',
+                  });
+                  // também cria no banco se desejar
+                  fetchItems();
+                  Alert.alert('QR Code Gerado', qrCode);
+                } else {
+                  Alert.alert('Erro', 'ID do item não encontrado.');
+                }
               }}
             />
 
-            {/* <TouchableOpacity
-              style={[styles.qrButton, { backgroundColor: theme.inputBg }]}
-              onPress={() => {}}
-            >
-              <Ionicons name="qr-code-outline" size={20} color={theme.text} />
-              <Text style={[styles.qrText, { color: theme.text }]}>
-                Ler QR Existente
-              </Text>
-            </TouchableOpacity> */}
             <Button
               type="icon"
-              title='Adicionar Existente'
-              iconName="qr-code-outline"
-              iconColor={theme.text}
-              onPress={async () => {
-                const qrCode = await generateNextQrCode();
-                Alert.alert('QR Code Gerado', qrCode);
-              }}
-              
-            />
-          </View>
-
-          <View style={styles.actions}>
-            <Button
-              type="icon"
+              title="Editar"
               iconName="create-outline"
               iconColor={theme.primary}
-              onPress={() =>
-                router.push({
-                  pathname: '/stock/edit-type/[id]',
-                  params: { id: item.id },
-                })
-              }
-              title="Editar"
+              onPress={() => {
+                if (item.id) {
+                  router.push({
+                    pathname: '/stock/edit-type/[id]',
+                    params: { id: item.id },
+                  });
+                } else {
+                  Alert.alert('Erro', 'ID do item não encontrado.');
+                }
+              }}
             />
+          </View>
+          <View style={styles.qrActions}>
             <Button
               type="icon"
+              title="Ler QR existente"
+              iconName="qr-code-outline"
+              iconColor={theme.text}
+              onPress={async () => {
+                try {
+                  const qrCode = prompt('Digite o QR Code existente:'); // ou use input/modal
+                  if (!qrCode) return;
+
+                  await qrCodeUtils.assignQrCodeToStock(
+                    qrCode,
+                    item.id!,
+                    user?.companyId || ''
+                  );
+                  await updateDoc(doc(db, 'stock', item.id!), {
+                    qrCode,
+                    pendingPrint: 'Y',
+                  });
+                  fetchItems();
+                  Alert.alert('QR Code Vinculado', qrCode);
+                } catch (error: any) {
+                  Alert.alert('Erro', error.message);
+                }
+              }}
+            />
+
+            <Button
+              type="icon"
+              title="Apagar"
               iconName="trash-outline"
               iconColor={theme.red}
-              onPress={() => handleDeleteItem(item.id)}
-              title="Apagar"
+              onPress={() => {
+                if (item.id) handleDeleteItem(item.id);
+                else Alert.alert('Erro', 'ID do item não encontrado.');
+              }}
             />
           </View>
         </Card>
@@ -197,38 +234,10 @@ const styles = StyleSheet.create({
   value: {
     fontWeight: 'normal',
   },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 12,
-    gap: 16,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  edit: {
-    fontWeight: '500',
-  },
-  delete: {
-    fontWeight: '500',
-  },
   qrActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 12,
     gap: 8,
-  },
-  qrButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    padding: 8,
-    borderRadius: 6,
-    flex: 1,
-  },
-  qrText: {
-    fontWeight: '500',
   },
 });

@@ -6,24 +6,27 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { DeliveryItem } from '@/app/(tabs)/index';
 import ScanItemsModal from '../ScanItemsModal';
 import Button from '../../Button';
 import { useTheme } from '@/src/context/ThemeContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  getDocs,
+  query,
+  collection,
+  where,
+} from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
 import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
-
-interface ProductModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onRefresh: () => void;
-  items: DeliveryItem[];
-  deliveryId: string;
-}
+import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 
 export default function ProductModal({
   visible,
@@ -31,12 +34,20 @@ export default function ProductModal({
   onRefresh,
   items,
   deliveryId,
-}: ProductModalProps) {
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onRefresh: () => void;
+  items: DeliveryItem[];
+  deliveryId: string;
+}) {
   const { theme } = useTheme();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [qrItem, setQrItem] = useState<string | null>(null);
   const [scanVisible, setScanVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
 
   const statusSequence: StatusOrder[] = [
     'pendente',
@@ -44,6 +55,39 @@ export default function ProductModal({
     'em progresso',
     'finalizado',
   ];
+
+  // const handleConfirm = async () => {
+  //   try {
+  //     const orderRef = doc(db, 'orders', deliveryId);
+  //     const orderSnap = await getDoc(orderRef);
+
+  //     if (!orderSnap.exists()) {
+  //       alert('Pedido não encontrado.');
+  //       return;
+  //     }
+
+  //     const currentStatus = orderSnap.data().status as StatusOrder;
+  //     const currentIndex = statusSequence.indexOf(currentStatus);
+
+  //     if (currentIndex === -1 || currentIndex === statusSequence.length - 1) {
+  //       alert('Status não pode ser atualizado.');
+  //       return;
+  //     }
+
+  //     const nextStatus = statusSequence[currentIndex + 1];
+
+  //     await updateDoc(orderRef, {
+  //       status: nextStatus,
+  //     });
+
+  //     console.log(`Status atualizado: ${currentStatus} -> ${nextStatus}`);
+  //     onRefresh();
+  //     onClose();
+  //   } catch (err) {
+  //     console.error('Erro ao atualizar status:', err);
+  //     alert('Erro ao atualizar status. Tente novamente.');
+  //   }
+  // };
 
   const handleConfirm = async () => {
     try {
@@ -69,7 +113,18 @@ export default function ProductModal({
         status: nextStatus,
       });
 
-      console.log(`Status atualizado: ${currentStatus} -> ${nextStatus}`);
+      if (nextStatus === 'finalizado') {
+        // Busque o pedido para extrair os stockIds
+        const orderData = orderSnap.data();
+        const stockIds = (orderData.items || []).map(
+          (item: any) => item.stockItemId
+        );
+        await qrCodeUtils.releaseQRCodesByStockIds(
+          stockIds,
+          user?.companyId || ''
+        );
+      }
+
       onRefresh();
       onClose();
     } catch (err) {
@@ -77,8 +132,6 @@ export default function ProductModal({
       alert('Erro ao atualizar status. Tente novamente.');
     }
   };
-
-  const { user } = useAuth();
 
   const handleCancel = async () => {
     try {
@@ -93,36 +146,53 @@ export default function ProductModal({
     }
   };
 
-  const handleQrScanned = (itemKey: string) => {
-    const [name, size, indexStr] = itemKey.split('_');
-    const index = parseInt(indexStr);
-    const item = items[index];
+  const handleQrScanned = async (scannedCode: string) => {
+    try {
+      if (!user?.companyId) throw new Error('Empresa não identificada.');
 
-    if (!item || `${item.name}_${item.size || ''}_${index}` !== itemKey) {
-      alert(`QR inválido ou fora do pedido.`);
-      return;
-    }
+      const qrQuery = query(
+        collection(db, 'qrcodes'),
+        where('code', '==', scannedCode),
+        where('companyId', '==', user.companyId),
+        where('status', '==', 'occupied')
+      );
+      const snapshot = await getDocs(qrQuery);
 
-    const current = quantities[itemKey] || 0;
-    if (current >= item.quantity) {
-      alert(`"${item.name} ${item.size}" já conferido totalmente.`);
-      return;
-    }
+      if (snapshot.empty) {
+        Alert.alert('QR Code inválido ou não vinculado a esta empresa.');
+        return;
+      }
 
-    setQuantities((prev) => ({
-      ...prev,
-      [itemKey]: current + 1,
-    }));
+      const qrDoc = snapshot.docs[0];
+      const stockId = qrDoc.data().usedByStockId;
 
-    if (!checkedItems.includes(itemKey)) {
-      setCheckedItems((prev) => [...prev, itemKey]);
+      const stockDoc = await getDoc(doc(db, 'stock', stockId));
+      if (!stockDoc.exists()) {
+        Alert.alert('Estoque vinculado ao QR não encontrado.');
+        return;
+      }
+
+      const stockData = stockDoc.data();
+      const itemKey = `${stockData.productName}_${stockData.volumeLiters}_${stockId}`;
+
+      const current = quantities[itemKey] || 0;
+      setQuantities((prev) => ({
+        ...prev,
+        [itemKey]: current + 1,
+      }));
+
+      if (!checkedItems.includes(itemKey)) {
+        setCheckedItems((prev) => [...prev, itemKey]);
+      }
+    } catch (error: any) {
+      Alert.alert('Erro ao ler QR', error.message);
     }
   };
 
-  const handleRemoveItem = (itemName: string) => {
-    setCheckedItems((prev) => prev.filter((name) => name !== itemName));
+  const handleRemoveItem = (itemKey: string) => {
+    setCheckedItems((prev) => prev.filter((key) => key !== itemKey));
     const updated = { ...quantities };
-    delete updated[itemName];
+    delete updated[itemKey];
     setQuantities(updated);
   };
 
@@ -142,7 +212,12 @@ export default function ProductModal({
             Itens do Pedido: {deliveryId}
           </Text>
 
-          <ScrollView contentContainerStyle={styles.itemsContainer}>
+          <ScrollView
+            contentContainerStyle={styles.itemsContainer}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
             {items.map((item, index) => {
               const itemKey = `${item.name}_${item.size || ''}_${index}`;
               const currentQuantity = quantities[itemKey] || 0;
@@ -206,7 +281,6 @@ export default function ProductModal({
                       >
                         {name} {size ? `(${size})` : ''}
                       </Text>
-
                       <Button
                         type="icon"
                         iconName="close-circle"
@@ -228,7 +302,12 @@ export default function ProductModal({
                   iconName="create-outline"
                   title="Editar"
                   iconColor="#007AFF"
-                  onPress={() => router.push(`/orders/edit/${delivery.id}`)}
+                  onPress={() => 
+                   // router.push(
+                     // `/orders/edit/${deliveryId}`
+                   // )
+                   {}
+                  }
                 />
                 <Button
                   onPress={handleCancel}
@@ -252,7 +331,9 @@ export default function ProductModal({
         <ScanItemsModal
           visible={scanVisible}
           onClose={() => setScanVisible(false)}
-          onScanned={handleQrScanned}
+          onScannedSuccess={handleQrScanned}
+          stockId={qrItem ?? ''}
+          companyId={user?.companyId || ''}
         />
       </View>
     </Modal>

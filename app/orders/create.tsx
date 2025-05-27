@@ -320,7 +320,7 @@ export default function CreateOrder() {
                 unity: item.unity,
                 brand: item.brand,
                 type: item.type,
-                price: item.price,
+                // price: item.price,
                 companyId: user?.companyId || '',
               }))}
               onRemoveItem={removeItem}

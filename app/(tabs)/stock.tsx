@@ -37,6 +37,8 @@ export default function Stock() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
+  const [addingStock, setAddingStock] = useState(false);
+
 
   const [productForm, setProductForm] = useState<Omit<Product, 'id' | 'createdAt' | 'companyId'>>({
     name: '',
@@ -78,9 +80,11 @@ export default function Stock() {
     setProductList(items.sort((a, b) => b.favorite - a.favorite));
   };
 
-  async function addStockItem() {
-    if (!selected || !quantity || !price) return;
+async function addStockItem() {
+  if (!selected || !quantity || !price) return;
 
+  setAddingStock(true);
+  try {
     const currentDate = new Date().toISOString().slice(0, 10);
     const productId = selected.id;
     const parsedPrice = parseFloat(price);
@@ -110,7 +114,13 @@ export default function Stock() {
     setQuantity('');
     setPrice('');
     fetchStock();
+  } catch (err) {
+    console.error('Erro ao adicionar ao estoque:', err);
+  } finally {
+    setAddingStock(false);
   }
+}
+
 
   async function calculateNextBatchId(
     batchDate: string,
@@ -236,6 +246,7 @@ export default function Stock() {
             price={price}
             quantity={quantity}
             showList={showList}
+            loading={addingStock && selected?.id === product.id}
             setPrice={setPrice}
             setSelected={setSelected}
             setQuantity={setQuantity}

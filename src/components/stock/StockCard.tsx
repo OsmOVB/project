@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ interface Props {
   selected: Product | null;
   price: string;
   quantity: string;
+  loading?: boolean;
   showList: boolean;
   setSelected: (product: Product) => void;
   setQuantity: (value: string) => void;
@@ -33,6 +34,7 @@ const StockCard: React.FC<Props> = ({
   selected,
   price,
   quantity,
+  loading,
   showList,
   setSelected,
   setQuantity,
@@ -110,6 +112,8 @@ const StockCard: React.FC<Props> = ({
             onPress={() =>
               openConfirm('Deseja adicionar ao estoque?', addStockItem)
             }
+            isLoading={loading}
+            disabled={loading}
           />
         </>
       )}

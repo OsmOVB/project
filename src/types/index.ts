@@ -56,6 +56,7 @@ export type Product = {
   createdAt: string;
   companyId: string;
   unity: string;
+  returnable: boolean;
 };
 export type QrCodeStatus = 'free' | 'occupied';
 
@@ -82,6 +83,7 @@ export interface Stock {
   qrCode: string;
   quantity?: number; // optional, used only in aggregated mode
   batchSequence?: number; // optional, if you want to keep a sequence
+  isEmpty: boolean; // indica se o lote está vazio
 }
 
 // Item de um pedido (referencia um Stock específico)

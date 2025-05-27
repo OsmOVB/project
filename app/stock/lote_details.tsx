@@ -104,7 +104,7 @@ export default function LoteDetails() {
       {items.map((item, i) => (
         <Card key={i} style={{ backgroundColor: theme.card }}>
           <CardTitle>
-            Produto: {item.productInfo?.name || '-'} {item.volumeLiters}L
+            Produto: {item.productInfo?.name || '-'}
           </CardTitle>
 
           <Text style={[styles.label, { color: theme.text }]}>

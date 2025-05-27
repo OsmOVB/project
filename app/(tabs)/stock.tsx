@@ -96,7 +96,8 @@ export default function Stock() {
         currentDate,
         productId,
         parsedPrice,
-        companyId
+        companyId,
+        selected.size ? parseInt(selected.size) : 0
       );
 
       const promises = Array.from({ length: qty }).map(async () => {
@@ -127,44 +128,48 @@ export default function Stock() {
     }
   }
 
-  async function calculateNextBatchId(
-    batchDate: string,
-    productId: string,
-    price: number,
-    companyId: string
-  ): Promise<number> {
-    const stockQuery = query(
-      collection(db, 'stock'),
-      where('productItemId', '==', productId),
-      where('batchDate', '==', batchDate),
-      where('companyId', '==', companyId)
-    );
+async function calculateNextBatchId(
+  batchDate: string,
+  productId: string,
+  price: number,
+  companyId: string,
+  volumeLiters: number
+): Promise<number> {
+  const stockQuery = query(
+    collection(db, 'stock'),
+    where('batchDate', '==', batchDate),
+    where('companyId', '==', companyId)
+  );
 
-    const stockSnapshot = await getDocs(stockQuery);
+  const stockSnapshot = await getDocs(stockQuery);
 
-    let maxBatchId = 0;
-    let matchedBatchId: number | null = null;
+  let maxBatchId = 0;
+  let matchedBatchId: number | null = null;
 
-    stockSnapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      if (typeof data.batchId === 'number') {
-        if (
-          data.price === price &&
-          data.productItemId === productId &&
-          data.volumeLiters === (selected?.size ? parseInt(selected.size) : 0)
-        ) {
-          matchedBatchId = data.batchId;
-        }
-        if (data.batchId > maxBatchId) {
-          maxBatchId = data.batchId;
-        }
+  stockSnapshot.docs.forEach((doc) => {
+    const data = doc.data();
+
+    if (typeof data.batchId === 'number') {
+      // Atualiza o maior batchId encontrado
+      if (data.batchId > maxBatchId) {
+        maxBatchId = data.batchId;
       }
-    });
 
-    if (matchedBatchId !== null) return matchedBatchId;
+      // Verifica se é o mesmo lote
+      const sameProduct =
+        data.productItemId === productId &&
+        data.price === price &&
+        data.volumeLiters === volumeLiters;
 
-    return maxBatchId + 1;
-  }
+      if (sameProduct && matchedBatchId === null) {
+        matchedBatchId = data.batchId;
+      }
+    }
+  });
+
+  return matchedBatchId !== null ? matchedBatchId : maxBatchId + 1;
+}
+
 
   const saveProduct = async () => {
     if (!productForm.name || !productForm.type) return;

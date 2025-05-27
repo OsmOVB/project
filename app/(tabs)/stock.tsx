@@ -6,14 +6,13 @@ import {
   Text,
   TextInput,
   Modal,
-  Pressable,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { Container, Title } from '../../src/components/styled';
 import { db } from '../../src/firebase/config';
-import { collection, getDocs, addDoc, updateDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import type { Stock, Product } from '../../src/types';
-import { Ionicons } from '@expo/vector-icons';
 import ConfirmModal from '@/src/components/ConfirmModal';
 import StarRating from '@/src/components/StarRating';
 import { useRouter } from 'expo-router';
@@ -34,13 +33,12 @@ export default function Stock() {
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [showList, setShowList] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
 
-  const [productForm, setProductForm] = useState<
-    Omit<Product, 'id' | 'createdAt' | 'companyId'>
-  >({
+  const [productForm, setProductForm] = useState<Omit<Product, 'id' | 'createdAt' | 'companyId'>>({
     name: '',
     type: '',
     size: '',
@@ -68,6 +66,7 @@ export default function Stock() {
       ...doc.data(),
     })) as Stock[];
     setStockItems(items);
+    setLoading(false);
   };
 
   const fetchProduct = async () => {
@@ -79,74 +78,74 @@ export default function Stock() {
     setProductList(items.sort((a, b) => b.favorite - a.favorite));
   };
 
-async function addStockItem() {
-  if (!selected || !quantity || !price) return;
+  async function addStockItem() {
+    if (!selected || !quantity || !price) return;
 
-  const currentDate = new Date().toISOString().slice(0, 10);
-  const productId = selected.id;
-  const parsedPrice = parseFloat(price);
-  const qty = Number(quantity);
-  const companyId = selected.companyId || '';
+    const currentDate = new Date().toISOString().slice(0, 10);
+    const productId = selected.id;
+    const parsedPrice = parseFloat(price);
+    const qty = Number(quantity);
+    const companyId = selected.companyId || '';
 
-  const batchId = await calculateNextBatchId(currentDate, productId, parsedPrice, companyId);
+    const batchId = await calculateNextBatchId(currentDate, productId, parsedPrice, companyId);
 
-  const promises = Array.from({ length: qty }).map(async () => {
-    const newStockItem: Omit<Stock, 'id'> = {
-      productItemId: productId,
-      batchId,
-      companyId,
-      adminEmail: user?.email || '',
-      volumeLiters: selected.size ? parseInt(selected.size) : 0,
-      batchDate: currentDate,
-      pendingPrint: 'Y',
-      price: parsedPrice,
-      qrCode: '',
-    };
-    await addDoc(collection(db, 'stock'), newStockItem);
-  });
+    const promises = Array.from({ length: qty }).map(async () => {
+      const newStockItem: Omit<Stock, 'id'> = {
+        productItemId: productId,
+        batchId,
+        companyId,
+        adminEmail: user?.email || '',
+        volumeLiters: selected.size ? parseInt(selected.size) : 0,
+        batchDate: currentDate,
+        pendingPrint: 'Y',
+        price: parsedPrice,
+        qrCode: '',
+      };
+      await addDoc(collection(db, 'stock'), newStockItem);
+    });
 
-  await Promise.all(promises);
+    await Promise.all(promises);
 
-  setSelected(null);
-  setQuantity('');
-  setPrice('');
-  fetchStock();
-}
+    setSelected(null);
+    setQuantity('');
+    setPrice('');
+    fetchStock();
+  }
 
-async function calculateNextBatchId(
-  batchDate: string,
-  productId: string,
-  price: number,
-  companyId: string
-): Promise<number> {
-  const stockQuery = query(
-    collection(db, 'stock'),
-    where('productItemId', '==', productId),
-    where('batchDate', '==', batchDate),
-    where('companyId', '==', companyId)
-  );
+  async function calculateNextBatchId(
+    batchDate: string,
+    productId: string,
+    price: number,
+    companyId: string
+  ): Promise<number> {
+    const stockQuery = query(
+      collection(db, 'stock'),
+      where('productItemId', '==', productId),
+      where('batchDate', '==', batchDate),
+      where('companyId', '==', companyId)
+    );
 
-  const stockSnapshot = await getDocs(stockQuery);
+    const stockSnapshot = await getDocs(stockQuery);
 
-  let maxBatchId = 0;
-  let matchedBatchId: number | null = null;
+    let maxBatchId = 0;
+    let matchedBatchId: number | null = null;
 
-  stockSnapshot.docs.forEach((doc) => {
-    const data = doc.data();
-    if (typeof data.batchId === 'number') {
-      if (data.price === price && matchedBatchId === null) {
-        matchedBatchId = data.batchId;
+    stockSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (typeof data.batchId === 'number') {
+        if (data.price === price && matchedBatchId === null) {
+          matchedBatchId = data.batchId;
+        }
+        if (data.batchId > maxBatchId) {
+          maxBatchId = data.batchId;
+        }
       }
-      if (data.batchId > maxBatchId) {
-        maxBatchId = data.batchId;
-      }
-    }
-  });
+    });
 
-  if (matchedBatchId !== null) return matchedBatchId;
+    if (matchedBatchId !== null) return matchedBatchId;
 
-  return maxBatchId + 1;
-}
+    return maxBatchId + 1;
+  }
 
   const saveProduct = async () => {
     if (!productForm.name || !productForm.type) return;
@@ -180,6 +179,15 @@ async function calculateNextBatchId(
     setTimeout(() => setRefreshing(false), 1000);
   };
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{ marginTop: 12, color: theme.textPrimary }}>Carregando estoque...</Text>
+      </View>
+    );
+  }
+
   return (
     <Container>
       <Title>Gestão de Estoque</Title>
@@ -187,43 +195,30 @@ async function calculateNextBatchId(
       <Text style={[styles.tabLabel, { color: theme.primary }]}>Produtos</Text>
       <View style={[styles.card, { backgroundColor: theme.card }]}>
         <View style={styles.tabRow}>
-          <Pressable
-            style={[styles.tabItem, { backgroundColor: theme.background }]}
+          <Button
+            iconName="add-circle-outline"
             onPress={() => setProductModalVisible(true)}
-          >
-            <Ionicons
-              name="list-circle-outline"
-              size={28}
-              color={theme.primary}
-            />
-            <Text style={[styles.tabLabel, { color: theme.primary }]}>
-              Cadastrar
-            </Text>
-          </Pressable>
+            title="Cadastrar"
+            type="icon"
+          />
           <View
             style={[styles.statDivider, { backgroundColor: theme.border }]}
           />
-          <Pressable
-            style={[styles.tabItem, { backgroundColor: theme.background }]}
+          <Button
+            iconName="list-outline"
             onPress={() => setShowList(!showList)}
-          >
-            <Ionicons name="list-outline" size={28} color={theme.primary} />
-            <Text style={[styles.tabLabel, { color: theme.primary }]}>
-              Lista
-            </Text>
-          </Pressable>
+            title="Lista"
+            type="icon"
+          />
           <View
             style={[styles.statDivider, { backgroundColor: theme.border }]}
           />
-          <Pressable
-            style={[styles.tabItem, { backgroundColor: theme.background }]}
+          <Button
+            iconName="cube-outline"
             onPress={() => router.push('/stock/lotes')}
-          >
-            <Ionicons name="cube-outline" size={28} color={theme.primary} />
-            <Text style={[styles.tabLabel, { color: theme.primary }]}>
-              Lotes
-            </Text>
-          </Pressable>
+            title="Lotes"
+            type="icon"
+          />
         </View>
       </View>
 
@@ -332,16 +327,6 @@ const styles = StyleSheet.create({
   tabRow: {
     flexDirection: 'row',
     gap: 12,
-  },
-  tabItem: {
-    flexDirection: 'row',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 3,
-    paddingHorizontal: 6,
-    borderRadius: 8,
   },
   tabLabel: {
     fontSize: 16,

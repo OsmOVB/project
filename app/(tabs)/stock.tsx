@@ -114,7 +114,7 @@ export default function Stock() {
           batchDate: currentDate,
           pendingPrint: 'Y',
           price: parsedPrice,
-          isEmpty: isReturnable,
+          isEmpty: !isReturnable,
           qrCode: '',
         };
         await addDoc(collection(db, 'stock'), newStockItem);
@@ -250,8 +250,7 @@ export default function Stock() {
             type="icon"
           />
         </View>
-      </View>
-      //se tiver vazio, mostra mensagem
+      </View>   
       {productList.length === 0 ? (
         <View style={{ paddingVertical: 40, alignItems: 'center' }}>
           <Text style={{ color: theme.textSecondary }}>
@@ -330,7 +329,7 @@ export default function Stock() {
               }}
             >
               <Text style={{ color: theme.textPrimary, marginRight: 8 }}>
-                Retornável:
+                Tipo Vasilhame Retornável:
               </Text>
               <Switch
                 value={productForm.returnable}

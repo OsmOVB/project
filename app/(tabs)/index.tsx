@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StatusOrder } from '@/src/types';
+import { Order, OrderItem, Product, StatusOrder, Stock } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { db } from '@/src/firebase/config';
-import { getDocs, collection } from 'firebase/firestore';
+import { getDocs, collection, query, where } from 'firebase/firestore';
 import ProductModal from '@/src/components/modal/ProductModal';
 import Button from '@/src/components/Button';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -47,65 +47,78 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const snapshot = await getDocs(collection(db, 'orders'));
 
-      const data = await Promise.all(
-        snapshot.docs.map(async (doc) => {
-          const orderData = doc.data();
+const fetchOrders = async () => {
+  try {
+    if (!user?.companyId) return;
 
-          const scheduledDate = dateUtils.parseFirestoreDate(orderData.date);
-          if (!scheduledDate) {
-            console.warn('Data inválida para pedido', doc.id);
-            return null;
-          }
+    setLoading(true);
+    const companyId = user.companyId;
 
-          const date = scheduledDate.toLocaleDateString('pt-BR');
-          const time = scheduledDate.toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          });
+    // Busca os pedidos e os produtos da empresa
+    const [ordersSnap, productSnap] = await Promise.all([
+      getDocs(query(collection(db, 'orders'), where('companyId', '==', companyId))),
+      getDocs(query(collection(db, 'product'), where('companyId', '==', companyId))),
+    ]);
 
-          const enrichedItems = await Promise.all(
-            (orderData.items || []).map(async (item: any) => {
-              const productDoc = await getDocs(collection(db, 'product'));
-              const matchedDoc = productDoc.docs.find((d) => d.id === item.id);
-              const size = matchedDoc?.data().size || '';
-              return { ...item, size };
-            })
-          );
+    // Cria o Map de produtos para join
+    const productMap = new Map<string, Product>(
+      productSnap.docs.map((doc) => [doc.id, { id: doc.id, ...doc.data() } as Product])
+    );
 
+    // Enriquecer os pedidos
+    const enrichedOrders = await Promise.all(
+      ordersSnap.docs.map(async (doc) => {
+        const orderData = doc.data();
+        const scheduledDate = dateUtils.parseFirestoreDate(orderData.date);
+        if (!scheduledDate) return null;
+
+        const date = scheduledDate.toLocaleDateString('pt-BR');
+        const time = scheduledDate.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const enrichedItems = (orderData.items as OrderItem[] || []).map((item) => {
+          const product = productMap.get(item.id);
           return {
-            id: doc.id,
-            customerName: orderData.customerName,
-            address: orderData.address,
-            date,
-            time,
-            items: enrichedItems,
-            status: orderData.status || 'pendente',
-            scheduledTimestamp: scheduledDate.getTime(),
-          } as Delivery;
-        })
-      );
-      setOrders(data.filter((d): d is Delivery => d !== null));
-    } catch (error) {
-      console.error('Erro ao buscar pedidos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+            name: product?.name || item.name || 'Produto desconhecido',
+            quantity: item.quantity,
+            size: product?.size || '',
+          };
+        });
 
-  // 2. Atualize o useEffect para usar a função acima
+        const enrichedDelivery: Delivery = {
+          scheduledTimestamp: scheduledDate.getTime(),
+          id: doc.id,
+          customerName: orderData.customerName || '',
+          address: orderData.address || '',
+          time,
+          date,
+          items: enrichedItems,
+          status: orderData.status as StatusOrder,
+        };
+
+        return enrichedDelivery;
+      })
+    );
+
+    setOrders(enrichedOrders.filter((o): o is Delivery => !!o));
+  } catch (error) {
+    console.error('Erro ao buscar pedidos:', error);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
+
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  // 3. Corrija o onRefresh
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchOrders(); // <- busca novamente os dados do banco
+    await fetchOrders();
     setRefreshing(false);
   };
 

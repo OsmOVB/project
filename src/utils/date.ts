@@ -61,9 +61,43 @@ const formatDateString = (dateString: string) => {
   return 'Data inválida';
 };
 
+function parseFirestoreDate(input: any): Date | null {
+  if (!input) {
+    console.warn('⚠️ scheduledDate está ausente');
+    return null;
+  }
+
+  if (typeof input.seconds === 'number') {
+    return new Date(input.seconds * 1000);
+  }
+
+  if (input instanceof Date && !isNaN(input.getTime())) {
+    return input;
+  }
+
+  if (typeof input === 'string') {
+    console.warn('⚠️ scheduledDate veio como string antiga:', input);
+    const parts = input.split(' ');
+    if (parts.length >= 7) {
+      const [dia, , mesStr, , ano, , horaStr] = parts;
+      const meses: Record<string, number> = {
+        janeiro: 0, fevereiro: 1, março: 2, abril: 3, maio: 4, junho: 5,
+        julho: 6, agosto: 7, setembro: 8, outubro: 9, novembro: 10, dezembro: 11,
+      };
+      const [h, m, s] = horaStr.split(':').map(Number);
+      const mes = meses[mesStr.toLowerCase()];
+      return new Date(Number(ano), mes, Number(dia), h, m, s);
+    }
+  }
+
+  console.warn('⚠️ scheduledDate com formato inesperado:', input);
+  return null;
+}
+
 export const dateUtils = {
   padStartNumber,
   toISOWithOffset,
   toUTCDateString,
   formatDateString,
+  parseFirestoreDate,
 };

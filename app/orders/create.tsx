@@ -15,7 +15,7 @@ import {
 } from '../../src/components/styled';
 import { router } from 'expo-router';
 import { db } from '../../src/firebase/config';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
@@ -212,7 +212,7 @@ export default function CreateOrder() {
         status: 'pendente',
         deliveryPersonId: null,
         address: data.address,
-        date: data.scheduledDate,
+        date: Timestamp.fromDate(data.scheduledDate),
         paymentMethod: data.paymentMethod,
         totalLiters,
         adminEmail: user.email,

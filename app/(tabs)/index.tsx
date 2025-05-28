@@ -12,6 +12,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { ThemeType } from '@/src/theme';
 import { RefreshControl } from 'react-native';
 import { ActivityIndicator } from 'react-native';
+import { dateUtils } from '@/src/utils/date';
 
 export interface DeliveryItem {
   name: string;
@@ -50,13 +51,22 @@ export default function Home() {
     try {
       setLoading(true);
       const snapshot = await getDocs(collection(db, 'orders'));
+
       const data = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const orderData = doc.data();
-          const scheduledDate = new Date(
-            orderData.scheduledDate?.seconds * 1000 || 0
-          );
-          const iso = scheduledDate.toISOString();
+
+          const scheduledDate = dateUtils.parseFirestoreDate(orderData.date);
+          if (!scheduledDate) {
+            console.warn('Data inválida para pedido', doc.id);
+            return null;
+          }
+
+          const date = scheduledDate.toLocaleDateString('pt-BR');
+          const time = scheduledDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
 
           const enrichedItems = await Promise.all(
             (orderData.items || []).map(async (item: any) => {
@@ -71,15 +81,15 @@ export default function Home() {
             id: doc.id,
             customerName: orderData.customerName,
             address: orderData.address,
-            date: iso.split('T')[0],
-            time: iso.split('T')[1]?.slice(0, 5),
+            date,
+            time,
             items: enrichedItems,
             status: orderData.status || 'pendente',
             scheduledTimestamp: scheduledDate.getTime(),
           } as Delivery;
         })
       );
-      setOrders(data);
+      setOrders(data.filter((d): d is Delivery => d !== null));
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
     } finally {
@@ -223,6 +233,7 @@ export default function Home() {
                       size={20}
                       color={theme.textSecondary}
                     />
+                    <Text style={styles.timeText}>{delivery.date}</Text>
                     <Text style={styles.timeText}>{delivery.time}</Text>
                   </View>
                   <View
@@ -260,7 +271,9 @@ export default function Home() {
         deliveryId={selectedDelivery?.id || ''}
       />
 
-      <Button type="fab" onPress={() => router.push('/orders/create')} />
+      {user?.role === 'admin' && (
+        <Button type="fab" onPress={() => router.push('/orders/create')} />
+      )}
     </View>
   );
 }

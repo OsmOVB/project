@@ -1,6 +1,12 @@
 // CreateOrder.tsx
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Modal, RefreshControl } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Modal,
+  RefreshControl,
+} from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +21,7 @@ import {
 } from '../../src/components/styled';
 import { router } from 'expo-router';
 import { db } from '../../src/firebase/config';
-import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, Timestamp, doc, runTransaction } from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
@@ -68,7 +74,6 @@ export default function CreateOrder() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedItems, setSelectedItems] = useState<SelectableProduct[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-
 
   const {
     control,
@@ -201,6 +206,20 @@ export default function CreateOrder() {
         (sum, item) => sum + item.quantity * (parseInt(item.size || '0') || 0),
         0
       );
+
+      const companyId = user.companyId;
+      const counterRef = doc(db, 'counters', companyId); // cada empresa tem seu contador
+
+      const orderNumber = await runTransaction(db, async (transaction) => {
+        const counterSnap = await transaction.get(counterRef);
+        const lastOrder = counterSnap.exists()
+          ? counterSnap.data().lastOrderNumber
+          : 0;
+        const nextOrder = lastOrder + 1;
+
+        transaction.set(counterRef, { lastOrderNumber: nextOrder });
+        return String(nextOrder).padStart(4, '0'); // ex: '0001'
+      });
       const newOrder = {
         customerName: data.customerName,
         items: data.items.map(({ id, name, quantity }) => ({
@@ -217,6 +236,7 @@ export default function CreateOrder() {
         totalLiters,
         adminEmail: user.email,
         companyId: user.companyId,
+        orderNumber, 
       };
       await addDoc(collection(db, 'orders'), newOrder);
       router.back();

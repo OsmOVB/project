@@ -29,6 +29,7 @@ export interface Delivery {
   date: string;
   items: DeliveryItem[];
   status: StatusOrder;
+  orderNumber: string;
 }
 
 export default function Home() {
@@ -47,74 +48,88 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const fetchOrders = async () => {
+    try {
+      if (!user?.companyId) return;
 
-const fetchOrders = async () => {
-  try {
-    if (!user?.companyId) return;
+      setLoading(true);
+      const companyId = user.companyId;
 
-    setLoading(true);
-    const companyId = user.companyId;
+      // Busca os pedidos e os produtos da empresa
+      const [ordersSnap, productSnap] = await Promise.all([
+        getDocs(
+          query(collection(db, 'orders'), where('companyId', '==', companyId))
+        ),
+        getDocs(
+          query(collection(db, 'product'), where('companyId', '==', companyId))
+        ),
+      ]);
 
-    // Busca os pedidos e os produtos da empresa
-    const [ordersSnap, productSnap] = await Promise.all([
-      getDocs(query(collection(db, 'orders'), where('companyId', '==', companyId))),
-      getDocs(query(collection(db, 'product'), where('companyId', '==', companyId))),
-    ]);
+      // Cria o Map de produtos para join
+      const productMap = new Map<string, Product>(
+        productSnap.docs.map((doc) => [
+          doc.id,
+          { id: doc.id, ...doc.data() } as Product,
+        ])
+      );
 
-    // Cria o Map de produtos para join
-    const productMap = new Map<string, Product>(
-      productSnap.docs.map((doc) => [doc.id, { id: doc.id, ...doc.data() } as Product])
-    );
+      // Enriquecer os pedidos
+      const enrichedOrders = await Promise.all(
+        ordersSnap.docs.map(async (doc) => {
+          const orderData = doc.data();
+          const scheduledDate = dateUtils.parseFirestoreDate(orderData.date);
+          if (!scheduledDate) return null;
 
-    // Enriquecer os pedidos
-    const enrichedOrders = await Promise.all(
-      ordersSnap.docs.map(async (doc) => {
-        const orderData = doc.data();
-        const scheduledDate = dateUtils.parseFirestoreDate(orderData.date);
-        if (!scheduledDate) return null;
+          const date = scheduledDate.toLocaleDateString('pt-BR');
+          const time = scheduledDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
 
-        const date = scheduledDate.toLocaleDateString('pt-BR');
-        const time = scheduledDate.toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+          const enrichedItems = ((orderData.items as OrderItem[]) || []).map(
+            (item) => {
+              const product = productMap.get(item.id);
+              return {
+                name: product?.name || item.name || 'Produto desconhecido',
+                quantity: item.quantity,
+                size: product?.size || '',
+                orderNumber: orderData.orderNumber || '', // ✅ aqui
+              };
+            }
+          );
 
-        const enrichedItems = (orderData.items as OrderItem[] || []).map((item) => {
-          const product = productMap.get(item.id);
-          return {
-            name: product?.name || item.name || 'Produto desconhecido',
-            quantity: item.quantity,
-            size: product?.size || '',
+          const enrichedDelivery: Delivery = {
+            scheduledTimestamp: scheduledDate.getTime(),
+            id: doc.id,
+            customerName: orderData.customerName || '',
+            address: orderData.address || '',
+            time,
+            date,
+            items: enrichedItems,
+            status: orderData.status as StatusOrder,
+            orderNumber: orderData.orderNumber || '???', // ✅ certo: pega do banco
+
           };
-        });
 
-        const enrichedDelivery: Delivery = {
-          scheduledTimestamp: scheduledDate.getTime(),
-          id: doc.id,
-          customerName: orderData.customerName || '',
-          address: orderData.address || '',
-          time,
-          date,
-          items: enrichedItems,
-          status: orderData.status as StatusOrder,
-        };
+          return enrichedDelivery;
+        })
+      );
 
-        return enrichedDelivery;
-      })
-    );
-
-    setOrders(enrichedOrders.filter((o): o is Delivery => !!o));
-  } catch (error) {
-    console.error('Erro ao buscar pedidos:', error);
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-};
+      setOrders(enrichedOrders.filter((o): o is Delivery => !!o));
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
   }, []);
+  useEffect(() => {
+    console.log('selectedDelivery', selectedDelivery);
+  }, [selectedDelivery]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -260,7 +275,10 @@ const fetchOrders = async () => {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.customerName}>{delivery.customerName}</Text>
+                <Text style={styles.customerName}>
+                  #{delivery.orderNumber} - {delivery.customerName}
+                </Text>
+
                 <Text style={styles.address}>{delivery.address}</Text>
                 <View style={styles.itemsList}>
                   {delivery.items.map((item, index) => (
@@ -282,6 +300,7 @@ const fetchOrders = async () => {
         onRefresh={() => setOrders([])}
         items={selectedDelivery?.items || []}
         deliveryId={selectedDelivery?.id || ''}
+        orderNumber={selectedDelivery?.orderNumber || ''}
       />
 
       {user?.role === 'admin' && (

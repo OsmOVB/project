@@ -34,12 +34,14 @@ export default function ProductModal({
   onRefresh,
   items,
   deliveryId,
+  orderNumber,
 }: {
   visible: boolean;
   onClose: () => void;
   onRefresh: () => void;
   items: DeliveryItem[];
   deliveryId: string;
+  orderNumber: string;
 }) {
   const { theme } = useTheme();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -176,7 +178,7 @@ export default function ProductModal({
           ]}
         >
           <Text style={[styles.title, { color: theme.textPrimary }]}>
-            Itens do Pedido: {deliveryId}
+            Pedido #{orderNumber}
           </Text>
 
           <ScrollView

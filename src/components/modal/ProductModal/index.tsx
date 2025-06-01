@@ -27,6 +27,7 @@ import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
 import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
+import { getStepStatus, nextStepStatus, StepStatus } from '@/src/utils/kegControl';
 
 export default function ProductModal({
   visible,
@@ -51,56 +52,51 @@ export default function ProductModal({
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
 
-  const statusSequence: StatusOrder[] = [
-    'pendente',
-    'a caminho',
-    'em progresso',
-    'finalizado',
-  ];
+const handleConfirm = async () => {
+  try {
+    const orderRef = doc(db, 'orders', deliveryId);
+    const orderSnap = await getDoc(orderRef);
 
-  const handleConfirm = async () => {
-    try {
-      const orderRef = doc(db, 'orders', deliveryId);
-      const orderSnap = await getDoc(orderRef);
-
-      if (!orderSnap.exists()) {
-        alert('Pedido não encontrado.');
-        return;
-      }
-
-      const currentStatus = orderSnap.data().status as StatusOrder;
-      const currentIndex = statusSequence.indexOf(currentStatus);
-
-      if (currentIndex === -1 || currentIndex === statusSequence.length - 1) {
-        alert('Status não pode ser atualizado.');
-        return;
-      }
-
-      const nextStatus = statusSequence[currentIndex + 1];
-
-      await updateDoc(orderRef, {
-        status: nextStatus,
-      });
-
-      if (nextStatus === 'finalizado') {
-        // Busque o pedido para extrair os stockIds
-        const orderData = orderSnap.data();
-        const stockIds = (orderData.items || []).map(
-          (item: any) => item.stockItemId
-        );
-        await qrCodeUtils.releaseQRCodesByStockIds(
-          stockIds,
-          user?.companyId || ''
-        );
-      }
-
-      onRefresh();
-      onClose();
-    } catch (err) {
-      console.error('Erro ao atualizar status:', err);
-      alert('Erro ao atualizar status. Tente novamente.');
+    if (!orderSnap.exists()) {
+      alert('Pedido não encontrado.');
+      return;
     }
-  };
+
+    const orderData = orderSnap.data();
+    const currentStatus = Object.values(StepStatus).includes(orderData.step)
+      ? orderData.step as StepStatus
+      : StepStatus.Pending;
+
+    // Verifica se todos os itens foram conferidos
+    const totalItems = items.length;
+    const totalChecked = checkedItems.length;
+
+    if (totalChecked < totalItems) {
+      Alert.alert('Ainda há itens não conferidos.');
+      return;
+    }
+
+    const nextStatus = nextStepStatus(currentStatus);
+
+    await updateDoc(orderRef, {
+      step: nextStatus,
+      status: getStepStatus(nextStatus),
+    });
+
+    if (nextStatus === StepStatus.Installed) {
+      const stockIds = (orderData.items || []).map(
+        (item: any) => item.stockItemId
+      );
+      await qrCodeUtils.releaseQRCodesByStockIds(stockIds, user?.companyId || '');
+    }
+
+    onRefresh();
+    onClose();
+  } catch (err) {
+    console.error('Erro ao atualizar status:', err);
+    alert('Erro ao atualizar status. Tente novamente.');
+  }
+};
 
   const handleCancel = async () => {
     try {
@@ -115,48 +111,74 @@ export default function ProductModal({
     }
   };
 
-  const handleQrScanned = async (scannedCode: string) => {
-    try {
-      if (!user?.companyId) throw new Error('Empresa não identificada.');
+const handleQrScanned = async (scannedCode: string) => {
+  try {
+    console.log(`🟡 QR Code escaneado: ${scannedCode}`);
 
-      const qrQuery = query(
-        collection(db, 'qrcodes'),
-        where('code', '==', scannedCode),
-        where('companyId', '==', user.companyId),
-        where('status', '==', 'occupied')
-      );
-      const snapshot = await getDocs(qrQuery);
+    if (!user?.companyId) throw new Error('Empresa não identificada.');
 
-      if (snapshot.empty) {
-        Alert.alert('QR Code inválido ou não vinculado a esta empresa.');
-        return;
-      }
+    const stockQuery = query(
+      collection(db, 'stock'),
+      where('qrCode', '==', scannedCode),
+      where('companyId', '==', user.companyId)
+    );
 
-      const qrDoc = snapshot.docs[0];
-      const stockId = qrDoc.data().usedByStockId;
+    const snapshot = await getDocs(stockQuery);
+    console.log(`🔍 Snapshot docs count: ${snapshot.size}`);
 
-      const stockDoc = await getDoc(doc(db, 'stock', stockId));
-      if (!stockDoc.exists()) {
-        Alert.alert('Estoque vinculado ao QR não encontrado.');
-        return;
-      }
-
-      const stockData = stockDoc.data();
-      const itemKey = `${stockData.productName}_${stockData.volumeLiters}_${stockId}`;
-
-      const current = quantities[itemKey] || 0;
-      setQuantities((prev) => ({
-        ...prev,
-        [itemKey]: current + 1,
-      }));
-
-      if (!checkedItems.includes(itemKey)) {
-        setCheckedItems((prev) => [...prev, itemKey]);
-      }
-    } catch (error: any) {
-      Alert.alert('Erro ao ler QR', error.message);
+    if (snapshot.empty) {
+      console.warn(`❌ QR Code "${scannedCode}" não encontrado para a empresa ${user.companyId}`);
+      return;
     }
-  };
+
+    const stockDoc = snapshot.docs[0];
+    const stockData = stockDoc.data();
+    const size = stockData.volumeLiters?.toString();
+    const stockId = stockDoc.id;
+
+    // 🆕 Buscar nome do produto
+    let productName: string | undefined;
+    if (stockData?.productItemId) {
+      const productSnap = await getDoc(doc(db, 'product', stockData.productItemId));
+      if (productSnap.exists()) {
+        const productData = productSnap.data();
+        productName = productData.name;
+      }
+    }
+
+    console.log(`📦 Produto encontrado: ${productName} (${size}) - Stock ID: ${stockId}`);
+
+    const matchedIndex = items.findIndex(
+      (item) =>
+        item.name.toLowerCase() === productName?.toLowerCase() &&
+        (item.size || '') === size
+    );
+
+    if (matchedIndex === -1) {
+      console.warn('⚠️ QR Code não corresponde a nenhum item do pedido.');
+      return;
+    }
+
+    const itemKey = `${productName}_${size}_${matchedIndex}`;
+    const current = quantities[itemKey] || 0;
+
+    setQuantities((prev) => ({
+      ...prev,
+      [itemKey]: current + 1,
+    }));
+
+    if (!checkedItems.includes(itemKey)) {
+      setCheckedItems((prev) => [...prev, itemKey]);
+    }
+
+    await qrCodeUtils.advanceQrCodeStepStatus(scannedCode, user.companyId);
+  } catch (error: any) {
+    console.error('❌ Erro ao processar QR Code:', error.message);
+    Alert.alert('Erro ao processar QR Code', error.message);
+  }
+};
+
+
 
   const handleRemoveItem = (itemKey: string) => {
     setCheckedItems((prev) => prev.filter((key) => key !== itemKey));

@@ -1,3 +1,5 @@
+import { StepStatus } from "../utils/kegControl";
+
 export type UserRole = 'admin' | 'delivery' | 'customer';
 export interface User {
   id: string;
@@ -14,19 +16,6 @@ export interface OrderItem {
   name: string;
   quantity: number;
 }
-
-export interface Order {
-  id: string;
-  customerName: string;
-  items: OrderItem[];
-  totalLiters: number;
-  status: StatusOrder;
-  deliveryPersonId?: string;
-  date: Date;
-  paymentMethod: paymentMethod;
-}
-
-export type paymentMethod = 'crédito' | 'débito' | 'dinheiro' | 'pix';
 
 export interface User {
   id: string;
@@ -67,6 +56,7 @@ export interface QRCode {
   companyId: string;
   createdAt: string;
   usedByStockId?: string;
+  stepStatus: StepStatus;
 }
 
 
@@ -84,14 +74,6 @@ export interface Stock {
   quantity?: number; // optional, used only in aggregated mode
   batchSequence?: number; // optional, if you want to keep a sequence
   isEmpty: boolean; // indica se o lote está vazio
-}
-
-// Item de um pedido (referencia um Stock específico)
-export interface OrderItem {
-  id: string;
-  stockItemId: string;
-  name: string;
-  quantity: number;
 }
 
 // Pedido de entrega

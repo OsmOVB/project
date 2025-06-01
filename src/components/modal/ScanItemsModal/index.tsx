@@ -64,11 +64,14 @@ export default function ScanItemsModal({
   };
 
   const handleManualSubmit = async () => {
-    if (!manualQrCode.trim()) {
-      Alert.alert('Erro', 'Digite um código válido.');
-      return;
-    }
-    await handleScannedQr(manualQrCode.trim());
+    // if (!manualQrCode.trim()) {
+    //   Alert.alert('Erro', 'Digite um código válido.');
+    //   return;
+    // }
+    await handleScannedQr(
+      `QR0005`
+      // manualQrCode.trim()
+    );
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet } from 'react-native';
+import { View, Alert, StyleSheet, Text } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -152,15 +152,32 @@ export default function Login() {
         />
 
         <Button
-          title="Recuperar Senha"
-          type="outline"
-          onPress={() => router.push('/forgot-password')}
-        />
-
-        <Button
           title="Criar Conta"
           type="outline"
           onPress={() => router.push('/register')}
+        />
+        <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
+          <Button
+            title="Esqueceu a senha?"
+            type="text"
+            onPress={() => router.push('/forgot-password')}
+          />
+        </View>
+      </View>
+
+      <View style={styles.termsContainer}>
+        <Button
+          title="Termos de Uso"
+          type="text"
+          onPress={() => WebBrowser.openBrowserAsync('https://google.com')}
+        />
+        <Text style={styles.separator}> e </Text>
+        <Button
+          title="Política de Privacidade"
+          type="text"
+          onPress={() =>
+            WebBrowser.openBrowserAsync('https://google.com/privacy')
+          }
         />
       </View>
     </Container>
@@ -173,5 +190,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: 20,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 1,
+    paddingVertical: 10,
+  },
+  separator: {
+    color: '#888',
+    fontSize: 14,
   },
 });

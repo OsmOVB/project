@@ -19,7 +19,8 @@ type TypeButton =
   | 'outline'
   | 'fab'
   | 'icon'
-  | 'card';
+  | 'card'
+  | 'text';
 
 interface BaseButtonProps {
   onPress: () => void;
@@ -48,7 +49,7 @@ interface FabButtonProps extends BaseButtonProps {
 interface CardButtonProps extends BaseButtonProps {
   type: 'card';
   title?: string;
-  children?: React.ReactNode; // <-- ADICIONE ISTO
+  children?: React.ReactNode;
 }
 
 type ButtonProps =
@@ -62,9 +63,10 @@ const Button: React.FC<ButtonProps> = (props) => {
   const isIcon = props.type === 'icon';
   const isFab = props.type === 'fab';
   const isCard = props.type === 'card';
+  const isText = props.type === 'text';
 
   const containerStyle: ViewStyle[] = [
-    !isIcon && !isFab && !isCard && styles.base,
+    !isIcon && !isFab && !isCard && !isText && styles.base,
     props.fullWidth && styles.fullWidth,
     isFab
       ? fabStyle(theme)
@@ -178,6 +180,14 @@ function getTypeStyle(
         backgroundColor: 'transparent',
         borderWidth: 1,
         borderColor: disabled ? theme.separator : theme.primary,
+      };
+
+    case 'text':
+      return {
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        backgroundColor: 'transparent',
+        alignSelf: 'auto',
       };
     default:
       return base;

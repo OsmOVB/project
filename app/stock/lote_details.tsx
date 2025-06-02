@@ -1,5 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Alert, View, Text, RefreshControl } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Alert,
+  View,
+  Text,
+  RefreshControl,
+} from 'react-native';
 import {
   collection,
   getDocs,
@@ -30,7 +37,7 @@ export default function LoteDetails() {
   useEffect(() => {
     fetchItems();
   }, []);
-  
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchItems();
@@ -103,9 +110,7 @@ export default function LoteDetails() {
 
       {items.map((item, i) => (
         <Card key={i} style={{ backgroundColor: theme.card }}>
-          <CardTitle>
-            Produto: {item.productInfo?.name || '-'}
-          </CardTitle>
+          <CardTitle>Produto: {item.productInfo?.name || '-'}</CardTitle>
 
           <Text style={[styles.label, { color: theme.text }]}>
             Preço Unitário:{' '}
@@ -130,11 +135,25 @@ export default function LoteDetails() {
           <View style={styles.qrActions}>
             <Button
               type="icon"
+              title="Imprimir"
+              iconName="print-outline"
+              iconColor={theme.primary}
+              onPress={() => {
+                Alert.alert('Ação', 'Chamada de impressão aqui...');
+                // Aqui você chama sua função de impressão (API, local, etc)
+              }}
+            />
+          </View>
+          <View style={styles.qrActions}>
+            <Button
+              type="icon"
               title="Novo QR"
               iconName="qr-code-outline"
               iconColor={theme.text}
               onPress={async () => {
-                const qrCode = await qrCodeUtils.generateNextCompanyQrCode(user?.companyId || '');
+                const qrCode = await qrCodeUtils.generateNextCompanyQrCode(
+                  user?.companyId || ''
+                );
                 if (item.id) {
                   await updateDoc(doc(db, 'stock', item.id!), {
                     qrCode,

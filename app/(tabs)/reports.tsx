@@ -36,116 +36,115 @@ export default function Reports() {
     labels: [] as string[],
     datasets: [{ data: [] as number[] }],
   });
-useEffect(() => {
-  const fetchFromOrders = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'orders'));
-      const grouped: Record<string, number> = {};
-      const detalhados: typeof ordersDetalhados = [];
 
-      setTotalPedidos(snapshot.size);
+  useEffect(() => {
+   const fetchFromOrders = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'orders'));
+    const grouped: Record<string, number> = {};
+    const detalhados: typeof ordersDetalhados = [];
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const date = new Date(data.scheduledDate?.seconds * 1000 || 0);
-        const formattedDate = date.toLocaleDateString('pt-BR');
+    setTotalPedidos(snapshot.size);
 
-        let key = '';
-        if (timeRange === 'daily') {
-          key = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-        } else if (timeRange === 'weekly') {
-          key = `Semana ${Math.ceil(date.getDate() / 7)}`;
-        } else if (timeRange === 'monthly') {
-          key = date.toLocaleString('default', { month: 'short' });
-        }
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const timestamp = data.date?.seconds || 0;
+      const date = new Date(timestamp * 1000);
+      const formattedDate = date.toLocaleDateString('pt-BR');
 
-        grouped[key] = (grouped[key] || 0) + 1;
-
-        const totalPedido = (data.items || []).reduce(
-          (acc: number, item: any) => acc + (item.price || 0) * (item.quantity || 0),
-          0
-        );
-
-        detalhados.push({
-          data: formattedDate,
-          cliente: data.customerName || 'Desconhecido',
-          endereco: data.address || 'Não informado',
-          total: totalPedido,
-        });
-      });
-
-      // Ordenação das labels para exibição correta no gráfico
-      let labels: string[] = [];
+      let key = '';
       if (timeRange === 'daily') {
-        labels = Object.keys(grouped).sort((a, b) => {
-          // Ordena por dia e mês
-          const [diaA, mesA] = a.split('/').map(Number);
-          const [diaB, mesB] = b.split('/').map(Number);
-          return mesA !== mesB ? mesA - mesB : diaA - diaB;
-        });
+        key = formattedDate;
       } else if (timeRange === 'weekly') {
-        labels = Object.keys(grouped).sort((a, b) => {
-          // Ordena por número da semana
-          const numA = parseInt(a.replace(/\D/g, ''), 10);
-          const numB = parseInt(b.replace(/\D/g, ''), 10);
-          return numA - numB;
-        });
+        const start = new Date(date);
+        start.setDate(date.getDate() - date.getDay());
+        key = `Semana de ${start.toLocaleDateString('pt-BR')}`;
       } else if (timeRange === 'monthly') {
-        // Ordena pelos meses do ano
-        const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-        labels = Object.keys(grouped).sort(
-          (a, b) => meses.indexOf(a.toLowerCase().slice(0, 3)) - meses.indexOf(b.toLowerCase().slice(0, 3))
-        );
+        key = `${date.getMonth() + 1}/${date.getFullYear()}`;
       }
 
-      const values = labels.map((label) => grouped[label]);
+      grouped[key] = (grouped[key] || 0) + 1;
 
-      setReportData({ labels, datasets: [{ data: values }] });
-      setOrdersDetalhados(detalhados);
-    } catch (error) {
-      console.error('Erro ao processar pedidos:', error);
+      detalhados.push({
+        data: formattedDate,
+        cliente: data.customerName || 'Desconhecido',
+        endereco: data.address || 'Não informado',
+        total: data.totalLiters || 0,
+      });
+    });
+
+    // Ordenação das labels para exibição correta no gráfico
+    let labels: string[] = [];
+    if (timeRange === 'daily') {
+      labels = Object.keys(grouped).sort((a, b) => {
+        // dd/MM/yyyy
+        const [da, ma, ya] = a.split('/').map(Number);
+        const [db, mb, yb] = b.split('/').map(Number);
+        const dateA = new Date(ya, ma - 1, da);
+        const dateB = new Date(yb, mb - 1, db);
+        return dateA.getTime() - dateB.getTime();
+      });
+    } else if (timeRange === 'weekly') {
+      labels = Object.keys(grouped).sort((a, b) => {
+        // "Semana de dd/MM/yyyy"
+        const getDate = (str: string) => {
+          const match = str.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          if (!match) return new Date(0);
+          const [, d, m, y] = match.map(Number);
+          return new Date(y, m - 1, d);
+        };
+        return getDate(a).getTime() - getDate(b).getTime();
+      });
+    } else if (timeRange === 'monthly') {
+      labels = Object.keys(grouped).sort((a, b) => {
+        // MM/YYYY
+        const [ma, ya] = a.split('/').map(Number);
+        const [mb, yb] = b.split('/').map(Number);
+        return ya !== yb ? ya - yb : ma - mb;
+      });
     }
-  };
 
-  fetchFromOrders();
-}, [timeRange]);
+    const values = labels.map((label) => grouped[label]);
+
+    setReportData({ labels, datasets: [{ data: values }] });
+    setOrdersDetalhados(detalhados);
+  } catch (error) {
+    console.error('Erro ao processar pedidos:', error);
+  }
+};
+
+    fetchFromOrders();
+  }, [timeRange]);
+
   const chartConfig = {
     backgroundColor: theme.card,
     backgroundGradientFrom: theme.card,
     backgroundGradientTo: theme.card,
     decimalPlaces: 0,
-    color: (opacity = 1) => theme.primary + Math.round(opacity * 255).toString(16),
+    color: (opacity = 1) => `${theme.primary}${Math.round(opacity * 255).toString(16)}`,
+    labelColor: () => theme.textPrimary,
     style: { borderRadius: 16 },
   };
-
-  const chartWidth = screenWidth - 32; // 16 padding de cada lado
 
   const renderChart = () => {
     const hasData = reportData.labels.length > 0 && reportData.datasets[0].data.length > 0;
     if (!hasData) {
-      return <Text style={[styles.noData, { color: theme.textSecondary }]}>Sem dados para este intervalo.</Text>;
+      return (
+        <Text style={[styles.noData, { color: theme.textSecondary }]}>Sem dados para este intervalo.</Text>
+      );
     }
 
-    return chartType === 'line' ? (
-      <LineChart
-        data={reportData}
-        width={chartWidth}
-        height={220}
-        chartConfig={chartConfig}
-        bezier
-        style={styles.chart}
-      />
-    ) : (
-      <BarChart
-        data={reportData}
-        width={chartWidth}
-        height={220}
-        chartConfig={chartConfig}
-        style={styles.chart}
-        yAxisLabel=""
-        yAxisSuffix=""
-      />
-    );
+    const commonProps = {
+      data: reportData,
+      width: screenWidth - 40,
+      height: 240,
+      chartConfig,
+      style: styles.chart,
+    };
+
+    return chartType === 'line'
+      ? <LineChart {...commonProps} bezier />
+      : <BarChart {...commonProps} yAxisLabel="" yAxisSuffix="" />;
   };
 
   const exportToExcel = async () => {
@@ -157,7 +156,9 @@ useEffect(() => {
       const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
       const uri = FileSystem.cacheDirectory + 'relatorio_completo.xlsx';
 
-      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: FileSystem.EncodingType.Base64 });
+      await FileSystem.writeAsStringAsync(uri, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
       await Sharing.shareAsync(uri, {
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         dialogTitle: 'Compartilhar Relatório Detalhado',
@@ -171,9 +172,8 @@ useEffect(() => {
 
   return (
     <Container>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView>
         <Title>Relatórios & Análise</Title>
-
         <View style={styles.filterContainer}>
           <View style={styles.pickerContainer}>
             <Text style={[styles.label, { color: theme.textSecondary }]}>Intervalo de Tempo</Text>
@@ -195,15 +195,14 @@ useEffect(() => {
               onValueChange={setChartType}
               style={[styles.picker, { backgroundColor: theme.inputBg, color: theme.textPrimary }]}
             >
-              <Picker.Item label="Gráfico de Linha" value="line" />
-              <Picker.Item label="Gráfico de Barras" value="bar" />
+              <Picker.Item label="Linha" value="line" />
+              <Picker.Item label="Barras" value="bar" />
             </Picker>
           </View>
         </View>
 
-        <View style={[styles.chartContainer, { backgroundColor: theme.card, alignItems: 'center' }]}>
-          {renderChart()}
-        </View>
+        <View style={[styles.chartContainer, { backgroundColor: theme.card }]}>{renderChart()}</View>
+
 
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: theme.inputBg }]}>
@@ -221,48 +220,16 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-  filterContainer: {
-    flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20,
-  },
-  pickerContainer: {
-    flex: 1, marginHorizontal: 5,
-  },
-  label: {
-    fontSize: 14, marginBottom: 5,
-  },
-  picker: {
-    borderRadius: 8, height: 50,
-  },
-  chartContainer: {
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 20,
-    alignItems: 'center', // centraliza o gráfico
-  },
-  chart: {
-    marginVertical: 8, borderRadius: 16,
-  },
-  noData: {
-    textAlign: 'center', fontSize: 16, marginTop: 16,
-  },
-  statsContainer: {
-    flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20,
-  },
-  statCard: {
-    flex: 1, borderRadius: 8, padding: 12, marginHorizontal: 5, alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 12, marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18, fontWeight: 'bold',
-  },
-  exportButton: {
-    marginTop: 10,
-  },
+  filterContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  pickerContainer: { flex: 1, marginHorizontal: 5 },
+  label: { fontSize: 14, marginBottom: 5 },
+  picker: { borderRadius: 8, height: 50 },
+  chartContainer: { borderRadius: 16, padding: 16, elevation: 3, marginBottom: 20 },
+  chart: { marginVertical: 8, borderRadius: 16 },
+  noData: { textAlign: 'center', fontSize: 16, marginTop: 16 },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  statCard: { flex: 1, borderRadius: 8, padding: 12, marginHorizontal: 5, alignItems: 'center' },
+  statLabel: { fontSize: 12, marginBottom: 4 },
+  statValue: { fontSize: 18, fontWeight: 'bold' },
+  exportButton: { marginTop: 10 },
 });

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet, Text } from 'react-native';
+import {
+  View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +24,7 @@ import {
   ErrorText,
 } from '../../src/components/styled';
 import Checkbox from '@/src/components/CheckBox';
+import { Ionicons } from '@expo/vector-icons';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,6 +47,7 @@ export default function Login() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const loadCredentials = async () => {
@@ -128,12 +137,22 @@ export default function Login() {
           control={control}
           name="password"
           render={({ field: { onChange, value } }) => (
-            <Input
-              placeholder="Senha"
-              secureTextEntry
-              value={value}
-              onChangeText={onChange}
-            />
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                placeholder="Senha"
+                value={value}
+                onChangeText={onChange}
+                secureTextEntry={!showPassword}
+                style={styles.passwordInput}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#999"
+                />
+              </TouchableOpacity>
+            </View>
           )}
         />
         {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
@@ -176,7 +195,7 @@ export default function Login() {
           title="Política de Privacidade"
           type="text"
           onPress={() =>
-            WebBrowser.openBrowserAsync('https://google.com/privacy')
+            WebBrowser.openBrowserAsync('https://google.com')
           }
         />
       </View>
@@ -202,5 +221,26 @@ const styles = StyleSheet.create({
   separator: {
     color: '#888',
     fontSize: 14,
+  },
+
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 50,
+    marginTop: 10,
+    marginBottom: 10,
+    backgroundColor: '#fff',
+  },
+
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  passwordIcon: {
+    marginLeft: 10,
   },
 });

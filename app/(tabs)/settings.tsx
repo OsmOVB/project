@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
 import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useTheme } from '@/src/context/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -63,12 +63,6 @@ export default function Settings() {
             >
               <ButtonText>Gerenciar Entregadores</ButtonText>
             </Button>
-            {/* <Button
-              onPress={() => console.log('Configurações da Empresa')}
-              style={styles.button}
-            >
-              <ButtonText>Configurações da Empresa</ButtonText>
-            </Button> */}
           </Card>
         )}
 
@@ -94,6 +88,8 @@ export default function Settings() {
 }
 
 function ProfileCard({ user, companyName }: { user: any, companyName: string }) {
+  const router = useRouter();
+
   return (
     <Card style={styles.profileCard}>
       <View style={styles.profileHeader}>
@@ -106,6 +102,13 @@ function ProfileCard({ user, companyName }: { user: any, companyName: string }) 
           {companyName && <Text style={styles.company}>{companyName}</Text>}
         </View>
       </View>
+
+      <Button
+        onPress={() => router.push('/edit-profile')}
+        style={styles.editButton}
+      >
+        <ButtonText>Editar informações</ButtonText>
+      </Button>
     </Card>
   );
 }
@@ -172,5 +175,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
     marginTop: 20,
     marginBottom: 40,
+  },
+  editButton: {
+    marginTop: 15,
+    alignSelf: 'flex-start',
   },
 });

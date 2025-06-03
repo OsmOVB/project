@@ -10,7 +10,7 @@ import { db } from '@/src/firebase/config';
 
 export default function Settings() {
   const { user, logout } = useAuth();
-  const { darkMode, toggleTheme } = useTheme();
+  const { darkMode, toggleTheme, theme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [companyName, setCompanyName] = useState<string>('');
 
@@ -27,7 +27,7 @@ export default function Settings() {
   return (
     <Container>
       <ScrollView>
-        <Title>Configurações</Title>
+        <Title style={{ color: theme.textPrimary }}>Configurações</Title>
 
         {user && <ProfileCard user={user} companyName={companyName} />}
 
@@ -35,7 +35,7 @@ export default function Settings() {
           <CardTitle>Preferências</CardTitle>
 
           <ThemeToggle>
-            <ThemeToggleLabel>Modo Escuro</ThemeToggleLabel>
+            <ThemeToggleLabel style={{ color: theme.textPrimary }}>Modo Escuro</ThemeToggleLabel>
             <Switch
               value={darkMode}
               onValueChange={toggleTheme}
@@ -68,10 +68,10 @@ export default function Settings() {
 
         <Card>
           <CardTitle>Suporte</CardTitle>
-          <Button onPress={() => { }} style={styles.button}>
+          <Button onPress={() => router.push('/help/HelpCenterScreen')} style={styles.button}>
             <ButtonText>Central de Ajuda</ButtonText>
           </Button>
-          <Button onPress={() => { }} style={styles.button}>
+          <Button onPress={() => router.push('/help/ReportProblemScreen')} style={styles.button}>
             <ButtonText>Reportar Problema</ButtonText>
           </Button>
         </Card>
@@ -89,17 +89,20 @@ export default function Settings() {
 
 function ProfileCard({ user, companyName }: { user: any, companyName: string }) {
   const router = useRouter();
+  const { theme } = useTheme();
 
   return (
     <Card style={styles.profileCard}>
       <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
+        <View style={[styles.avatar, { backgroundColor: theme.card }]}>
           <Ionicons name="person" size={40} color="#007AFF" />
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.name}>{user?.name}</Text>
-          <Text style={styles.role}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}</Text>
-          {companyName && <Text style={styles.company}>{companyName}</Text>}
+          <Text style={[styles.name, { color: theme.textPrimary }]}>{user?.name}</Text>
+          <Text style={[styles.role, { color: theme.textSecondary }]}>
+            {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
+          </Text>
+          {companyName && <Text style={[styles.company, { color: theme.textSecondary }]}>{companyName}</Text>}
         </View>
       </View>
 
@@ -114,7 +117,7 @@ function ProfileCard({ user, companyName }: { user: any, companyName: string }) 
 }
 
 function SettingItem({ label, children }: { label: string; children: React.ReactNode }) {
-  const { theme } = useTheme(); // ✅ Importa o tema dinamicamente
+  const { theme } = useTheme();
 
   return (
     <View style={styles.settingItem}>
@@ -138,7 +141,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -149,16 +151,13 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1c1c1e',
     marginBottom: 4,
   },
   role: {
     fontSize: 16,
-    color: '#666',
   },
   company: {
     fontSize: 14,
-    color: '#999',
   },
   settingItem: {
     flexDirection: 'row',
@@ -170,7 +169,6 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    color: '#1c1c1e'
   },
   button: {
     marginBottom: 10,

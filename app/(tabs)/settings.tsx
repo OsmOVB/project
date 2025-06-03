@@ -114,9 +114,13 @@ function ProfileCard({ user, companyName }: { user: any, companyName: string }) 
 }
 
 function SettingItem({ label, children }: { label: string; children: React.ReactNode }) {
+  const { theme } = useTheme(); // ✅ Importa o tema dinamicamente
+
   return (
     <View style={styles.settingItem}>
-      <Text style={styles.settingLabel}>{label}</Text>
+      <Text style={[styles.settingLabel, { color: theme.textPrimary }]}>
+        {label}
+      </Text>
       {children}
     </View>
   );
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    color: '#1c1c1e',
+    color: '#1c1c1e'
   },
   button: {
     marginBottom: 10,

@@ -1,65 +1,73 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
-import Button from '@/src/components/Button';
-import { useAuth } from '@/src/hooks/useAuth';
-import { db } from '@/src/firebase/config';
-import { doc, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/src/context/ThemeContext';
+import { useAuth } from '@/src/hooks/useAuth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/src/firebase/config';
+import Button from '@/src/components/Button';
 
-export default function EditProfileScreen() {
-  const { user } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const router = useRouter();
+export default function EditProfile() {
+    const router = useRouter();
+    const { theme } = useTheme();
+    const { user } = useAuth();
 
-  const handleSave = async () => {
-    if (!user) return;
+    const [name, setName] = useState(user?.name || '');
+    const [email, setEmail] = useState(user?.email || '');
 
-    try {
-      await updateDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-      });
-      Alert.alert('Sucesso', 'Informações atualizadas!');
-      router.back();
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Erro', 'Não foi possível salvar as informações.');
-    }
-  };
+    const handleSave = async () => {
+        if (user?.id) {
+            await updateDoc(doc(db, 'users', user.id), {
+                name,
+                email,
+            });
+            router.back();
+        }
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Editar Informações</Text>
+    return (
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <Text style={[styles.title, { color: theme.textPrimary }]}>
+                Editar Informações
+            </Text>
 
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="Nome"
-      />
+            <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Nome"
+                style={[styles.input, { backgroundColor: theme.inputBg, color: theme.textPrimary }]}
+                placeholderTextColor={theme.textSecondary}
+            />
 
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        keyboardType="email-address"
-      />
+            <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="E-mail"
+                keyboardType="email-address"
+                style={[styles.input, { backgroundColor: theme.inputBg, color: theme.textPrimary }]}
+                placeholderTextColor={theme.textSecondary}
+            />
 
-      <Button title="Salvar" onPress={handleSave} />
-    </View>
-  );
+            <Button title="Salvar" onPress={handleSave} />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, marginBottom: 20, textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 15,
-  },
+    container: {
+        flex: 1,
+        padding: 24,
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    input: {
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        marginBottom: 16,
+    },
 });

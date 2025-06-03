@@ -26,9 +26,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function Reports() {
   const { theme } = useTheme();
-  const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>(
-    'daily'
-  );
+  const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [totalPedidos, setTotalPedidos] = useState(0);
   const [ordersDetalhados, setOrdersDetalhados] = useState<
@@ -47,10 +45,6 @@ export default function Reports() {
       legendFontSize: number;
     }[]
   >([]);
-  // const [litersPerMonth, setLitersPerMonth] = useState<{
-  //   labels: string[];
-  //   data: number[];
-  // }>({ labels: [], data: [] });
 
   useEffect(() => {
     const fetchFromOrders = async () => {
@@ -88,11 +82,9 @@ export default function Reports() {
           });
         });
 
-        // Ordenação das labels para exibição correta no gráfico
         let labels: string[] = [];
         if (timeRange === 'daily') {
           labels = Object.keys(grouped).sort((a, b) => {
-            // dd/MM/yyyy
             const [da, ma, ya] = a.split('/').map(Number);
             const [db, mb, yb] = b.split('/').map(Number);
             const dateA = new Date(ya, ma - 1, da);
@@ -101,7 +93,6 @@ export default function Reports() {
           });
         } else if (timeRange === 'weekly') {
           labels = Object.keys(grouped).sort((a, b) => {
-            // "Semana de dd/MM/yyyy"
             const getDate = (str: string) => {
               const match = str.match(/(\d{2})\/(\d{2})\/(\d{4})/);
               if (!match) return new Date(0);
@@ -112,7 +103,6 @@ export default function Reports() {
           });
         } else if (timeRange === 'monthly') {
           labels = Object.keys(grouped).sort((a, b) => {
-            // MM/YYYY
             const [ma, ya] = a.split('/').map(Number);
             const [mb, yb] = b.split('/').map(Number);
             return ya !== yb ? ya - yb : ma - mb;
@@ -143,22 +133,14 @@ export default function Reports() {
           grouped[method] = (grouped[method] || 0) + 1;
         });
 
-        // Cores para cada método (adicione mais se necessário)
-        const colors = [
-          '#4CAF50',
-          '#2196F3',
-          '#FFC107',
-          '#E91E63',
-          '#9C27B0',
-          '#FF5722',
-        ];
+        const colors = ['#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0', '#FF5722'];
         let colorIndex = 0;
 
         const chartData = Object.entries(grouped).map(([name, count]) => ({
           name,
           count,
           color: colors[colorIndex++ % colors.length],
-          legendFontColor: '#333',
+          legendFontColor: theme.textPrimary, // 👈 COR CORRIGIDA AQUI
           legendFontSize: 14,
         }));
 
@@ -170,36 +152,6 @@ export default function Reports() {
 
     fetchPaymentMethods();
   }, []);
-
-  // useEffect(() => {
-  //   const fetchLitersPerMonth = async () => {
-  //     try {
-  //       const snapshot = await getDocs(collection(db, 'orders'));
-  //       const grouped: Record<string, number> = {};
-
-  //       snapshot.forEach((doc) => {
-  //         const data = doc.data();
-  //         const timestamp = data.date?.seconds || 0;
-  //         const date = new Date(timestamp * 1000);
-  //         const key = `${date.getMonth() + 1}/${date.getFullYear()}`;
-  //         grouped[key] = (grouped[key] || 0) + (data.totalLiters || 0);
-  //       });
-
-  //       // Ordena as labels
-  //       const labels = Object.keys(grouped).sort((a, b) => {
-  //         const [ma, ya] = a.split('/').map(Number);
-  //         const [mb, yb] = b.split('/').map(Number);
-  //         return ya !== yb ? ya - yb : ma - mb;
-  //       });
-  //       const data = labels.map((label) => grouped[label]);
-  //       setLitersPerMonth({ labels, data });
-  //     } catch (error) {
-  //       console.error('Erro ao buscar litros por mês:', error);
-  //     }
-  //   };
-
-  //   fetchLitersPerMonth();
-  // }, []);
 
   const chartConfig = {
     backgroundColor: theme.card,
@@ -215,6 +167,7 @@ export default function Reports() {
   const renderChart = () => {
     const hasData =
       reportData.labels.length > 0 && reportData.datasets[0].data.length > 0;
+
     if (!hasData) {
       return (
         <Text style={[styles.noData, { color: theme.textSecondary }]}>
@@ -250,6 +203,7 @@ export default function Reports() {
       await FileSystem.writeAsStringAsync(uri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
+
       await Sharing.shareAsync(uri, {
         mimeType:
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -266,6 +220,7 @@ export default function Reports() {
     <Container>
       <ScrollView>
         <Title>Relatórios & Análise</Title>
+
         <View style={styles.filterContainer}>
           <View style={styles.pickerContainer}>
             <Text style={[styles.label, { color: theme.textSecondary }]}>
@@ -274,10 +229,10 @@ export default function Reports() {
             <Picker
               selectedValue={timeRange}
               onValueChange={setTimeRange}
-              style={[
-                styles.picker,
-                { backgroundColor: theme.inputBg, color: theme.textPrimary },
-              ]}
+              style={[styles.picker, {
+                backgroundColor: theme.inputBg,
+                color: theme.textPrimary,
+              }]}
             >
               <Picker.Item label="Diário" value="daily" />
               <Picker.Item label="Semanal" value="weekly" />
@@ -292,10 +247,10 @@ export default function Reports() {
             <Picker
               selectedValue={chartType}
               onValueChange={setChartType}
-              style={[
-                styles.picker,
-                { backgroundColor: theme.inputBg, color: theme.textPrimary },
-              ]}
+              style={[styles.picker, {
+                backgroundColor: theme.inputBg,
+                color: theme.textPrimary,
+              }]}
             >
               <Picker.Item label="Linha" value="line" />
               <Picker.Item label="Barras" value="bar" />
@@ -308,15 +263,11 @@ export default function Reports() {
         </View>
 
         {paymentData.length > 0 && (
-          <View
-            style={[styles.chartContainer, { backgroundColor: theme.card }]}
-          >
-            <Text
-              style={[
-                styles.label,
-                { color: theme.textPrimary, marginBottom: 10 },
-              ]}
-            >
+          <View style={[styles.chartContainer, { backgroundColor: theme.card }]}>
+            <Text style={[
+              styles.label,
+              { color: theme.textPrimary, marginBottom: 10 }
+            ]}>
               Pedidos por Método de Pagamento
             </Text>
             <PieChart
@@ -338,32 +289,6 @@ export default function Reports() {
           </View>
         )}
 
-        {/* {litersPerMonth.labels.length > 0 && (
-          <View
-            style={[styles.chartContainer, { backgroundColor: theme.card }]}
-          >
-            <Text
-              style={[
-                styles.label,
-                { color: theme.textPrimary, marginBottom: 10 },
-              ]}
-            >
-              Total de Litros Entregues por Mês
-            </Text>
-            <BarChart
-              data={{
-                labels: litersPerMonth.labels,
-                datasets: [{ data: litersPerMonth.data }],
-              }}
-              width={screenWidth - 40}
-              height={220}
-              chartConfig={chartConfig}
-              style={styles.chart}
-              yAxisLabel=""
-              yAxisSuffix="L"
-            />
-          </View>
-        )} */}
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: theme.inputBg }]}>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>

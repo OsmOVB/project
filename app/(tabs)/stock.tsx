@@ -21,6 +21,7 @@ import StockCard from '@/src/components/stock/StockCard';
 import Button from '@/src/components/Button';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Switch } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<Stock[]>([]);
@@ -31,7 +32,7 @@ export default function Stock() {
   const [refreshing, setRefreshing] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => { });
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [showList, setShowList] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,9 +41,7 @@ export default function Stock() {
   const router = useRouter();
   const [addingStock, setAddingStock] = useState(false);
 
-  const [productForm, setProductForm] = useState<
-    Omit<Product, 'id' | 'createdAt' | 'companyId'>
-  >({
+  const [productForm, setProductForm] = useState<Omit<Product, 'id' | 'createdAt' | 'companyId'>>({
     name: '',
     type: '',
     size: '',
@@ -66,20 +65,14 @@ export default function Stock() {
 
   const fetchStock = async () => {
     const stockCollection = await getDocs(collection(db, 'stock'));
-    const items = stockCollection.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Stock[];
+    const items = stockCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Stock[];
     setStockItems(items);
     setLoading(false);
   };
 
   const fetchProduct = async () => {
     const productCollection = await getDocs(collection(db, 'product'));
-    const items = productCollection.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Product[];
+    const items = productCollection.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
     setProductList(items.sort((a, b) => b.favorite - a.favorite));
   };
 
@@ -94,13 +87,7 @@ export default function Stock() {
       const qty = Number(quantity);
       const companyId = selected.companyId || '';
 
-      const batchId = await calculateNextBatchId(
-        currentDate,
-        productId,
-        parsedPrice,
-        companyId,
-        selected.size ? parseInt(selected.size) : 0
-      );
+      const batchId = await calculateNextBatchId(currentDate, productId, parsedPrice, companyId, selected.size ? parseInt(selected.size) : 0);
 
       const promises = Array.from({ length: qty }).map(async () => {
         const isReturnable = selected?.returnable === true;
@@ -133,13 +120,7 @@ export default function Stock() {
     }
   }
 
-  async function calculateNextBatchId(
-    batchDate: string,
-    productId: string,
-    price: number,
-    companyId: string,
-    volumeLiters: number
-  ): Promise<number> {
+  async function calculateNextBatchId(batchDate: string, productId: string, price: number, companyId: string, volumeLiters: number): Promise<number> {
     const stockQuery = query(
       collection(db, 'stock'),
       where('batchDate', '==', batchDate),
@@ -155,12 +136,10 @@ export default function Stock() {
       const data = doc.data();
 
       if (typeof data.batchId === 'number') {
-        // Atualiza o maior batchId encontrado
         if (data.batchId > maxBatchId) {
           maxBatchId = data.batchId;
         }
 
-        // Verifica se é o mesmo lote
         const sameProduct =
           data.productItemId === productId &&
           data.price === price &&
@@ -182,15 +161,7 @@ export default function Stock() {
       createdAt: new Date().toISOString(),
       companyId: user?.companyId || '',
     });
-    setProductForm({
-      name: '',
-      type: '',
-      size: '',
-      brand: '',
-      unity: '',
-      returnable: false,
-      favorite: 1,
-    });
+    setProductForm({ name: '', type: '', size: '', brand: '', unity: '', returnable: false, favorite: 1 });
     setProductModalVisible(false);
     fetchProduct();
   };
@@ -212,9 +183,7 @@ export default function Stock() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={{ marginTop: 12, color: theme.textPrimary }}>
-          Carregando estoque...
-        </Text>
+        <Text style={{ marginTop: 12, color: theme.textPrimary }}>Carregando estoque...</Text>
       </View>
     );
   }
@@ -225,44 +194,20 @@ export default function Stock() {
       <Text style={[styles.tabLabel, { color: theme.primary }]}>Produtos</Text>
       <View style={[styles.card, { backgroundColor: theme.card }]}>
         <View style={styles.tabRow}>
-          <Button
-            iconName="add-circle-outline"
-            onPress={() => setProductModalVisible(true)}
-            title="Cadastrar"
-            type="icon"
-          />
-          <View
-            style={[styles.statDivider, { backgroundColor: theme.border }]}
-          />
-          <Button
-            iconName="list-outline"
-            onPress={() => setShowList(!showList)}
-            title="Lista"
-            type="icon"
-          />
-          <View
-            style={[styles.statDivider, { backgroundColor: theme.border }]}
-          />
-          <Button
-            iconName="cube-outline"
-            onPress={() => router.push('/stock/lotes')}
-            title="Lotes"
-            type="icon"
-          />
+          <Button iconName="add-circle-outline" onPress={() => setProductModalVisible(true)} title="Cadastrar" type="icon" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Button iconName="list-outline" onPress={() => setShowList(!showList)} title="Lista" type="icon" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Button iconName="cube-outline" onPress={() => router.push('/stock/lotes')} title="Lotes" type="icon" />
         </View>
-      </View>   
+      </View>
+
       {productList.length === 0 ? (
         <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-          <Text style={{ color: theme.textSecondary }}>
-            Nenhum produto cadastrado.
-          </Text>
+          <Text style={{ color: theme.textSecondary }}>Nenhum produto cadastrado.</Text>
         </View>
       ) : (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
           {productList.map((product, index) => (
             <StockCard
               key={index}
@@ -283,79 +228,13 @@ export default function Stock() {
           ))}
         </ScrollView>
       )}
+
       <Modal visible={productModalVisible} transparent>
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <TextInput
-              placeholder="Nome do produto (ex: Barril)"
-              value={productForm.name}
-              onChangeText={(text) => updateProductField('name', text)}
-              style={styles.input}
-              placeholderTextColor={theme.textSecondary}
-            />
-            <TextInput
-              placeholder="Tipo (ex: chopeira, CO2)"
-              value={productForm.type}
-              onChangeText={(text) => updateProductField('type', text)}
-              style={styles.input}
-              placeholderTextColor={theme.textSecondary}
-            />
-            <TextInput
-              placeholder="Tamanho (ex: 50 litros)"
-              value={productForm.size}
-              onChangeText={(text) => updateProductField('size', text)}
-              style={styles.input}
-              placeholderTextColor={theme.textSecondary}
-            />
-            <TextInput
-              placeholder="Marca (ex: Colina, Heineken)"
-              value={productForm.brand}
-              onChangeText={(text) => updateProductField('brand', text)}
-              style={styles.input}
-              placeholderTextColor={theme.textSecondary}
-            />
-            <TextInput
-              placeholder="Unidade (ex: L, UN, KG)"
-              value={productForm.unity}
-              onChangeText={(text) => updateProductField('unity', text)}
-              style={styles.input}
-              placeholderTextColor={theme.textSecondary}
-            />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 12,
-              }}
-            >
-              <Text style={{ color: theme.textPrimary, marginRight: 8 }}>
-                Tipo Vasilhame Retornável:
-              </Text>
-              <Switch
-                value={productForm.returnable}
-                onValueChange={(val) => updateProductField('returnable', val)}
-              />
-            </View>
-            <Text style={{ marginVertical: 8, color: theme.textPrimary }}>
-              Favoritos (1 a 6 estrelas):
-            </Text>
-            <StarRating
-              rating={productForm.favorite}
-              onChange={(val: number) => updateProductField('favorite', val)}
-            />
-            <Button
-              type="primary"
-              onPress={saveProduct}
-              title="Salvar Produto"
-            />
-            <Button
-              type="outline"
-              onPress={() => setProductModalVisible(false)}
-              title="Cancelar"
-            />
-          </View>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>...</View>
         </View>
       </Modal>
+
       <ConfirmModal
         visible={confirmVisible}
         message={confirmMessage}

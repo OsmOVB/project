@@ -31,7 +31,7 @@ export default function Stock() {
   const [refreshing, setRefreshing] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => { });
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [showList, setShowList] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -250,7 +250,7 @@ export default function Stock() {
             type="icon"
           />
         </View>
-      </View>   
+      </View>
       {productList.length === 0 ? (
         <View style={{ paddingVertical: 40, alignItems: 'center' }}>
           <Text style={{ color: theme.textSecondary }}>

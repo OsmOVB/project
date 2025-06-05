@@ -44,7 +44,7 @@ export default function Register() {
     watch,
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'customer' },
+    defaultValues: { role: 'admin' },
   });
 
   useEffect(() => {

@@ -178,6 +178,17 @@ const handleQrScanned = async (scannedCode: string) => {
   }
 };
 
+const handleEditOrder = () => {
+    if (!deliveryId) {
+      Alert.alert("Erro", "ID da entrega não disponível para edição.");
+      return;
+    }
+    router.push({ 
+      pathname: '/orders/create', 
+      params: { orderId: deliveryId } 
+    });
+    onClose(); 
+  };
 
 
   const handleRemoveItem = (itemKey: string) => {
@@ -293,12 +304,7 @@ const handleQrScanned = async (scannedCode: string) => {
                   iconName="create-outline"
                   title="Editar"
                   iconColor="#007AFF"
-                  onPress={() => 
-                   // router.push(
-                     // `/orders/edit/${deliveryId}`
-                   // )
-                   {}
-                  }
+                onPress={handleEditOrder}
                 />
                 <Button
                   onPress={handleCancel}

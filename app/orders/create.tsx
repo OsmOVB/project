@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,9 +20,18 @@ import {
   Card,
   CardTitle,
 } from '../../src/components/styled';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { db } from '../../src/firebase/config';
-import { collection, getDocs, addDoc, Timestamp, doc, runTransaction } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  Timestamp,
+  doc,
+  runTransaction,
+  getDoc,
+  updateDoc,
+} from 'firebase/firestore';
 import { useTheme } from '@/src/context/ThemeContext';
 import ProductSelector from '@/src/components/ProductSelector';
 import AddProductModal from '@/src/components/modal/AddProductModal';
@@ -66,6 +76,7 @@ type Address = {
 export default function CreateOrder() {
   const { theme } = useTheme();
   const { user } = useAuth();
+  const localParams = useLocalSearchParams<{ orderId?: string }>();
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -74,6 +85,16 @@ export default function CreateOrder() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedItems, setSelectedItems] = useState<SelectableProduct[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const orderId = localParams.orderId;
+  const isEditMode = !!orderId;
+  const [pageTitle, setPageTitle] = useState(
+    isEditMode ? 'Editar Pedido' : 'Criar Novo Pedido'
+  );
+  const [submitButtonText, setSubmitButtonText] = useState(
+    isEditMode ? 'Salvar Alterações' : 'Salvar Pedido'
+  );
 
   const {
     control,
@@ -81,6 +102,7 @@ export default function CreateOrder() {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<OrderForm>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
@@ -91,6 +113,75 @@ export default function CreateOrder() {
   });
 
   const scheduledDate = watch('scheduledDate');
+
+  useEffect(() => {
+    if (isEditMode && orderId && groupedProducts.length > 0) {
+      setPageTitle(`Editar Pedido`);
+      setSubmitButtonText('Salvar Alterações');
+      setLoading(true);
+
+      const fetchOrderDetails = async () => {
+        try {
+          const orderRef = doc(db, 'orders', orderId);
+          const orderSnap = await getDoc(orderRef);
+
+          if (orderSnap.exists()) {
+            const orderData = orderSnap.data();
+            setPageTitle(
+              `Editar Pedido #${
+                orderData.orderNumber || orderId.substring(0, 5)
+              }`
+            );
+
+            setValue('customerName', orderData.customerName);
+            setValue('address', orderData.address);
+            setValue('scheduledDate', (orderData.date as Timestamp).toDate());
+            setValue('paymentMethod', orderData.paymentMethod);
+
+            const itemsFromDb = orderData.items || [];
+            const enrichedSelectedItems = itemsFromDb
+              .map((dbItem: any) => {
+                const baseProductInfo = groupedProducts.find(
+                  (gp) => gp.productItemId === dbItem.id
+                );
+                if (!baseProductInfo && !dbItem.name) return null;
+
+                return {
+                  productItemId: dbItem.id,
+                  productItemName:
+                    dbItem.name ||
+                    baseProductInfo?.productItemName ||
+                    'Produto Desconhecido',
+                  quantity: dbItem.quantity,
+                  size: dbItem.size || baseProductInfo?.size || '',
+                  unity: baseProductInfo?.unity || '',
+                  brand: baseProductInfo?.brand || '',
+                  type: baseProductInfo?.type || '',
+               //   availableStock: baseProductInfo?.availableStock || 0,
+             //     price: dbItem.price || baseProductInfo?.price || 0,
+                };
+              })
+              .filter(Boolean) as SelectableProduct[];
+
+            setSelectedItems(enrichedSelectedItems);
+            updateFormItems(enrichedSelectedItems); // Atualiza o react-hook-form
+          } else {
+            Alert.alert('Erro', 'Pedido não encontrado.');
+            router.back();
+          }
+        } catch (error) {
+          console.error('Erro ao buscar detalhes do pedido:', error);
+          Alert.alert('Erro', 'Não foi possível carregar os dados do pedido.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchOrderDetails();
+    } else if (!isEditMode) {
+      setPageTitle('Criar Novo Pedido');
+      setSubmitButtonText('Salvar Pedido');
+    }
+  }, [isEditMode, orderId, groupedProducts, setValue, reset, router]);
 
   useEffect(() => {
     fetchData();
@@ -127,7 +218,6 @@ export default function CreateOrder() {
     }
   };
 
-  fetchData();
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -196,9 +286,12 @@ export default function CreateOrder() {
   };
 
   const onSubmit = async (data: OrderForm) => {
+    setIsSubmitting(true);
     try {
       if (!user?.email || !user?.companyId) {
         console.error('Usuário não autenticado ou sem empresa vinculada.');
+         Alert.alert('Erro', 'Usuário não autenticado ou sem empresa vinculada.');
+        setIsSubmitting(false);
         return;
       }
 
@@ -220,13 +313,15 @@ export default function CreateOrder() {
         transaction.set(counterRef, { lastOrderNumber: nextOrder });
         return String(nextOrder).padStart(4, '0'); // ex: '0001'
       });
-      const newOrder = {
+       const orderPayload ={
         customerName: data.customerName,
-        items: data.items.map(({ id, name, quantity }) => ({
+        items: data.items.map(({ id, name, quantity, size, price }) => ({ // Adicionado size e price
           id,
-          stockItemId: id,
+          stockItemId: id, // Mantém a referência ao item de estoque original se necessário
           name,
           quantity,
+          size,
+          price,
         })),
         status: 'pendente',
         deliveryPersonId: null,
@@ -236,12 +331,47 @@ export default function CreateOrder() {
         totalLiters,
         adminEmail: user.email,
         companyId: user.companyId,
-        orderNumber, 
+        orderNumber,
       };
-      await addDoc(collection(db, 'orders'), newOrder);
+      if (isEditMode && orderId) {
+        // Modo Edição
+        const orderRef = doc(db, 'orders', orderId);
+        await updateDoc(orderRef, {
+          ...orderPayload,
+          updatedAt: Timestamp.now(), // Atualiza o timestamp de modificação
+        });
+        Alert.alert('Sucesso', 'Pedido atualizado com sucesso!');
+      } else {
+        // Modo Criação
+        const companyId = user.companyId;
+        const counterRef = doc(db, 'counters', companyId);
+
+        const orderNumber = await runTransaction(db, async (transaction) => {
+          const counterSnap = await transaction.get(counterRef);
+          const lastOrder = counterSnap.exists()
+            ? counterSnap.data().lastOrderNumber
+            : 0;
+          const nextOrder = lastOrder + 1;
+          // Usar merge: true para não sobrescrever outros campos no contador, caso existam
+          transaction.set(counterRef, { lastOrderNumber: nextOrder }, { merge: true });
+          return String(nextOrder).padStart(4, '0');
+        });
+
+        await addDoc(collection(db, 'orders'), {
+          ...orderPayload,
+          orderNumber,
+          status: 'pendente', // Status inicial para novos pedidos
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+        Alert.alert('Sucesso', 'Pedido criado com sucesso!');
+      }
       router.back();
     } catch (error) {
-      console.error('Erro ao criar pedido:', error);
+      console.error(`Erro ao ${isEditMode ? 'atualizar' : 'criar'} pedido:`, error);
+      Alert.alert('Erro', `Não foi possível ${isEditMode ? 'atualizar' : 'salvar'} o pedido.`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -253,7 +383,7 @@ export default function CreateOrder() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <Title style={{ color: theme.textPrimary }}>Criar Novo Pedido</Title>
+          <Title style={{ color: theme.textPrimary }}>{pageTitle}</Title>
 
           <Card style={{ backgroundColor: theme.card }}>
             <CardTitle style={{ color: theme.textPrimary }}>
@@ -346,6 +476,7 @@ export default function CreateOrder() {
               onRemoveItem={removeItem}
               onUpdateQuantity={updateQuantity}
               onOpenAddModal={() => setModalVisible(true)}
+              // isEditMode={isEditMode}
             />
           </Card>
         </ScrollView>
@@ -353,7 +484,9 @@ export default function CreateOrder() {
         <Button
           onPress={handleSubmit(onSubmit)}
           style={styles.submitButton}
-          title="Salvar Pedido"
+          title={submitButtonText}
+          disabled={isSubmitting || (loading && isEditMode)} // Desabilitar se estiver submetendo ou carregando dados para edição
+          isLoading={isSubmitting}
         />
 
         <AddProductModal

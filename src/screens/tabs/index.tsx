@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { Order, OrderItem, Product, StatusOrder, Stock } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
 import { db } from '@/src/firebase/config';
@@ -304,7 +303,11 @@ export default function Home() {
       />
 
       {user?.role === 'admin' && (
-        <Button type="fab" onPress={() => router.push('/orders/create')} />
+        <Button type="fab" onPress={() => {
+          console.log('Create Order');
+          // router.push('/orders/create');
+        }}
+        />
       )}
     </View>
   );

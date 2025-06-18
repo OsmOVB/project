@@ -9,7 +9,6 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { DeliveryItem } from '@/app/(tabs)/index';
 import ScanItemsModal from '../ScanItemsModal';
 import Button from '../../Button';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -25,9 +24,9 @@ import {
 import { db } from '@/src/firebase/config';
 import { StatusOrder } from '@/src/types';
 import { useAuth } from '@/src/hooks/useAuth';
-import { router } from 'expo-router';
 import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 import { getStepStatus, nextStepStatus, StepStatus } from '@/src/utils/kegControl';
+import { DeliveryItem } from '@/src/screens/tabs';
 
 export default function ProductModal({
   visible,
@@ -183,10 +182,11 @@ const handleEditOrder = () => {
       Alert.alert("Erro", "ID da entrega não disponível para edição.");
       return;
     }
-    router.push({ 
-      pathname: '/orders/create', 
-      params: { orderId: deliveryId } 
-    });
+    // router.push({ 
+    //   pathname: '/orders/create', 
+    //   params: { orderId: deliveryId } 
+    // });
+    console.log(`📝 Editando pedido com ID: ${deliveryId}`);
     onClose(); 
   };
 

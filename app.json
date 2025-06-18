@@ -31,7 +31,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-camera",
         {
@@ -41,9 +40,6 @@
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "API_KEY": "AIzaSyCeBLsf8aPqzKWX0vUm0rl1VV8-W1UeJ5E",
       "AUTH_DOMAIN": "choppgo-8f7c4.firebaseapp.com",

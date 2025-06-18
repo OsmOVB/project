@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
@@ -19,24 +18,23 @@ function InnerLayout() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <StatusBar style={theme.background === '#121212' ? 'light' : 'dark'} />
-      <Slot />
+      {/* <Slot /> */}
     </SafeAreaView>
   );
 }
 
 export default function RootLayout() {
   const { user } = useAuth();
-  const router = useRouter();
-  const segments = useSegments();
+  // const segments = useSegments();
 
-  useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
-    if (user && inAuthGroup) {
-      router.replace('/(tabs)');
-    } else if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    }
-  }, [user, segments]);
+  // useEffect(() => {
+  //   const inAuthGroup = segments[0] === '(auth)';
+  //   if (user && inAuthGroup) {
+  //     // router.replace('/(tabs)');
+  //   } else if (!user && !inAuthGroup) {
+  //     // router.replace('/(auth)/login');
+  //   }
+  // }, [user, segments]);
 
   return (
     <ThemeProvider>

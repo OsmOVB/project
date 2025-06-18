@@ -12,7 +12,7 @@ import {
   Title,
   Button,
   ButtonText,
-} from '../../src/components/styled';
+} from '../../../src/components/styled';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
 import { collection, getDocs } from 'firebase/firestore';

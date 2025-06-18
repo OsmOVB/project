@@ -9,13 +9,12 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { Container, Title } from '../../src/components/styled';
-import { db } from '../../src/firebase/config';
+import { Container, Title } from '../../../src/components/styled';
+import { db } from '../../../src/firebase/config';
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
-import type { Stock, Product } from '../../src/types';
+import type { Stock, Product } from '../../../src/types';
 import ConfirmModal from '@/src/components/ConfirmModal';
 import StarRating from '@/src/components/StarRating';
-import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/context/ThemeContext';
 import StockCard from '@/src/components/stock/StockCard';
 import Button from '@/src/components/Button';
@@ -37,7 +36,6 @@ export default function Stock() {
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const { user } = useAuth();
-  const router = useRouter();
   const [addingStock, setAddingStock] = useState(false);
 
   const [productForm, setProductForm] = useState<
@@ -245,7 +243,10 @@ export default function Stock() {
           />
           <Button
             iconName="cube-outline"
-            onPress={() => router.push('/stock/lotes')}
+            onPress={() => {
+              // router.push('/stock/lotes')
+              console.log('Lotes');
+            }}
             title="Lotes"
             type="icon"
           />

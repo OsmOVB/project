@@ -10,9 +10,8 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../../src/firebase/config';
+import { auth, db } from '../../../src/firebase/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
@@ -22,7 +21,7 @@ import {
   Title,
   Input,
   ErrorText,
-} from '../../src/components/styled';
+} from '../../../src/components/styled';
 import Checkbox from '@/src/components/CheckBox';
 import { Ionicons } from '@expo/vector-icons';
 

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
-import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../src/components/styled';
+import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useRouter } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useTheme } from '@/src/context/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -58,7 +57,10 @@ export default function Settings() {
           <Card>
             <CardTitle>Administração</CardTitle>
             <Button
-              onPress={() => router.push('/admin/ManageDeliveries')}
+              onPress={() =>
+                // router.push('/admin/ManageDeliveries')
+                console.log('Manage Deliveries')
+              }
               style={styles.button}
             >
               <ButtonText>Gerenciar Entregadores</ButtonText>
@@ -68,10 +70,16 @@ export default function Settings() {
 
         <Card>
           <CardTitle>Suporte</CardTitle>
-          <Button onPress={() => router.push('/help/HelpCenterScreen')} style={styles.button}>
+          <Button onPress={() =>
+            // router.push('/help/HelpCenterScreen')
+            console.log('Central de Ajuda')
+          } style={styles.button}>
             <ButtonText>Central de Ajuda</ButtonText>
           </Button>
-          <Button onPress={() => router.push('/help/ReportProblemScreen')} style={styles.button}>
+          <Button onPress={() => {
+            // router.push('/help/ReportProblemScreen')
+            console.log('Reportar Problema');
+          }} style={styles.button}>
             <ButtonText>Reportar Problema</ButtonText>
           </Button>
         </Card>
@@ -88,7 +96,7 @@ export default function Settings() {
 }
 
 function ProfileCard({ user, companyName }: { user: any, companyName: string }) {
-  const router = useRouter();
+  // const router = useRouter();
   const { theme } = useTheme();
 
   return (
@@ -107,7 +115,9 @@ function ProfileCard({ user, companyName }: { user: any, companyName: string }) 
       </View>
 
       <Button
-        onPress={() => router.push('/edit-profile')}
+        onPress={() =>
+          //  router.push('/edit-profile')
+          console.log('Edit Profile')}
         style={styles.editButton}
       >
         <ButtonText>Editar informações</ButtonText>

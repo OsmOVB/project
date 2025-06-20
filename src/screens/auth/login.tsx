@@ -25,6 +25,7 @@ import {
 import Checkbox from '@/src/components/CheckBox';
 import { Ionicons } from '@expo/vector-icons';
 import { navigate } from '@/src/navigation/NavigationService';
+import { useAuth } from '@/src/context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -48,7 +49,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+   const { setUser } = useAuth();
   useEffect(() => {
     const loadCredentials = async () => {
       const email = await AsyncStorage.getItem('@email');

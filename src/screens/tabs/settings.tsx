@@ -114,9 +114,8 @@ function ProfileCard({ user, companyName }: { user: any, companyName: string }) 
       </View>
 
       <Button
-        onPress={() =>
-          //  router.push('/edit-profile')
-          console.log('Edit Profile')}
+        onPress={() => navigate.push('EditProfile')}
+
         style={styles.editButton}
       >
         <ButtonText>Editar informações</ButtonText>

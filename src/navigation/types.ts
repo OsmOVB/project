@@ -7,6 +7,7 @@ export type AppStackParamList = {
   ManageDeliveries: undefined;
   HelpCenter: undefined;
   ReportProblem: undefined;
+  EditProfile: undefined;
 
 };
 

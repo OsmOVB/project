@@ -8,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 import { navigate } from '../navigation/NavigationService';
 
 export default function EditProfile() {
-    // const router = useRouter();
     const { theme } = useTheme();
     const { user } = useAuth();
 

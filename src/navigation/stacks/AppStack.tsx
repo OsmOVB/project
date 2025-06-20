@@ -8,6 +8,7 @@ import ManageDeliveries from '@/src/screens/admin/ManageDeliveries';
 import { AppStackParamList } from '../types';
 import HelpCenter from '@/src/screens/help/HelpCenter';
 import ReportProblem from '@/src/screens/help/ReportProblem';
+import EditProfile from '@/src/screens/edit-profile';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -21,6 +22,7 @@ export default function AppStack() {
       <Stack.Screen name="ManageDeliveries" component={ManageDeliveries} />
       <Stack.Screen name="HelpCenter" component={HelpCenter} />
       <Stack.Screen name="ReportProblem" component={ReportProblem} />
+      <Stack.Screen name="EditProfile" component={EditProfile} />
       {/* Add other screens as needed */}
     </Stack.Navigator>
   );

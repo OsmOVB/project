@@ -3,21 +3,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+type User = {
+  uid: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'customer';
+  companyId?: string;
+};
 interface AuthContextProps {
-  user: {
-    uid: string;
-    name: string;
-    email: string;
-    role: string;
-    companyId?: string;
-  } | null;
+  user: User | null;
+  setUser: (user: User | null) => void;
   loading: boolean;
   logout: () => Promise<void>;
 }
 interface AuthProviderProps {
   children: React.ReactNode;
 }
+
+type AuthContextType = {
+  user: User | null;
+  setUser: (user: User | null) => void;
+};
 
 const AuthContext = createContext<AuthContextProps | null>(null);
 
@@ -54,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const auth = getAuth();
     await signOut(auth);
     setUser(null);
+    await AsyncStorage.removeItem('user');
   };
 
   return (

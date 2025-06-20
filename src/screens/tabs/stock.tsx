@@ -18,9 +18,9 @@ import StarRating from '@/src/components/StarRating';
 import { useTheme } from '@/src/context/ThemeContext';
 import StockCard from '@/src/components/stock/StockCard';
 import Button from '@/src/components/Button';
-import { useAuth } from '@/src/hooks/useAuth';
 import { Switch } from 'react-native';
 import { navigate } from '@/src/navigation/NavigationService';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<Stock[]>([]);

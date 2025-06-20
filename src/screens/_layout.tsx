@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 
 import { ThemeProvider, useTheme } from '@/src/context/ThemeContext';
-import { useAuth } from '@/src/hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 function InnerLayout() {
   const { theme } = useTheme();

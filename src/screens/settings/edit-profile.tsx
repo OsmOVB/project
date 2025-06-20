@@ -7,12 +7,17 @@ import {
   Alert,
   Text,
 } from 'react-native';
-import { Container, Title, Button, ButtonText } from '../../src/components/styled';
-import { useAuth } from '@/src/hooks/useAuth';
-import { router } from 'expo-router';
+import {
+  Container,
+  Title,
+  Button,
+  ButtonText,
+} from '../../../src/components/styled';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../src/firebase/config';
+import { db } from '../../../src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
+import { useAuth } from '@/src/context/AuthContext';
+import { navigate } from '@/src/navigation/NavigationService';
 
 export default function EditProfile() {
   const { darkMode } = useTheme();
@@ -26,6 +31,11 @@ export default function EditProfile() {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
     try {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { name, address });
@@ -33,7 +43,7 @@ export default function EditProfile() {
       setUser({ ...user, name, address });
 
       Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
-      router.back();
+      navigate.back();
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
@@ -151,7 +161,7 @@ export default function EditProfile() {
           <ButtonText>Salvar Alterações</ButtonText>
         </Button>
 
-        <Button onPress={() => router.back()} style={styles.cancelButton}>
+        <Button onPress={() => navigate.back()} style={styles.cancelButton}>
           <ButtonText>Cancelar</ButtonText>
         </Button>
       </ScrollView>

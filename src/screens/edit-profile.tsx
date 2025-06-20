@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useAuth } from '@/src/hooks/useAuth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
 import Button from '@/src/components/Button';
+import { useAuth } from '../context/AuthContext';
+import { navigate } from '../navigation/NavigationService';
 
 export default function EditProfile() {
-    const router = useRouter();
+    // const router = useRouter();
     const { theme } = useTheme();
     const { user } = useAuth();
 
@@ -16,12 +16,12 @@ export default function EditProfile() {
     const [email, setEmail] = useState(user?.email || '');
 
     const handleSave = async () => {
-        if (user?.id) {
-            await updateDoc(doc(db, 'users', user.id), {
+        if (user?.uid) {
+            await updateDoc(doc(db, 'users', user.uid), {
                 name,
                 email,
             });
-            router.back();
+            navigate.back();
         }
     };
 

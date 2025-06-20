@@ -37,10 +37,10 @@ import AddProductModal from '@/src/components/modal/AddProductModal';
 import { GroupedProduct, Product, Stock } from '@/src/types';
 import { Picker } from '@react-native-picker/picker';
 import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
-import { useAuth } from '@/src/hooks/useAuth';
 import Button from '@/src/components/Button';
 import { groupStockByProduct } from '@/src/utils/groupStock';
 import { navigate } from '@/src/navigation/NavigationService';
+import { useAuth } from '@/src/context/AuthContext';
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
@@ -87,7 +87,10 @@ export default function CreateOrder() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const current = navigate.getCurrentRoute();
-  const orderId = current?.params?.orderId;
+  const orderId =
+    current?.params && 'orderId' in current.params
+      ? (current.params as { orderId?: string }).orderId
+      : undefined;
 
   const isEditMode = !!orderId;
   const [pageTitle, setPageTitle] = useState(

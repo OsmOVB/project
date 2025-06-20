@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useAuth } from '@/src/hooks/useAuth';
 import { auth, db } from '@/src/firebase/config';
 import {
   collection,
@@ -26,6 +25,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import Button from '@/src/components/Button';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function ManageDeliveries() {
   const { theme } = useTheme();

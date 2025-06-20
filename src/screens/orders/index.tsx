@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { Container, Title, Button, ButtonText } from '../../../src/components/styled';
 import { Order, StatusOrder } from '../../../src/types';
-import { useAuth } from '@/src/hooks/useAuth';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../../src/firebase/config';
 import { Delivery } from '../tabs';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function Orders() {
   const { user } = useAuth();

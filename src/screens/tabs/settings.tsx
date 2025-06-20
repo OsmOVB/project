@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, Switch } from 'react-native';
 import { Container, Title, Button, ButtonText, Card, CardTitle, ThemeToggle, ThemeToggleLabel } from '../../../src/components/styled';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/src/hooks/useAuth';
 import { useTheme } from '@/src/context/ThemeContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
+import { useAuth } from '@/src/context/AuthContext';
+import { navigate } from '@/src/navigation/NavigationService';
 
 export default function Settings() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { darkMode, toggleTheme, theme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [companyName, setCompanyName] = useState<string>('');
@@ -22,6 +23,10 @@ export default function Settings() {
       fetchCompany();
     }
   }, [user?.companyId]);
+
+  const logout = () => {
+    navigate.to('Login');
+  };
 
   return (
     <Container>

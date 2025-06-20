@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextProps {
-  user: { uid: string; email: string; role: string; companyId?: string } | null;
+  user: { uid: string; name: string; email: string; role: string; companyId?: string } | null;
   loading: boolean;
 }
 
@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userDoc.exists()) {
           setUser({
             uid: firebaseUser.uid,
+            name: userDoc.data().name || firebaseUser.displayName || '',
             email: firebaseUser.email!,
             role: userDoc.data().role,
             companyId: userDoc.data().companyId,
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth deve ser usado dentro de AuthProvider');
+  if (!context)
+    throw new Error('useAuth deve ser usado dentro de AuthProvider');
   return context;
 };

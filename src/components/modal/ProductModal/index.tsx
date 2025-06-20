@@ -23,11 +23,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
 import { StatusOrder } from '@/src/types';
-import { useAuth } from '@/src/hooks/useAuth';
 import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 import { getStepStatus, nextStepStatus, StepStatus } from '@/src/utils/kegControl';
 import { DeliveryItem } from '@/src/screens/tabs';
 import { navigate } from '@/src/navigation/NavigationService';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function ProductModal({
   visible,

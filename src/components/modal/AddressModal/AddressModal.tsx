@@ -12,7 +12,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
 import Button from '../../Button';
-import { useAuth } from '@/src/hooks/useAuth';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface Props {
   visible: boolean;

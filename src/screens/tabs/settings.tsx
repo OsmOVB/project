@@ -9,7 +9,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { navigate } from '@/src/navigation/NavigationService';
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { darkMode, toggleTheme, theme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [companyName, setCompanyName] = useState<string>('');
@@ -23,10 +23,6 @@ export default function Settings() {
       fetchCompany();
     }
   }, [user?.companyId]);
-
-  const logout = () => {
-    navigate.to('Login');
-  };
 
   return (
     <Container>

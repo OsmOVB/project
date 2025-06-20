@@ -23,3 +23,4 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
+export type AllStackRoutes = AuthStackParamList & AppStackParamList;

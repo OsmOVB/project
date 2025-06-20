@@ -16,16 +16,11 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import Button from '@/src/components/Button';
-import {
-  Container,
-  Title,
-  Input,
-  ErrorText,
-} from '../../components/styled';
+import { Container, Title, Input, ErrorText } from '../../components/styled';
 import Checkbox from '@/src/components/CheckBox';
 import { Ionicons } from '@expo/vector-icons';
 import { navigate } from '@/src/navigation/NavigationService';
-import { useAuth } from '@/src/context/AuthContext';
+import { useAuth, User } from '@/src/context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -49,7 +44,8 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-   const { setUser } = useAuth();
+  const { setUser } = useAuth();
+
   useEffect(() => {
     const loadCredentials = async () => {
       const email = await AsyncStorage.getItem('@email');
@@ -80,12 +76,18 @@ export default function Login() {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
 
-      const userData = userDoc.exists()
-        ? userDoc.data()
+      const userData: User = userDoc.exists()
+        ? {
+            uid: user.uid,
+            name: userDoc.data().name,
+            email: userDoc.data().email,
+            role: userDoc.data().role,
+            companyId: userDoc.data().companyId,
+          }
         : {
             uid: user.uid,
             name: user.displayName || 'Usuário',
-            email: user.email,
+            email: user.email!,
             role: 'customer',
           };
 
@@ -94,6 +96,7 @@ export default function Login() {
       }
 
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
 
       if (remember) {
         await AsyncStorage.setItem('@email', data.email);
@@ -103,11 +106,10 @@ export default function Login() {
         await AsyncStorage.removeItem('@password');
       }
       if (userData.role === 'admin' && !userData.companyId) {
-
-        navigate.replace('/screens/RegisterCompany');
+        navigate.replace('RegisterCompany');
         return;
       }
-      navigate.replace('/(tabs)');
+      navigate.replace('Tabs');
     } catch (error) {
       Alert.alert('Erro', 'Falha ao autenticar.');
     } finally {
@@ -196,9 +198,7 @@ export default function Login() {
         <Button
           title="Política de Privacidade"
           type="text"
-          onPress={() =>
-            WebBrowser.openBrowserAsync('https://google.com')
-          }
+          onPress={() => WebBrowser.openBrowserAsync('https://google.com')}
         />
       </View>
     </Container>

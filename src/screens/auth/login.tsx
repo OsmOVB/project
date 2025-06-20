@@ -106,10 +106,10 @@ export default function Login() {
         await AsyncStorage.removeItem('@password');
       }
       if (userData.role === 'admin' && !userData.companyId) {
-        navigate.replace('RegisterCompany');
+        navigate.replace('ManageDeliveries');
         return;
       }
-      navigate.replace('Tabs');
+      navigate.replace('HomeMain');
     } catch (error) {
       Alert.alert('Erro', 'Falha ao autenticar.');
     } finally {

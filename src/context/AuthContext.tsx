@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextProps {
-  user: { uid: string; email: string; role: string } | null;
+  user: { uid: string; email: string; role: string; companyId?: string } | null;
   loading: boolean;
 }
 
@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             uid: firebaseUser.uid,
             email: firebaseUser.email!,
             role: userDoc.data().role,
+            companyId: userDoc.data().companyId,
           });
         }
       } else {

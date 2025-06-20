@@ -1,13 +1,17 @@
 // app/screens/LoteDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../src/firebase/config';
+import { db } from '@/src/firebase/config';
+import { navigate } from '@/src/navigation/NavigationService';
 
 export default function LoteDetails() {
-  const { loteId, dataLote } = useLocalSearchParams();
   const [barris, setBarris] = useState<any[]>([]);
+  const routeParams = navigate.getCurrentRoute()?.params;
+  const { loteId = '', dataLote = '' } = (routeParams ?? {}) as {
+    loteId?: string;
+    dataLote?: string;
+  };
 
   useEffect(() => {
     fetchBarris();
@@ -15,19 +19,27 @@ export default function LoteDetails() {
 
   async function fetchBarris() {
     const stockSnapshot = await getDocs(collection(db, 'stock'));
-    const all = stockSnapshot.docs.map(doc => doc.data());
-    const barrisDoLote = all.filter(item => item.loteId == loteId && item.dataLote == dataLote);
+    const all = stockSnapshot.docs.map((doc) => doc.data());
+    console.log('Barris fetched:', all);
+    const barrisDoLote = all.filter(
+      (item) =>
+        String(item.batchId) === String(loteId) && item.batchDate === dataLote
+    );
+
     setBarris(barrisDoLote);
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Lote #{loteId} - {dataLote}</Text>
+      <Text style={styles.title}>
+        Lote #{loteId} - {dataLote}
+      </Text>
       {barris.map((barril, index) => (
         <View key={index} style={styles.card}>
-          <Text>{barril.tipoItemName} - {barril.liters}L</Text>
-          <Text>Quantidade: {barril.quantity}</Text>
-          <Text>Sequência: {barril.sequenciaLote}</Text>
+          <Text>ID Produto: {barril.productItemId}</Text>
+          <Text>Volume: {barril.volumeLiters}L</Text>
+          <Text>QR Code: {barril.qrCode}</Text>
+          <Text>Preço: R$ {barril.price?.toFixed(2)}</Text>
         </View>
       ))}
     </ScrollView>

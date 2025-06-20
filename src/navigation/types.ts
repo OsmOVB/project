@@ -3,4 +3,5 @@ export type RootStackParamList = {
   OrderCreate: { orderId?: string };
   Batches: undefined;
   LoteDetails: { loteId: string; dataLote: string };
+  EditStockItem: { itemId: string };
 };

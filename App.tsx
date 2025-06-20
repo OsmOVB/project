@@ -4,6 +4,7 @@ import AppNavigation from './src/navigation';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
+import { AuthProvider } from './src/context/AuthContext';
 
 function MainContent() {
   const { theme } = useTheme();
@@ -21,9 +22,11 @@ function MainContent() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <MainContent />
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <MainContent />
+        </ThemeProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

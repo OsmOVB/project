@@ -1,4 +1,3 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ScrollView,
   StyleSheet,
@@ -17,22 +16,28 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { db } from '@/src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
-import { Card, CardTitle } from '@/src/components/styled';
-import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
-import Button from '@/src/components/Button';
 import { Product, Stock } from '@/src/types';
-import { useAuth } from '@/src/hooks/useAuth';
+import { useAuth } from '@/src/context/AuthContext';
+import { navigate } from '@/src/navigation/NavigationService';
+import Button from '@/src/components/Button';
+import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
+import { Card, CardTitle } from '@/src/components/styled';
 import { dateUtils } from '@/src/utils/date';
+import { db } from '@/src/firebase/config';
 
 export default function LoteDetails() {
-  const { loteId, dataLote } = useLocalSearchParams();
+  // const { loteId, dataLote } = useLocalSearchParams();
   const [items, setItems] = useState<(Stock & { productInfo?: Product })[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { theme } = useTheme();
   const { user } = useAuth();
-  const router = useRouter();
+  // const router = useRouter();
+  const routeParams = navigate.getCurrentRoute()?.params;
+  const { loteId = '', dataLote = '' } = (routeParams ?? {}) as {
+    loteId?: string;
+    dataLote?: string;
+  };
 
   useEffect(() => {
     fetchItems();
@@ -175,10 +180,11 @@ export default function LoteDetails() {
               iconColor={theme.primary}
               onPress={() => {
                 if (item.id) {
-                  router.push({
-                    pathname: '/stock/edit-type/[id]',
-                    params: { id: item.id },
-                  });
+                  // router.push({
+                  //   pathname: '/stock/edit-type/[id]',
+                  //   params: { id: item.id },
+                  // });
+                  navigate.push('EditStockItem', { itemId: item.id });
                 } else {
                   Alert.alert('Erro', 'ID do item não encontrado.');
                 }

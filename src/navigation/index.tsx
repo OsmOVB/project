@@ -15,6 +15,7 @@ import Stock from '../screens/tabs/stock';
 import CreateOrder from '../screens/orders/create';
 import Batches from '../screens/stock/lotes';
 import LoteDetails from '../screens/stock/LoteDetails';
+import ManageDeliveries from '../screens/admin/ManageDeliveries';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -60,6 +61,8 @@ export default function AppNavigation() {
         <Stack.Screen name="OrderCreate" component={CreateOrder} />
         <Stack.Screen name="Batches" component={Batches} />
         <Stack.Screen name="LoteDetails" component={LoteDetails} />
+        <Stack.Screen name="ManageDeliveries" component={ManageDeliveries} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

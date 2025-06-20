@@ -64,7 +64,7 @@ export default function Settings() {
             <Button
               onPress={() =>
                 // router.push('/admin/ManageDeliveries')
-                console.log('Manage Deliveries')
+                navigate.to('ManageDeliveries')
               }
               style={styles.button}
             >

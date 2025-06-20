@@ -36,7 +36,6 @@ export default function Home() {
   const { user } = useAuth();
   const { theme } = useTheme();
   const styles = themedStyles(theme);
-
   const [orders, setOrders] = useState<Delivery[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
     null
@@ -48,7 +47,33 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrders = async () => {
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+  useEffect(() => {
+    console.log('selectedDelivery', selectedDelivery);
+  }, [selectedDelivery]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrders();
+    setRefreshing(false);
+  };
+
+  const getStatusColor = (status: StatusOrder) => {
+    switch (status) {
+      case 'pendente':
+        return '#FFA500';
+      case 'em progresso':
+        return '#007AFF';
+      case 'finalizado':
+        return '#34C759';
+      default:
+        return '#666';
+    }
+  };
+
+    const fetchOrders = async () => {
     try {
       if (!user?.companyId) return;
 
@@ -106,6 +131,7 @@ export default function Home() {
             time,
             date,
             items: enrichedItems,
+            //getStepStatus
             status: orderData.status as StatusOrder,
             orderNumber: orderData.orderNumber || '???', // ✅ certo: pega do banco
 
@@ -121,32 +147,6 @@ export default function Home() {
     } finally {
       setLoading(false);
       setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-  useEffect(() => {
-    console.log('selectedDelivery', selectedDelivery);
-  }, [selectedDelivery]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchOrders();
-    setRefreshing(false);
-  };
-
-  const getStatusColor = (status: StatusOrder) => {
-    switch (status) {
-      case 'pendente':
-        return '#FFA500';
-      case 'em progresso':
-        return '#007AFF';
-      case 'finalizado':
-        return '#34C759';
-      default:
-        return '#666';
     }
   };
 
@@ -276,7 +276,7 @@ export default function Home() {
                   </View>
                 </View>
                 <Text style={styles.customerName}>
-                  #{delivery.orderNumber} - {delivery.customerName}
+                  Pedido: { delivery.orderNumber} - {delivery.customerName}
                 </Text>
 
                 <Text style={styles.address}>{delivery.address}</Text>

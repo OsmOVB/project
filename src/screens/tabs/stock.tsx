@@ -20,6 +20,7 @@ import StockCard from '@/src/components/stock/StockCard';
 import Button from '@/src/components/Button';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Switch } from 'react-native';
+import { navigate } from '@/src/navigation/NavigationService';
 
 export default function Stock() {
   const [stockItems, setStockItems] = useState<Stock[]>([]);
@@ -245,6 +246,7 @@ export default function Stock() {
             iconName="cube-outline"
             onPress={() => {
               // router.push('/stock/lotes')
+              navigate.push('Batches');
               console.log('Lotes');
             }}
             title="Lotes"

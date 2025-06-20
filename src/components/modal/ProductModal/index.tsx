@@ -27,6 +27,7 @@ import { useAuth } from '@/src/hooks/useAuth';
 import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 import { getStepStatus, nextStepStatus, StepStatus } from '@/src/utils/kegControl';
 import { DeliveryItem } from '@/src/screens/tabs';
+import { navigate } from '@/src/navigation/NavigationService';
 
 export default function ProductModal({
   visible,
@@ -182,12 +183,8 @@ const handleEditOrder = () => {
       Alert.alert("Erro", "ID da entrega não disponível para edição.");
       return;
     }
-    // router.push({ 
-    //   pathname: '/orders/create', 
-    //   params: { orderId: deliveryId } 
-    // });
-    console.log(`📝 Editando pedido com ID: ${deliveryId}`);
-    onClose(); 
+    navigate.push('OrderCreate', { orderId: deliveryId });
+    onClose();
   };
 
 

@@ -11,7 +11,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Calendar from '../../src/components/Calendar';
+import Calendar from '../../../src/components/Calendar';
 import {
   Container,
   Title,
@@ -19,9 +19,8 @@ import {
   ErrorText,
   Card,
   CardTitle,
-} from '../../src/components/styled';
-import { router, useLocalSearchParams } from 'expo-router';
-import { db } from '../../src/firebase/config';
+} from '../../../src/components/styled';
+import { db } from '../../../src/firebase/config';
 import {
   collection,
   getDocs,
@@ -41,6 +40,7 @@ import AddressModal from '@/src/components/modal/AddressModal/AddressModal';
 import { useAuth } from '@/src/hooks/useAuth';
 import Button from '@/src/components/Button';
 import { groupStockByProduct } from '@/src/utils/groupStock';
+import { navigate } from '@/src/navigation/NavigationService';
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
@@ -76,7 +76,6 @@ type Address = {
 export default function CreateOrder() {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const localParams = useLocalSearchParams<{ orderId?: string }>();
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -87,7 +86,9 @@ export default function CreateOrder() {
   const [refreshing, setRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const orderId = localParams.orderId;
+  const current = navigate.getCurrentRoute();
+  const orderId = current?.params?.orderId;
+
   const isEditMode = !!orderId;
   const [pageTitle, setPageTitle] = useState(
     isEditMode ? 'Editar Pedido' : 'Criar Novo Pedido'
@@ -157,8 +158,8 @@ export default function CreateOrder() {
                   unity: baseProductInfo?.unity || '',
                   brand: baseProductInfo?.brand || '',
                   type: baseProductInfo?.type || '',
-               //   availableStock: baseProductInfo?.availableStock || 0,
-             //     price: dbItem.price || baseProductInfo?.price || 0,
+                  //   availableStock: baseProductInfo?.availableStock || 0,
+                  //     price: dbItem.price || baseProductInfo?.price || 0,
                 };
               })
               .filter(Boolean) as SelectableProduct[];
@@ -167,7 +168,7 @@ export default function CreateOrder() {
             updateFormItems(enrichedSelectedItems); // Atualiza o react-hook-form
           } else {
             Alert.alert('Erro', 'Pedido não encontrado.');
-            router.back();
+            navigate.back();
           }
         } catch (error) {
           console.error('Erro ao buscar detalhes do pedido:', error);
@@ -181,7 +182,7 @@ export default function CreateOrder() {
       setPageTitle('Criar Novo Pedido');
       setSubmitButtonText('Salvar Pedido');
     }
-  }, [isEditMode, orderId, groupedProducts, setValue, reset, router]);
+  }, [isEditMode, orderId, groupedProducts, setValue, reset]);
 
   useEffect(() => {
     fetchData();
@@ -217,7 +218,6 @@ export default function CreateOrder() {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -290,7 +290,10 @@ export default function CreateOrder() {
     try {
       if (!user?.email || !user?.companyId) {
         console.error('Usuário não autenticado ou sem empresa vinculada.');
-         Alert.alert('Erro', 'Usuário não autenticado ou sem empresa vinculada.');
+        Alert.alert(
+          'Erro',
+          'Usuário não autenticado ou sem empresa vinculada.'
+        );
         setIsSubmitting(false);
         return;
       }
@@ -313,9 +316,10 @@ export default function CreateOrder() {
         transaction.set(counterRef, { lastOrderNumber: nextOrder });
         return String(nextOrder).padStart(4, '0'); // ex: '0001'
       });
-       const orderPayload ={
+      const orderPayload = {
         customerName: data.customerName,
-        items: data.items.map(({ id, name, quantity, size, price }) => ({ // Adicionado size e price
+        items: data.items.map(({ id, name, quantity, size, price }) => ({
+          // Adicionado size e price
           id,
           stockItemId: id, // Mantém a referência ao item de estoque original se necessário
           name,
@@ -353,7 +357,11 @@ export default function CreateOrder() {
             : 0;
           const nextOrder = lastOrder + 1;
           // Usar merge: true para não sobrescrever outros campos no contador, caso existam
-          transaction.set(counterRef, { lastOrderNumber: nextOrder }, { merge: true });
+          transaction.set(
+            counterRef,
+            { lastOrderNumber: nextOrder },
+            { merge: true }
+          );
           return String(nextOrder).padStart(4, '0');
         });
 
@@ -366,10 +374,16 @@ export default function CreateOrder() {
         });
         Alert.alert('Sucesso', 'Pedido criado com sucesso!');
       }
-      router.back();
+      navigate.back();
     } catch (error) {
-      console.error(`Erro ao ${isEditMode ? 'atualizar' : 'criar'} pedido:`, error);
-      Alert.alert('Erro', `Não foi possível ${isEditMode ? 'atualizar' : 'salvar'} o pedido.`);
+      console.error(
+        `Erro ao ${isEditMode ? 'atualizar' : 'criar'} pedido:`,
+        error
+      );
+      Alert.alert(
+        'Erro',
+        `Não foi possível ${isEditMode ? 'atualizar' : 'salvar'} o pedido.`
+      );
     } finally {
       setIsSubmitting(false);
     }

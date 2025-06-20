@@ -15,15 +15,14 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { useRouter } from 'expo-router';
 import { db } from '@/src/firebase/config';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Card, CardTitle } from '@/src/components/styled';
 import Button from '@/src/components/Button';
 import { dateUtils } from '@/src/utils/date';
 import { Stock } from '@/src/types';
-import { useFocusEffect } from 'expo-router';
 import { BackHandler } from 'react-native';
+import { navigate } from '@/src/navigation/NavigationService';
 
 interface BatchGroup {
   batchId: string;
@@ -34,23 +33,22 @@ interface BatchGroup {
 export default function Batches() {
   const [batches, setBatches] = useState<BatchGroup[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const router = useRouter();
   const { theme } = useTheme();
 
-  useFocusEffect(
-  React.useCallback(() => {
-    const onBackPress = () => {
-      router.replace('/stock');
-      return true;
-    };
+//   useFocusEffect(
+//   React.useCallback(() => {
+//     const onBackPress = () => {
+//       router.replace('/stock');
+//       return true;
+//     };
 
-    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+//     BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-    return () => {
-      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-    };
-  }, [])
-);
+//     return () => {
+//       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+//     };
+//   }, [])
+// );
 
   useEffect(() => {
     fetchBatches();
@@ -86,10 +84,10 @@ export default function Batches() {
   }
 
   function handleDeleteBatch(batchId: string, batchDate: string) {
-    Alert.alert('Delete Batch', 'Are you sure you want to delete this batch?', [
-      { text: 'Cancel' },
+    Alert.alert('Apagar Lote', 'Tem certeza de que deseja apagar este lote?', [
+      { text: 'Cancelar' },
       {
-        text: 'Delete',
+        text: 'Apagar',
         style: 'destructive',
         onPress: async () => {
           const snapshot = await getDocs(
@@ -132,10 +130,7 @@ export default function Batches() {
             <Button
               type="card"
               onPress={() =>
-                router.push({
-                  pathname: '/stock/lote_details',
-                  params: { loteId: batch.batchId, dataLote: batch.batchDate },
-                })
+                navigate.push('LoteDetails', { loteId: batch.batchId, dataLote: batch.batchDate })
               }
             >
               <CardTitle style={{ color: theme.primary }}>

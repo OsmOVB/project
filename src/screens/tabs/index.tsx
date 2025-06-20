@@ -12,6 +12,7 @@ import { ThemeType } from '@/src/theme';
 import { RefreshControl } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { dateUtils } from '@/src/utils/date';
+import { navigate, navigationRef } from '@/src/navigation/NavigationService';
 
 export interface DeliveryItem {
   name: string;
@@ -304,8 +305,7 @@ export default function Home() {
 
       {user?.role === 'admin' && (
         <Button type="fab" onPress={() => {
-          console.log('Create Order');
-          // router.push('/orders/create');
+          navigate.push('OrderCreate');
         }}
         />
       )}

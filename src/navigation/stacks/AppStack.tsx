@@ -6,6 +6,8 @@ import Batches from '@/src/screens/stock/lotes';
 import LoteDetails from '@/src/screens/stock/LoteDetails';
 import ManageDeliveries from '@/src/screens/admin/ManageDeliveries';
 import { AppStackParamList } from '../types';
+import HelpCenter from '@/src/screens/help/HelpCenter';
+import ReportProblem from '@/src/screens/help/ReportProblem';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -17,6 +19,9 @@ export default function AppStack() {
       <Stack.Screen name="Batches" component={Batches} />
       <Stack.Screen name="LoteDetails" component={LoteDetails} />
       <Stack.Screen name="ManageDeliveries" component={ManageDeliveries} />
+      <Stack.Screen name="HelpCenter" component={HelpCenter} />
+      <Stack.Screen name="ReportProblem" component={ReportProblem} />
+      {/* Add other screens as needed */}
     </Stack.Navigator>
   );
 }

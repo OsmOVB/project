@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useRouter } from 'expo-router';
 import { Container, Title } from '@/src/components/styled';
+import { useAuth } from '@/src/context/AuthContext';
+import { navigate } from '@/src/navigation/NavigationService';
 
 const helpTopics = [
     {
@@ -32,9 +33,9 @@ const helpTopics = [
     },
 ];
 
-export default function HelpCenterScreen() {
+export default function HelpCenter() {
     const { theme } = useTheme();
-    const router = useRouter();
+    const router = useAuth();
 
     return (
         <Container>
@@ -46,10 +47,12 @@ export default function HelpCenterScreen() {
                     <TouchableOpacity
                         style={styles.topic}
                         onPress={() =>
-                            router.push({
-                                pathname: '/help/faq/[id]',
-                                params: { id: item.id },
-                            })
+                      navigate.push('EditStockItem', { itemId: item.id })
+
+     //                       navigate.push({
+    //                            pathname: '/help/faq/[id]',
+    //                            params: { id: item.id },
+    //                        })
                         }
                     >
                         <Text style={[styles.topicText, { color: theme.textPrimary }]}>{item.title}</Text>

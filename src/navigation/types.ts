@@ -5,6 +5,8 @@ export type AppStackParamList = {
   LoteDetails: { loteId: string; dataLote: string };
   EditStockItem: { itemId: string };
   ManageDeliveries: undefined;
+  HelpCenter: undefined;
+  ReportProblem: undefined;
 
 };
 
@@ -20,3 +22,4 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
 };
+

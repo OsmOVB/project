@@ -4,7 +4,7 @@ import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import { Container, Title, Button, ButtonText } from '@/src/components/styled';
 import { useTheme } from '@/src/context/ThemeContext';
 
-export default function ReportProblemScreen() {
+export default function ReportProblem() {
     const { theme } = useTheme();
     const [message, setMessage] = useState('');
 

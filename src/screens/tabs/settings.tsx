@@ -76,13 +76,12 @@ export default function Settings() {
         <Card>
           <CardTitle>Suporte</CardTitle>
           <Button onPress={() =>
-            // router.push('/help/HelpCenterScreen')
-            console.log('Central de Ajuda')
+             navigate.push('HelpCenter')
           } style={styles.button}>
             <ButtonText>Central de Ajuda</ButtonText>
           </Button>
           <Button onPress={() => {
-            // router.push('/help/ReportProblemScreen')
+             navigate.push('ReportProblem')
             console.log('Reportar Problema');
           }} style={styles.button}>
             <ButtonText>Reportar Problema</ButtonText>

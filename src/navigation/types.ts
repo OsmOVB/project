@@ -1,4 +1,4 @@
-export type RootStackParamList = {
+export type AppStackParamList = {
   HomeMain: undefined;
   OrderCreate: { orderId?: string };
   Batches: undefined;
@@ -6,4 +6,17 @@ export type RootStackParamList = {
   EditStockItem: { itemId: string };
   ManageDeliveries: undefined;
 
+};
+
+export type TabStackParamList = {
+  Início: undefined;
+  Lotes: undefined;
+  Relatórios: undefined;
+  Ajustes: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
 };

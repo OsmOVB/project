@@ -24,6 +24,7 @@ import {
 } from '../../components/styled';
 import Checkbox from '@/src/components/CheckBox';
 import { Ionicons } from '@expo/vector-icons';
+import { navigate } from '@/src/navigation/NavigationService';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -101,10 +102,11 @@ export default function Login() {
         await AsyncStorage.removeItem('@password');
       }
       if (userData.role === 'admin' && !userData.companyId) {
-        router.replace('/screens/RegisterCompany');
+
+        navigate.replace('/screens/RegisterCompany');
         return;
       }
-      router.replace('/(tabs)');
+      navigate.replace('/(tabs)');
     } catch (error) {
       Alert.alert('Erro', 'Falha ao autenticar.');
     } finally {
@@ -172,13 +174,13 @@ export default function Login() {
         <Button
           title="Criar Conta"
           type="outline"
-          onPress={() => router.push('/register')}
+          onPress={() => navigate.push('/Register')}
         />
         <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
           <Button
             title="Esqueceu a senha?"
             type="text"
-            onPress={() => router.push('/forgot-password')}
+            onPress={() => navigate.push('/ForgotPassword')}
           />
         </View>
       </View>

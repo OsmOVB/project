@@ -1,14 +1,20 @@
 // src/contexts/AuthContext.tsx
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextProps {
-  user: { uid: string; name: string; email: string; role: string; companyId?: string } | null;
+  user: {
+    uid: string;
+    name: string;
+    email: string;
+    role: string;
+    companyId?: string;
+  } | null;
   loading: boolean;
+  logout: () => Promise<void>;
 }
-
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -44,8 +50,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  const logout = async () => {
+    const auth = getAuth();
+    await signOut(auth); // 👈 Faz logout
+    setUser(null); // 👈 Limpa estado do contexto
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

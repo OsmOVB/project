@@ -4,17 +4,17 @@ import {
   CommonActions,
   NavigationState,
 } from '@react-navigation/native';
-import type { RootStackParamList } from './types';
+import type { AllStackRoutes } from './types';
 
-export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+export const navigationRef = createNavigationContainerRef<AllStackRoutes>();
 
 export const navigate = {
   /**
    * Navega para uma tela com nome e parâmetros opcionais
    */
-  to<RouteName extends keyof RootStackParamList>(
+  to<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
-    params?: RootStackParamList[RouteName]
+    params?: AllStackRoutes[RouteName]
   ) {
     if (navigationRef.isReady()) {
       navigationRef.navigate(name, params);
@@ -33,9 +33,9 @@ export const navigate = {
   /**
    * Substitui toda a pilha de navegação por uma nova rota
    */
-  reset<RouteName extends keyof RootStackParamList>(
+  reset<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
-    params?: RootStackParamList[RouteName]
+    params?: AllStackRoutes[RouteName]
   ) {
     if (navigationRef.isReady()) {
       navigationRef.dispatch(
@@ -50,9 +50,9 @@ export const navigate = {
   /**
    * Empilha uma nova rota no topo da stack
    */
-  push<RouteName extends keyof RootStackParamList>(
+  push<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
-    params?: RootStackParamList[RouteName]
+    params?: AllStackRoutes[RouteName]
   ) {
     if (navigationRef.isReady()) {
       navigationRef.dispatch(StackActions.push(name, params));
@@ -62,9 +62,9 @@ export const navigate = {
   /**
    * Substitui a rota atual por uma nova
    */
-  replace<RouteName extends keyof RootStackParamList>(
+  replace<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
-    params?: RootStackParamList[RouteName]
+    params?: AllStackRoutes[RouteName]
   ) {
     if (navigationRef.isReady()) {
       navigationRef.dispatch(StackActions.replace(name, params));

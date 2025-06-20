@@ -1,7 +1,7 @@
-import { useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Container, Title } from '@/src/components/styled';
+import { navigate } from '@/src/navigation/NavigationService';
 
 const helpTopics = [
     {
@@ -32,7 +32,7 @@ const helpTopics = [
 ];
 
 export default function HelpAnswerScreen() {
-    const { id } = useLocalSearchParams();
+    const { id } = navigate.getCurrentRoute();
     const { theme } = useTheme();
 
     const topic = helpTopics.find((t) => t.id === id);

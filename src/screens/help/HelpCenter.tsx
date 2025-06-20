@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { useTheme } from '@/src/context/ThemeContext';
+import { FlatList, StyleSheet } from 'react-native';
+import { AccordionItem } from '@/src/components/AccordionItem'; // ajuste o caminho
 import { Container, Title } from '@/src/components/styled';
-import { useAuth } from '@/src/context/AuthContext';
-import { navigate } from '@/src/navigation/NavigationService';
 
-const helpTopics = [
+type HelpTopic = {
+    id: string;
+    title: string;
+    answer: string;
+};
+
+const helpTopics: HelpTopic[] = [
     {
         id: '1',
         title: 'Como alterar minha senha?',
@@ -33,10 +37,7 @@ const helpTopics = [
     },
 ];
 
-export default function HelpCenter() {
-    const { theme } = useTheme();
-    const router = useAuth();
-
+export default function HelpCenterScreen() {
     return (
         <Container>
             <Title>Central de Ajuda</Title>
@@ -44,32 +45,13 @@ export default function HelpCenter() {
                 data={helpTopics}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.topic}
-                        onPress={() =>
-                      navigate.push('EditStockItem', { itemId: item.id })
-
-     //                       navigate.push({
-    //                            pathname: '/help/faq/[id]',
-    //                            params: { id: item.id },
-    //                        })
-                        }
-                    >
-                        <Text style={[styles.topicText, { color: theme.textPrimary }]}>{item.title}</Text>
-                    </TouchableOpacity>
+                    <AccordionItem<HelpTopic>
+                        item={item}
+                        title={item.title}
+                        content={item.answer}
+                    />
                 )}
             />
         </Container>
     );
 }
-
-const styles = StyleSheet.create({
-    topic: {
-        paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-    },
-    topicText: {
-        fontSize: 16,
-    },
-});

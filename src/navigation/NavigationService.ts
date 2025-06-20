@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native';
 import type { AllStackRoutes } from './types';
 
+// Cria a referência global da navegação
 export const navigationRef = createNavigationContainerRef<AllStackRoutes>();
 
 export const navigate = {
@@ -22,7 +23,7 @@ export const navigate = {
   },
 
   /**
-   * Volta para a tela anterior, se possível
+   * Volta para a tela anterior
    */
   back() {
     if (navigationRef.isReady() && navigationRef.canGoBack()) {
@@ -31,7 +32,7 @@ export const navigate = {
   },
 
   /**
-   * Substitui toda a pilha de navegação por uma nova rota
+   * Reseta a pilha de navegação para uma nova rota
    */
   reset<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
@@ -48,7 +49,7 @@ export const navigate = {
   },
 
   /**
-   * Empilha uma nova rota no topo da stack
+   * Empilha uma nova rota
    */
   push<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
@@ -60,7 +61,7 @@ export const navigate = {
   },
 
   /**
-   * Substitui a rota atual por uma nova
+   * Substitui a rota atual
    */
   replace<RouteName extends keyof AllStackRoutes>(
     name: RouteName,
@@ -72,23 +73,23 @@ export const navigate = {
   },
 
   /**
-   * Retorna o nome e params da rota atual
+   * Obtém a rota atual
    */
   getCurrentRoute() {
     return navigationRef.getCurrentRoute(); // { name, key, params }
   },
 
   /**
-   * Verifica se há tela anterior na pilha
+   * Verifica se é possível voltar
    */
   canGoBack(): boolean {
     return navigationRef.isReady() && navigationRef.canGoBack();
   },
 
   /**
-   * Obtém o estado atual da navegação
+   * Obtém o estado raiz da navegação
    */
   getRootState(): NavigationState | undefined {
     return navigationRef.getRootState();
-  }
+  },
 };

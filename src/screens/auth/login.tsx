@@ -177,13 +177,13 @@ export default function Login() {
         <Button
           title="Criar Conta"
           type="outline"
-          onPress={() => navigate.push('/Register')}
+          onPress={() => navigate.push('Register')}
         />
         <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
           <Button
             title="Esqueceu a senha?"
             type="text"
-            onPress={() => navigate.push('/ForgotPassword')}
+            onPress={() => navigate.push('ForgotPassword')}
           />
         </View>
       </View>

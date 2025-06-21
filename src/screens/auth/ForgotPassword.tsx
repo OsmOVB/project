@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/src/firebase/config';
 import Button from '@/src/components/Button';
-import { router } from 'expo-router';
 import { Container, ErrorText, Input, Title } from '@/src/components/styled';
+import { navigate } from '@/src/navigation/NavigationService';
 
 
 
@@ -17,7 +17,7 @@ const forgotPasswordSchema = z.object({
 
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
-export default function ForgotPasswordScreen() {
+export default function ForgotPassword() {
     const { control, handleSubmit, formState: { errors } } = useForm<ForgotPasswordForm>({
         resolver: zodResolver(forgotPasswordSchema),
     });
@@ -60,7 +60,7 @@ export default function ForgotPasswordScreen() {
                 <Button
                     title="Voltar para Login"
                     type="outline"
-                    onPress={() => router.push('/(auth)/login')}
+                    onPress={() => navigate.push('Login')}
                 />
             </View>
         </Container>

@@ -14,6 +14,7 @@ import {
   query,
   where,
   updateDoc,
+  getDoc,
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -25,11 +26,18 @@ import { qrCodeUtils } from '@/src/utils/qrCodeUtils';
 import { Card, CardTitle } from '@/src/components/styled';
 import { dateUtils } from '@/src/utils/date';
 import { db } from '@/src/firebase/config';
+import ScanItemsModal from '@/src/components/modal/ScanItemsModal';
 
 export default function LoteDetails() {
   // const { loteId, dataLote } = useLocalSearchParams();
   const [items, setItems] = useState<(Stock & { productInfo?: Product })[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [scanVisible, setScanVisible] = useState(false);
+  const [qrItem, setQrItem] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
+  // const [loteId, setLoteId] = useState<string>('');
+
   const { theme } = useTheme();
   const { user } = useAuth();
   // const router = useRouter();
@@ -99,140 +107,208 @@ export default function LoteDetails() {
     ]);
   }
 
-  return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  const handleQrScanned = async (scannedCode: string) => {
+    try {
+      console.log(`🟡 QR Code escaneado: ${scannedCode}`);
+
+      if (!user?.companyId) throw new Error('Empresa não identificada.');
+
+      const stockQuery = query(
+        collection(db, 'stock'),
+        where('qrCode', '==', scannedCode),
+        where('companyId', '==', user.companyId)
+      );
+
+      const snapshot = await getDocs(stockQuery);
+      console.log(`🔍 Snapshot docs count: ${snapshot.size}`);
+
+      if (snapshot.empty) {
+        console.warn(
+          `❌ QR Code "${scannedCode}" não encontrado para a empresa ${user.companyId}`
+        );
+        return;
       }
-    >
-      <Text style={[styles.title, { color: theme.textPrimary }]}>
-        📦 Lote: {loteId} -{' '}
-        {dateUtils.formatDateString(
-          Array.isArray(dataLote) ? dataLote[0] : dataLote
-        )}
-      </Text>
 
-      {items.map((item, i) => (
-        <Card key={i} style={{ backgroundColor: theme.card }}>
-          <CardTitle>Produto: {item.productInfo?.name || '-'}</CardTitle>
+      const stockDoc = snapshot.docs[0];
+      const stockData = stockDoc.data();
+      const size = stockData.volumeLiters?.toString();
+      const stockId = stockDoc.id;
 
-          <Text style={[styles.label, { color: theme.text }]}>
-            Preço Unitário:{' '}
-            <Text style={styles.value}>R$ {item.price?.toFixed(2)}</Text>
-          </Text>
+      // 🆕 Buscar nome do produto
+      let productName: string | undefined;
+      if (stockData?.productItemId) {
+        const productSnap = await getDoc(
+          doc(db, 'product', stockData.productItemId)
+        );
+        if (productSnap.exists()) {
+          const productData = productSnap.data();
+          productName = productData.name;
+        }
+      }
 
-          <Text style={[styles.label, { color: theme.text }]}>
-            Marca:{' '}
-            <Text style={styles.value}>{item.productInfo?.brand || '-'}</Text>
-          </Text>
+      console.log(
+        `📦 Produto encontrado: ${productName} (${size}) - Stock ID: ${stockId}`
+      );
 
-          <Text style={[styles.label, { color: theme.text }]}>
-            Capacidade:{' '}
-            <Text style={styles.value}>{item.productInfo?.size || '-'}</Text>
-          </Text>
+      const matchedIndex = items.findIndex(
+        (item) =>
+          item.name.toLowerCase() === productName?.toLowerCase() &&
+          (item.size || '') === size
+      );
 
-          <Text style={[styles.label, { color: theme.text }]}>
-            QR Code:{' '}
-            <Text style={styles.value}>{item.qrCode || 'Não gerado'}</Text>
-          </Text>
+      if (matchedIndex === -1) {
+        console.warn('⚠️ QR Code não corresponde a nenhum item do pedido.');
+        return;
+      }
 
-          <View style={styles.qrActions}>
-            <Button
-              type="icon"
-              title="Imprimir"
-              iconName="print-outline"
-              iconColor={theme.primary}
-              onPress={() => {
-                Alert.alert('Ação', 'Chamada de impressão aqui...');
-                // Aqui você chama sua função de impressão (API, local, etc)
-              }}
-            />
-          </View>
-          <View style={styles.qrActions}>
-            <Button
-              type="icon"
-              title="Novo QR"
-              iconName="qr-code-outline"
-              iconColor={theme.text}
-              onPress={async () => {
-                const qrCode = await qrCodeUtils.generateNextCompanyQrCode(
-                  user?.companyId || ''
-                );
-                if (item.id) {
-                  await updateDoc(doc(db, 'stock', item.id!), {
-                    qrCode,
-                    pendingPrint: 'Y',
-                  });
-                  // também cria no banco se desejar
-                  fetchItems();
-                  Alert.alert('QR Code Gerado', qrCode);
-                } else {
-                  Alert.alert('Erro', 'ID do item não encontrado.');
-                }
-              }}
-            />
+      const itemKey = `${productName}_${size}_${matchedIndex}`;
+      const current = quantities[itemKey] || 0;
 
-            <Button
-              type="icon"
-              title="Editar"
-              iconName="create-outline"
-              iconColor={theme.primary}
-              onPress={() => {
-                if (item.id) {
-                  // router.push({
-                  //   pathname: '/stock/edit-type/[id]',
-                  //   params: { id: item.id },
-                  // });
-                  navigate.push('EditStockItem', { itemId: item.id });
-                } else {
-                  Alert.alert('Erro', 'ID do item não encontrado.');
-                }
-              }}
-            />
-          </View>
-          <View style={styles.qrActions}>
-            <Button
-              type="icon"
-              title="Ler QR existente"
-              iconName="qr-code-outline"
-              iconColor={theme.text}
-              onPress={async () => {
-                try {
-                  const qrCode = prompt('Digite o QR Code existente:'); // ou use input/modal
-                  if (!qrCode) return;
+      setQuantities((prev) => ({
+        ...prev,
+        [itemKey]: current + 1,
+      }));
 
-                  await qrCodeUtils.assignQrCodeToStock(
-                    qrCode,
-                    item.id!,
+      if (!checkedItems.includes(itemKey)) {
+        setCheckedItems((prev) => [...prev, itemKey]);
+      }
+
+      await qrCodeUtils.advanceQrCodeStepStatus(scannedCode, user.companyId);
+    } catch (error: any) {
+      console.error('❌ Erro ao processar QR Code:', error.message);
+      Alert.alert('Erro ao processar QR Code', error.message);
+    }
+  };
+
+  return (
+    <>
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <Text style={[styles.title, { color: theme.textPrimary }]}>
+          📦 Lote: {loteId} -{' '}
+          {dateUtils.formatDateString(
+            Array.isArray(dataLote) ? dataLote[0] : dataLote
+          )}
+        </Text>
+
+        {items.map((item, i) => (
+          <Card key={i} style={{ backgroundColor: theme.card }}>
+            <CardTitle>Produto: {item.productInfo?.name || '-'}</CardTitle>
+
+            <Text style={[styles.label, { color: theme.text }]}>
+              Preço Unitário:{' '}
+              <Text style={styles.value}>R$ {item.price?.toFixed(2)}</Text>
+            </Text>
+
+            <Text style={[styles.label, { color: theme.text }]}>
+              Marca:{' '}
+              <Text style={styles.value}>{item.productInfo?.brand || '-'}</Text>
+            </Text>
+
+            <Text style={[styles.label, { color: theme.text }]}>
+              Capacidade:{' '}
+              <Text style={styles.value}>{item.productInfo?.size || '-'}</Text>
+            </Text>
+
+            <Text style={[styles.label, { color: theme.text }]}>
+              QR Code:{' '}
+              <Text style={styles.value}>{item.qrCode || 'Não gerado'}</Text>
+            </Text>
+
+            <View style={styles.qrActions}>
+              <Button
+                type="icon"
+                title="Imprimir"
+                iconName="print-outline"
+                iconColor={theme.primary}
+                onPress={() => {
+                  Alert.alert('Ação', 'Chamada de impressão aqui...');
+                  // Aqui você chama sua função de impressão (API, local, etc)
+                }}
+              />
+            </View>
+            <View style={styles.qrActions}>
+              <Button
+                type="icon"
+                title="Novo QR"
+                iconName="qr-code-outline"
+                iconColor={theme.text}
+                onPress={async () => {
+                  const qrCode = await qrCodeUtils.generateNextCompanyQrCode(
                     user?.companyId || ''
                   );
-                  await updateDoc(doc(db, 'stock', item.id!), {
-                    qrCode,
-                    pendingPrint: 'Y',
-                  });
-                  fetchItems();
-                  Alert.alert('QR Code Vinculado', qrCode);
-                } catch (error: any) {
-                  Alert.alert('Erro', error.message);
-                }
-              }}
-            />
+                  if (item.id) {
+                    await updateDoc(doc(db, 'stock', item.id!), {
+                      qrCode,
+                      pendingPrint: 'Y',
+                    });
+                    // também cria no banco se desejar
+                    fetchItems();
+                    Alert.alert('QR Code Gerado', qrCode);
+                  } else {
+                    Alert.alert('Erro', 'ID do item não encontrado.');
+                  }
+                }}
+              />
 
-            <Button
-              type="icon"
-              title="Apagar"
-              iconName="trash-outline"
-              iconColor={theme.red}
-              onPress={() => {
-                if (item.id) handleDeleteItem(item.id);
-                else Alert.alert('Erro', 'ID do item não encontrado.');
-              }}
-            />
-          </View>
-        </Card>
-      ))}
-    </ScrollView>
+              <Button
+                type="icon"
+                title="Editar"
+                iconName="create-outline"
+                iconColor={theme.primary}
+                onPress={() => {
+                  if (item.id) {
+                    // router.push({
+                    //   pathname: '/stock/edit-type/[id]',
+                    //   params: { id: item.id },
+                    // });
+                    navigate.push('EditStockItem', { itemId: item.id });
+                  } else {
+                    Alert.alert('Erro', 'ID do item não encontrado.');
+                  }
+                }}
+              />
+            </View>
+            <View style={styles.qrActions}>
+              <Button
+                type="icon"
+                title="Ler QR existente"
+                iconName="qr-code-outline"
+                iconColor={theme.text}
+                onPress={
+                  () => {
+                    setQrItem(item.id || null);
+                    setScanVisible(true);
+                  }
+                }
+              />
+
+              <Button
+                type="icon"
+                title="Apagar"
+                iconName="trash-outline"
+                iconColor={theme.red}
+                onPress={() => {
+                  if (item.id) handleDeleteItem(item.id);
+                  else Alert.alert('Erro', 'ID do item não encontrado.');
+                }}
+              />
+            </View>
+          </Card>
+        ))}
+      </ScrollView>
+      <ScanItemsModal
+        visible={scanVisible}
+        onClose={() => setScanVisible(false)}
+        onScannedSuccess={handleQrScanned}
+        stockId={qrItem ?? ''}
+        companyId={user?.companyId || ''}
+      />
+    </>
   );
 }
 
